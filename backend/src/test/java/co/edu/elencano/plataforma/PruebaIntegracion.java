@@ -1,10 +1,11 @@
 package co.edu.elencano.plataforma;
 
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.Set;
+
+import jakarta.servlet.http.Cookie;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -13,6 +14,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
 import co.edu.elencano.plataforma.usuarios.entidad.Rol;
 import co.edu.elencano.plataforma.usuarios.entidad.TipoDocumento;
@@ -45,6 +47,19 @@ public abstract class PruebaIntegracion {
                 "Nombre", "Apellido", null, null, nombreUsuario, CONTRASENA, Set.of(roles)));
     }
 
+    /**
+     * Envia el token CSRF como lo hace el navegador: en la cookie XSRF-TOKEN y en el encabezado X-XSRF-TOKEN.
+     * No se usa csrf() de spring-security-test porque reemplaza el repositorio de tokens en el contexto
+     * compartido y despues ninguna respuesta vuelve a entregar la cookie.
+     */
+    protected static RequestPostProcessor tokenCsrf() {
+        return peticion -> {
+            peticion.setCookies(new Cookie("XSRF-TOKEN", "token-de-prueba"));
+            peticion.addHeader("X-XSRF-TOKEN", "token-de-prueba");
+            return peticion;
+        };
+    }
+
     protected String jsonLogin(String nombreUsuario, String contrasena) {
         return """
                 {"nombreUsuario": "%s", "contrasena": "%s"}
@@ -53,7 +68,7 @@ public abstract class PruebaIntegracion {
 
     /** Inicia sesion y devuelve la sesion HTTP para usarla en las siguientes peticiones. */
     protected MockHttpSession iniciarSesion(String nombreUsuario, String contrasena) throws Exception {
-        return (MockHttpSession) mockMvc.perform(post("/api/auth/login").with(csrf())
+        return (MockHttpSession) mockMvc.perform(post("/api/auth/login").with(tokenCsrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonLogin(nombreUsuario, contrasena)))
                 .andExpect(status().isOk())

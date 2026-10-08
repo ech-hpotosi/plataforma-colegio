@@ -1,7 +1,6 @@
 package co.edu.elencano.plataforma.usuarios;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -40,7 +39,7 @@ class AutenticacionTest extends PruebaIntegracion {
     void contrasenaIncorrectaResponde401() throws Exception {
         crearUsuario("clave.mala", Rol.SECRETARIA);
 
-        mockMvc.perform(post("/api/auth/login").with(csrf())
+        mockMvc.perform(post("/api/auth/login").with(tokenCsrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonLogin("clave.mala", "otra-clave")))
                 .andExpect(status().isUnauthorized())
@@ -49,7 +48,7 @@ class AutenticacionTest extends PruebaIntegracion {
 
     @Test
     void usuarioInexistenteRespondeIgualQueContrasenaIncorrecta() throws Exception {
-        mockMvc.perform(post("/api/auth/login").with(csrf())
+        mockMvc.perform(post("/api/auth/login").with(tokenCsrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonLogin("no.existe", "lo-que-sea")))
                 .andExpect(status().isUnauthorized())
@@ -71,14 +70,14 @@ class AutenticacionTest extends PruebaIntegracion {
         crearUsuario("bloqueo", Rol.DOCENTE);
 
         for (int i = 0; i < 5; i++) {
-            mockMvc.perform(post("/api/auth/login").with(csrf())
+            mockMvc.perform(post("/api/auth/login").with(tokenCsrf())
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(jsonLogin("bloqueo", "incorrecta")))
                     .andExpect(status().isUnauthorized());
         }
 
         // Con la cuenta bloqueada, ni la contrasena correcta sirve
-        mockMvc.perform(post("/api/auth/login").with(csrf())
+        mockMvc.perform(post("/api/auth/login").with(tokenCsrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonLogin("bloqueo", CONTRASENA)))
                 .andExpect(status().isUnauthorized())
@@ -92,7 +91,7 @@ class AutenticacionTest extends PruebaIntegracion {
         usuario.setActivo(false);
         usuarioRepository.save(usuario);
 
-        mockMvc.perform(post("/api/auth/login").with(csrf())
+        mockMvc.perform(post("/api/auth/login").with(tokenCsrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonLogin("inactivo", CONTRASENA)))
                 .andExpect(status().isUnauthorized())
@@ -105,7 +104,7 @@ class AutenticacionTest extends PruebaIntegracion {
         crearUsuario("logout", Rol.DOCENTE);
         MockHttpSession sesion = iniciarSesion("logout", CONTRASENA);
 
-        mockMvc.perform(post("/api/auth/logout").with(csrf()).session(sesion))
+        mockMvc.perform(post("/api/auth/logout").with(tokenCsrf()).session(sesion))
                 .andExpect(status().isNoContent());
 
         mockMvc.perform(get("/api/yo").session(sesion))

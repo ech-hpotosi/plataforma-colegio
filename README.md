@@ -61,6 +61,23 @@ El esquema de la base de datos se versiona con Flyway en `backend/src/main/resou
   o cambiar la contrasena desde la pantalla de usuarios.
 - `/api/usuarios` es solo para el rol ADMINISTRADOR.
 
+## Estructura academica
+
+Pantalla "Estructura academica" (roles ADMINISTRADOR y COORDINADOR_ACADEMICO). Orden sugerido para configurar un anio:
+
+1. Sedes (solo una puede ser la principal).
+2. Anio lectivo con sus periodos: por defecto tres; los porcentajes deben sumar 100 y los periodos ir en orden
+   dentro de las fechas del anio. El estado solo avanza (Planeacion, Matricula, En curso, Cerrado) y solo un anio
+   puede estar en curso. Un anio cerrado no admite cambios.
+3. Areas y asignaturas.
+4. Plan de estudios de cada grado (asignaturas e intensidad horaria). Los grados vienen cargados en la migracion V3.
+5. Docentes: son los usuarios activos con rol DOCENTE; aqui se registran especialidad, escalafon y sedes.
+6. Grupos (director de grupo opcional) y su carga academica (docente por asignatura del plan).
+
+Endpoints: `/api/sedes`, `/api/anios`, `/api/grados`, `/api/areas`, `/api/asignaturas`, `/api/plan-estudio`,
+`/api/docentes`, `/api/grupos` y `/api/grupos/{id}/carga`. Consultar requiere sesion; modificar requiere uno de
+los dos roles anteriores.
+
 ## Pruebas
 
 ```

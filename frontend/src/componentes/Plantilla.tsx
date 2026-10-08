@@ -13,6 +13,7 @@ interface OpcionMenu {
 const MENU: OpcionMenu[] = [
   { texto: 'Inicio', ruta: '/' },
   { texto: 'Usuarios', ruta: '/usuarios', roles: ['ADMINISTRADOR'] },
+  { texto: 'Estructura academica', ruta: '/academico', roles: ['ADMINISTRADOR', 'COORDINADOR_ACADEMICO'] },
 ];
 
 /** Barra superior con el menu segun los roles del usuario y el boton de cerrar sesion. */

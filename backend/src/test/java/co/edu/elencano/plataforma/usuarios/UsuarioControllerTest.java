@@ -1,6 +1,5 @@
 package co.edu.elencano.plataforma.usuarios;
 
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -35,7 +34,7 @@ class UsuarioControllerTest extends PruebaIntegracion {
 
     @Test
     void administradorCreaUsuarioYLuegoEsePuedeIniciarSesion() throws Exception {
-        mockMvc.perform(post("/api/usuarios").with(csrf()).session(sesionAdmin)
+        mockMvc.perform(post("/api/usuarios").with(tokenCsrf()).session(sesionAdmin)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonNuevoUsuario("5001", "maria.jojoa")))
                 .andExpect(status().isCreated())
@@ -50,7 +49,7 @@ class UsuarioControllerTest extends PruebaIntegracion {
     void nombreDeUsuarioRepetidoResponde409() throws Exception {
         crearUsuario("repetido", Rol.DOCENTE);
 
-        mockMvc.perform(post("/api/usuarios").with(csrf()).session(sesionAdmin)
+        mockMvc.perform(post("/api/usuarios").with(tokenCsrf()).session(sesionAdmin)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonNuevoUsuario("5002", "repetido")))
                 .andExpect(status().isConflict());
@@ -58,7 +57,7 @@ class UsuarioControllerTest extends PruebaIntegracion {
 
     @Test
     void datosInvalidosResponden400ConElCampo() throws Exception {
-        mockMvc.perform(post("/api/usuarios").with(csrf()).session(sesionAdmin)
+        mockMvc.perform(post("/api/usuarios").with(tokenCsrf()).session(sesionAdmin)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonNuevoUsuario("5003", "Con Espacios")))
                 .andExpect(status().isBadRequest())
@@ -89,7 +88,7 @@ class UsuarioControllerTest extends PruebaIntegracion {
         Long idAdmin = usuarioService.buscar("admin", 0, 20).getContent().stream()
                 .filter(u -> u.getNombreUsuario().equals("admin")).findFirst().orElseThrow().getId();
 
-        mockMvc.perform(put("/api/usuarios/" + idAdmin).with(csrf()).session(sesionAdmin)
+        mockMvc.perform(put("/api/usuarios/" + idAdmin).with(tokenCsrf()).session(sesionAdmin)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"nombres": "Administrador", "apellidos": "Plataforma", "activo": true,
@@ -102,7 +101,7 @@ class UsuarioControllerTest extends PruebaIntegracion {
     void cambiarContrasenaPermiteEntrarConLaNueva() throws Exception {
         Usuario usuario = crearUsuario("cambio.clave", Rol.SECRETARIA);
 
-        mockMvc.perform(put("/api/usuarios/" + usuario.getId() + "/contrasena").with(csrf()).session(sesionAdmin)
+        mockMvc.perform(put("/api/usuarios/" + usuario.getId() + "/contrasena").with(tokenCsrf()).session(sesionAdmin)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"contrasena": "nueva-clave-456"}
