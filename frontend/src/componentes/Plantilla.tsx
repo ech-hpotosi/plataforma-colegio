@@ -1,5 +1,6 @@
 import { AppBar, Box, Button, Container, Toolbar, Typography } from '@mui/material';
 import { Link as RouterLink, Outlet } from 'react-router';
+import escudo from '../assets/escudo.png';
 import { useSesion } from '../sesion/useSesion';
 import type { Rol } from '../tipos';
 
@@ -23,6 +24,13 @@ export default function Plantilla() {
     <>
       <AppBar position="static">
         <Toolbar sx={{ gap: 1, flexWrap: 'wrap' }}>
+          {/* Fondo blanco circular para que los colores del escudo se vean sobre la barra azul */}
+          <Box
+            component="img"
+            src={escudo}
+            alt=""
+            sx={{ height: 44, width: 44, objectFit: 'contain', bgcolor: 'common.white', borderRadius: '50%', p: 0.5 }}
+          />
           <Typography variant="h6" component="div" sx={{ mr: 2 }}>
             IEM El Encano
           </Typography>

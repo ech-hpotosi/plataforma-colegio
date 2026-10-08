@@ -7,6 +7,7 @@ import { Navigate, useLocation, useNavigate } from 'react-router';
 import { Alert, Box, Button, Container, Paper, TextField, Typography } from '@mui/material';
 import { iniciarSesion } from '../api/auth';
 import { ErrorApi } from '../api/cliente';
+import escudo from '../assets/escudo.png';
 import { CLAVE_SESION, useSesion } from '../sesion/useSesion';
 
 const esquema = z.object({
@@ -48,6 +49,12 @@ export default function Login() {
   return (
     <Container maxWidth="xs">
       <Paper sx={{ mt: 8, p: 4 }} elevation={3}>
+        <Box
+          component="img"
+          src={escudo}
+          alt="Escudo de la IEM El Encano"
+          sx={{ display: 'block', mx: 'auto', mb: 1, height: 120 }}
+        />
         <Typography variant="h5" component="h1" align="center" gutterBottom>
           IEM El Encano
         </Typography>
