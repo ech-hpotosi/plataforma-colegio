@@ -48,7 +48,18 @@ El esquema de la base de datos se versiona con Flyway en `backend/src/main/resou
    npm run dev
    ```
 
-   Abrir http://localhost:5173. Las llamadas a `/api` se redirigen al backend.
+   Abrir http://localhost:5173 e ingresar con `admin` y la contrasena de `ADMIN_CONTRASENA`.
+   Las llamadas a `/api` se redirigen al backend.
+
+## Autenticacion
+
+- `POST /api/auth/login` abre la sesion (cookie HttpOnly) y `POST /api/auth/logout` la cierra.
+- `GET /api/yo` devuelve el usuario con sesion y sus roles.
+- Todas las peticiones POST, PUT y DELETE llevan el token CSRF de la cookie `XSRF-TOKEN`
+  en el encabezado `X-XSRF-TOKEN`; el cliente de `frontend/src/api/cliente.ts` lo hace solo.
+- Tras 5 intentos fallidos la cuenta se bloquea 15 minutos. Un administrador puede desbloquearla
+  o cambiar la contrasena desde la pantalla de usuarios.
+- `/api/usuarios` es solo para el rol ADMINISTRADOR.
 
 ## Pruebas
 
@@ -68,3 +79,5 @@ GitHub Actions ejecuta las mismas pruebas en cada push y pull request.
 | `DB_CONTRASENA` | `plataforma` | Contrasena de la base de datos |
 | `ADMIN_USUARIO` | `admin` | Nombre del primer administrador |
 | `ADMIN_CONTRASENA` | (vacio) | Si esta vacio no se crea el primer administrador |
+| `plataforma.seguridad.maximo-intentos` | `5` | Intentos fallidos antes de bloquear la cuenta |
+| `plataforma.seguridad.minutos-bloqueo` | `15` | Minutos que dura el bloqueo |

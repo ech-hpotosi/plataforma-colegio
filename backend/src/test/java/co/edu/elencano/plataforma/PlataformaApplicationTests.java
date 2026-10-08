@@ -2,28 +2,19 @@ package co.edu.elencano.plataforma;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.cookie;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Import;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.test.web.servlet.MockMvc;
 
 import co.edu.elencano.plataforma.usuarios.entidad.Rol;
 import co.edu.elencano.plataforma.usuarios.entidad.Usuario;
 import co.edu.elencano.plataforma.usuarios.repositorio.UsuarioRepository;
 
-@SpringBootTest(properties = "plataforma.admin-inicial.contrasena=clave-de-prueba")
-@AutoConfigureMockMvc
-@Import(TestcontainersConfiguration.class)
-class PlataformaApplicationTests {
-
-    @Autowired
-    private MockMvc mockMvc;
+class PlataformaApplicationTests extends PruebaIntegracion {
 
     @Autowired
     private UsuarioRepository usuarioRepository;
@@ -32,10 +23,11 @@ class PlataformaApplicationTests {
     private PasswordEncoder passwordEncoder;
 
     @Test
-    void saludEsPublica() throws Exception {
+    void saludEsPublicaYEntregaCookieCsrf() throws Exception {
         mockMvc.perform(get("/api/salud"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.estado").value("OK"));
+                .andExpect(jsonPath("$.estado").value("OK"))
+                .andExpect(cookie().exists("XSRF-TOKEN"));
     }
 
     @Test

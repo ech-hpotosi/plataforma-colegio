@@ -1,25 +1,18 @@
-import { useQuery } from '@tanstack/react-query';
-import { Alert, Box, CircularProgress, Container, Typography } from '@mui/material';
-import { consultarSalud } from '../api/salud';
+import { Chip, Stack, Typography } from '@mui/material';
+import { useSesion } from '../sesion/useSesion';
+import { NOMBRE_ROL } from '../tipos';
 
 export default function Inicio() {
-  const salud = useQuery({ queryKey: ['salud'], queryFn: consultarSalud });
+  const { usuario } = useSesion();
 
   return (
-    <Container maxWidth="sm">
-      <Box sx={{ mt: 8, textAlign: 'center' }}>
-        <Typography variant="h4" component="h1" gutterBottom>
-          Institucion Educativa Municipal El Encano
-        </Typography>
-        <Typography variant="subtitle1" color="text.secondary" gutterBottom>
-          Plataforma escolar
-        </Typography>
-        <Box sx={{ mt: 4 }}>
-          {salud.isPending && <CircularProgress />}
-          {salud.isError && <Alert severity="error">No hay conexion con el servidor</Alert>}
-          {salud.isSuccess && <Alert severity="success">Servidor en linea</Alert>}
-        </Box>
-      </Box>
-    </Container>
+    <>
+      <Typography variant="h5" component="h1" gutterBottom>
+        Bienvenido, {usuario?.nombreCompleto}
+      </Typography>
+      <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>
+        {usuario?.roles.map((rol) => <Chip key={rol} label={NOMBRE_ROL[rol]} color="primary" variant="outlined" />)}
+      </Stack>
+    </>
   );
 }

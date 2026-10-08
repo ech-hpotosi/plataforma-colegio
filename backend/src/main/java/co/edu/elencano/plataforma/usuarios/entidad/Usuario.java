@@ -46,6 +46,9 @@ public class Usuario {
     @Column(name = "ultimo_acceso")
     private LocalDateTime ultimoAcceso;
 
+    @Column(name = "bloqueado_hasta")
+    private LocalDateTime bloqueadoHasta;
+
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "usuario_rol", joinColumns = @JoinColumn(name = "usuario_id"))
     @Enumerated(EnumType.STRING)
@@ -69,6 +72,33 @@ public class Usuario {
         roles.add(rol);
     }
 
+    public boolean estaBloqueado(LocalDateTime ahora) {
+        return bloqueadoHasta != null && bloqueadoHasta.isAfter(ahora);
+    }
+
+    /**
+     * Suma un intento fallido. Al llegar al maximo, bloquea la cuenta hasta la fecha indicada
+     * y reinicia el contador para el siguiente ciclo.
+     */
+    public void registrarIntentoFallido(int maximoIntentos, LocalDateTime bloquearHasta) {
+        intentosFallidos++;
+        if (intentosFallidos >= maximoIntentos) {
+            bloqueadoHasta = bloquearHasta;
+            intentosFallidos = 0;
+        }
+    }
+
+    public void registrarAccesoExitoso(LocalDateTime ahora) {
+        intentosFallidos = 0;
+        bloqueadoHasta = null;
+        ultimoAcceso = ahora;
+    }
+
+    public void desbloquear() {
+        intentosFallidos = 0;
+        bloqueadoHasta = null;
+    }
+
     public Long getId() {
         return id;
     }
@@ -89,6 +119,14 @@ public class Usuario {
         return activo;
     }
 
+    public void setActivo(boolean activo) {
+        this.activo = activo;
+    }
+
+    public void setContrasenaHash(String contrasenaHash) {
+        this.contrasenaHash = contrasenaHash;
+    }
+
     public int getIntentosFallidos() {
         return intentosFallidos;
     }
@@ -97,7 +135,16 @@ public class Usuario {
         return ultimoAcceso;
     }
 
+    public LocalDateTime getBloqueadoHasta() {
+        return bloqueadoHasta;
+    }
+
     public Set<Rol> getRoles() {
         return roles;
+    }
+
+    public void setRoles(Set<Rol> nuevosRoles) {
+        roles.clear();
+        roles.addAll(nuevosRoles);
     }
 }
