@@ -35,3 +35,8 @@ plataforma:
   admin-inicial:
     usuario: ${ADMIN_USUARIO:admin}
     contrasena: ${ADMIN_CONTRASENA:}
+  # Reglas del SIEE para asistencia. Pasaran a la configuracion del SIEE cuando exista ese modulo.
+  asistencia:
+    porcentaje-maximo-inasistencia: 15
+    dias-habiles-justificacion: 3
+    semanas-lectivas: 40

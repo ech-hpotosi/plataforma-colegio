@@ -14,6 +14,24 @@ public interface CargaAcademicaRepository extends JpaRepository<CargaAcademica, 
 
     boolean existsByGrupoId(Long grupoId);
 
+    /** Cargas de un docente en anios que no estan cerrados. */
+    @Query("""
+            select c from CargaAcademica c join fetch c.grupo g join fetch g.grado join fetch g.sede
+            join fetch c.asignatura a join fetch g.anioLectivo y
+            where c.docente.id = :docenteId and y.estado <> 'CERRADO'
+            order by y.anio desc, g.grado.orden, g.nombre, a.nombre
+            """)
+    List<CargaAcademica> listarAbiertasDeDocente(@Param("docenteId") Long docenteId);
+
+    /** Todas las cargas en anios que no estan cerrados. */
+    @Query("""
+            select c from CargaAcademica c join fetch c.grupo g join fetch g.grado join fetch g.sede
+            join fetch c.asignatura a join fetch g.anioLectivo y join fetch c.docente d join fetch d.persona
+            where y.estado <> 'CERRADO'
+            order by y.anio desc, g.grado.orden, g.nombre, a.nombre
+            """)
+    List<CargaAcademica> listarAbiertas();
+
     /** Indica si alguna asignatura del plan de un grado y anio ya tiene docente asignado en algun grupo. */
     @Query("""
             select count(c) > 0 from CargaAcademica c

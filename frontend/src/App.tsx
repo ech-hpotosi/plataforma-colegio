@@ -9,6 +9,9 @@ import Grados from './paginas/academico/Grados';
 import Grupos from './paginas/academico/Grupos';
 import PlanEstudio from './paginas/academico/PlanEstudio';
 import Sedes from './paginas/academico/Sedes';
+import Asistencia from './paginas/asistencia/Asistencia';
+import ConsolidadoAsistencia from './paginas/asistencia/ConsolidadoAsistencia';
+import TomarAsistencia from './paginas/asistencia/TomarAsistencia';
 import DetalleEstudiante from './paginas/estudiantes/DetalleEstudiante';
 import ListaEstudiantes from './paginas/estudiantes/ListaEstudiantes';
 import Inicio from './paginas/Inicio';
@@ -33,6 +36,16 @@ export default function App() {
           >
             <Route path="/estudiantes" element={<ListaEstudiantes />} />
             <Route path="/estudiantes/:id" element={<DetalleEstudiante />} />
+          </Route>
+          <Route
+            element={
+              <RutaProtegida roles={['ADMINISTRADOR', 'RECTOR', 'COORDINADOR_ACADEMICO', 'SECRETARIA', 'DOCENTE']} />
+            }
+          >
+            <Route path="/asistencia" element={<Asistencia />}>
+              <Route path="tomar" element={<TomarAsistencia />} />
+              <Route path="consolidado" element={<ConsolidadoAsistencia />} />
+            </Route>
           </Route>
           <Route element={<RutaProtegida roles={['ADMINISTRADOR', 'COORDINADOR_ACADEMICO']} />}>
             <Route path="/academico" element={<EstructuraAcademica />}>

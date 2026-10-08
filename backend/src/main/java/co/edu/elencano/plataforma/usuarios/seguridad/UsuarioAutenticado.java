@@ -19,6 +19,7 @@ import co.edu.elencano.plataforma.usuarios.entidad.Usuario;
 public class UsuarioAutenticado implements UserDetails {
 
     private final Long id;
+    private final Long personaId;
     private final String nombreUsuario;
     private final String contrasenaHash;
     private final String nombreCompleto;
@@ -28,6 +29,7 @@ public class UsuarioAutenticado implements UserDetails {
 
     public UsuarioAutenticado(Usuario usuario) {
         this.id = usuario.getId();
+        this.personaId = usuario.getPersona().getId();
         this.nombreUsuario = usuario.getNombreUsuario();
         this.contrasenaHash = usuario.getContrasenaHash();
         this.nombreCompleto = usuario.getPersona().getNombreCompleto();
@@ -38,6 +40,15 @@ public class UsuarioAutenticado implements UserDetails {
 
     public Long getId() {
         return id;
+    }
+
+    /** Persona del usuario; para un docente es tambien el identificador del docente. */
+    public Long getPersonaId() {
+        return personaId;
+    }
+
+    public boolean tieneRol(Rol rol) {
+        return roles.contains(rol);
     }
 
     public String getNombreCompleto() {

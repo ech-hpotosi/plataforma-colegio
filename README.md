@@ -82,7 +82,7 @@ los dos roles anteriores.
 
 Pantalla "Estudiantes" (consulta: administrador, rector, coordinador academico y secretaria; modificar: administrador
 y secretaria). Los docentes no ven datos de estudiantes por ahora porque son menores de edad; tendran una consulta
-limitada a sus grupos.
+limitada a sus grupos; por ahora en asistencia solo ven nombres y apellidos de los estudiantes de sus clases.
 
 - Ficha del estudiante: documento (se puede cambiar de TI a CC), datos personales, EPS, discapacidad, PIAR y otras condiciones.
 - Acudientes: si el documento ya existe se reutiliza la persona (por ejemplo, la madre de dos hermanos). Solo un acudiente
@@ -93,6 +93,28 @@ limitada a sus grupos.
 Endpoints: `/api/estudiantes`, `/api/estudiantes/{id}/acudientes`, `/api/personas/por-documento`,
 `/api/estudiantes/{id}/matriculas`, `/api/matriculas`, `/api/matriculas/{id}/grupo`, `/api/matriculas/{id}/retirar`
 y `/api/grupos/{id}/estudiantes`.
+
+## Asistencia
+
+Pantalla "Asistencia" con dos pestanas:
+
+- Tomar asistencia (docente de la clase, administrador y coordinador academico): se elige la clase (grupo y asignatura
+  de la carga academica), la fecha y las horas dictadas. Todos quedan como "Asistio" y se marcan solo las novedades:
+  falta, retardo o permiso. Se puede corregir despues; no se aceptan fechas futuras, fechas fuera de los periodos
+  ni anios o periodos cerrados. Un docente solo ve sus propias clases.
+- Consolidado por grupo (directivos, secretaria y el director del grupo): horas sin justificar por asignatura en el anio
+  y su porcentaje frente a las horas de la asignatura (intensidad semanal por semanas lectivas). En rojo quien pasa
+  el maximo del SIEE (15 %). Desde aqui se justifican las faltas de un dia.
+
+Reglas del SIEE que se usan (articulo 5): se pierde la asignatura por inasistencia injustificada mayor al 15 % de su
+intensidad horaria anual, y la falta se justifica dentro de los 3 dias habiles siguientes (sin contar sabados ni
+domingos; los festivos aun no se descuentan). Pasado el plazo solo el administrador o el coordinador la pueden
+justificar. El permiso cuenta como inasistencia justificada y el retardo no cuenta como inasistencia.
+Los valores estan en `application.yml` (`plataforma.asistencia`).
+
+Endpoints: `/api/asistencia/cargas`, `/api/asistencia/cargas/{id}?fecha=`, `/api/asistencia/grupos`,
+`/api/asistencia/grupos/{id}/resumen`, `/api/asistencia/matriculas/{id}/novedades` y
+`/api/asistencia/matriculas/{id}/justificacion`.
 
 ## Pruebas
 
@@ -114,3 +136,6 @@ GitHub Actions ejecuta las mismas pruebas en cada push y pull request.
 | `ADMIN_CONTRASENA` | (vacio) | Si esta vacio no se crea el primer administrador |
 | `plataforma.seguridad.maximo-intentos` | `5` | Intentos fallidos antes de bloquear la cuenta |
 | `plataforma.seguridad.minutos-bloqueo` | `15` | Minutos que dura el bloqueo |
+| `plataforma.asistencia.porcentaje-maximo-inasistencia` | `15` | Inasistencia injustificada maxima por asignatura |
+| `plataforma.asistencia.dias-habiles-justificacion` | `3` | Dias habiles para justificar una falta |
+| `plataforma.asistencia.semanas-lectivas` | `40` | Semanas del anio para calcular las horas anuales |

@@ -18,6 +18,14 @@ public interface GrupoRepository extends JpaRepository<Grupo, Long> {
             """)
     List<Grupo> listar(@Param("anioId") Long anioId, @Param("sedeId") Long sedeId);
 
+    /** Grupos de anios que no estan cerrados; si se indica director, solo los que el dirige. */
+    @Query("""
+            select g from Grupo g join fetch g.sede join fetch g.grado join fetch g.anioLectivo y
+            where y.estado <> 'CERRADO' and (:directorId is null or g.director.id = :directorId)
+            order by y.anio desc, g.sede.nombre, g.grado.orden, g.nombre
+            """)
+    List<Grupo> listarAbiertos(@Param("directorId") Long directorId);
+
     boolean existsByAnioLectivoIdAndSedeIdAndGradoIdAndNombreIgnoreCaseAndIdNot(
             Long anioId, Long sedeId, Long gradoId, String nombre, Long id);
 }

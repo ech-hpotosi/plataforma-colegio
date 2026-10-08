@@ -19,6 +19,11 @@ const MENU: OpcionMenu[] = [
     ruta: '/estudiantes',
     roles: ['ADMINISTRADOR', 'RECTOR', 'COORDINADOR_ACADEMICO', 'SECRETARIA'],
   },
+  {
+    texto: 'Asistencia',
+    ruta: '/asistencia',
+    roles: ['ADMINISTRADOR', 'RECTOR', 'COORDINADOR_ACADEMICO', 'SECRETARIA', 'DOCENTE'],
+  },
   { texto: 'Estructura academica', ruta: '/academico', roles: ['ADMINISTRADOR', 'COORDINADOR_ACADEMICO'] },
 ];
 
