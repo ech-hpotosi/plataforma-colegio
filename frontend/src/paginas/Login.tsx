@@ -51,8 +51,11 @@ export default function Login() {
         <Typography variant="h5" component="h1" align="center" gutterBottom>
           IEM El Encano
         </Typography>
-        <Typography variant="subtitle1" align="center" color="text.secondary" gutterBottom>
+        <Typography variant="subtitle1" align="center" color="text.secondary">
           Plataforma escolar
+        </Typography>
+        <Typography variant="caption" component="p" align="center" color="secondary" gutterBottom>
+          Estudio, trabajo y ciencia
         </Typography>
         <Box component="form" onSubmit={handleSubmit(enviar)} noValidate sx={{ mt: 2 }}>
           {error && (
