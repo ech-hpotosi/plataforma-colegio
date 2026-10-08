@@ -1,0 +1,17 @@
+# Backend
+backend/target/
+backend/.mvn/wrapper/maven-wrapper.jar
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+
+# IDE y sistema
+.idea/
+*.iml
+.vscode/
+.DS_Store
+
+# Variables de entorno locales
+.env
+frontend/*.tsbuildinfo

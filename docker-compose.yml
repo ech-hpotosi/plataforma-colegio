@@ -1,0 +1,17 @@
+# Servicios para desarrollo local. Por ahora solo la base de datos;
+# el backend y el frontend se ejecutan desde el IDE o la terminal.
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: plataforma-postgres
+    environment:
+      POSTGRES_DB: plataforma
+      POSTGRES_USER: plataforma
+      POSTGRES_PASSWORD: plataforma
+    ports:
+      - "5432:5432"
+    volumes:
+      - datos-postgres:/var/lib/postgresql/data
+
+volumes:
+  datos-postgres:
