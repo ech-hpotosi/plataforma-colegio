@@ -8,13 +8,26 @@ function leerCookie(nombre: string): string | undefined {
     ?.split('=')[1];
 }
 
+/** Error devuelto por la API, con el mensaje y los errores por campo que envia el backend. */
 export class ErrorApi extends Error {
-  constructor(public readonly estado: number, mensaje: string) {
+  constructor(
+    public readonly estado: number,
+    mensaje: string,
+    public readonly errores: Record<string, string> = {},
+  ) {
     super(mensaje);
   }
 }
 
+const METODOS_SEGUROS = ['GET', 'HEAD', 'OPTIONS'];
+
 export async function llamarApi<T>(ruta: string, opciones: RequestInit = {}): Promise<T> {
+  const metodo = (opciones.method ?? 'GET').toUpperCase();
+  // Al cerrar sesion el servidor borra la cookie CSRF. Antes de un POST, PUT o DELETE sin cookie,
+  // una peticion GET cualquiera hace que el servidor entregue un token nuevo.
+  if (!METODOS_SEGUROS.includes(metodo) && !leerCookie('XSRF-TOKEN')) {
+    await fetch('/api/salud', { credentials: 'same-origin' });
+  }
   const encabezados = new Headers(opciones.headers);
   encabezados.set('Accept', 'application/json');
   if (opciones.body && !(opciones.body instanceof FormData)) {
@@ -31,7 +44,16 @@ export async function llamarApi<T>(ruta: string, opciones: RequestInit = {}): Pr
     credentials: 'same-origin',
   });
   if (!respuesta.ok) {
-    throw new ErrorApi(respuesta.status, `Error ${respuesta.status} en ${ruta}`);
+    let mensaje = `Error ${respuesta.status}`;
+    let errores: Record<string, string> = {};
+    try {
+      const cuerpo = await respuesta.json();
+      mensaje = cuerpo.mensaje ?? mensaje;
+      errores = cuerpo.errores ?? {};
+    } catch {
+      // La respuesta no trae JSON; se deja el mensaje generico
+    }
+    throw new ErrorApi(respuesta.status, mensaje, errores);
   }
   if (respuesta.status === 204) {
     return undefined as T;
