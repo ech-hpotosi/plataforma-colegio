@@ -14,6 +14,11 @@ interface OpcionMenu {
 const MENU: OpcionMenu[] = [
   { texto: 'Inicio', ruta: '/' },
   { texto: 'Usuarios', ruta: '/usuarios', roles: ['ADMINISTRADOR'] },
+  {
+    texto: 'Estudiantes',
+    ruta: '/estudiantes',
+    roles: ['ADMINISTRADOR', 'RECTOR', 'COORDINADOR_ACADEMICO', 'SECRETARIA'],
+  },
   { texto: 'Estructura academica', ruta: '/academico', roles: ['ADMINISTRADOR', 'COORDINADOR_ACADEMICO'] },
 ];
 

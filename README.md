@@ -78,6 +78,22 @@ Endpoints: `/api/sedes`, `/api/anios`, `/api/grados`, `/api/areas`, `/api/asigna
 `/api/docentes`, `/api/grupos` y `/api/grupos/{id}/carga`. Consultar requiere sesion; modificar requiere uno de
 los dos roles anteriores.
 
+## Estudiantes y matricula
+
+Pantalla "Estudiantes" (consulta: administrador, rector, coordinador academico y secretaria; modificar: administrador
+y secretaria). Los docentes no ven datos de estudiantes por ahora porque son menores de edad; tendran una consulta
+limitada a sus grupos.
+
+- Ficha del estudiante: documento (se puede cambiar de TI a CC), datos personales, EPS, discapacidad, PIAR y otras condiciones.
+- Acudientes: si el documento ya existe se reutiliza la persona (por ejemplo, la madre de dos hermanos). Solo un acudiente
+  es el principal; el primero que se agrega queda como principal.
+- Matricula: una por estudiante y anio, con grupo opcional. Respeta el cupo del grupo. Al retirar se guarda el motivo;
+  si el estudiante vuelve el mismo anio se reactiva la misma matricula.
+
+Endpoints: `/api/estudiantes`, `/api/estudiantes/{id}/acudientes`, `/api/personas/por-documento`,
+`/api/estudiantes/{id}/matriculas`, `/api/matriculas`, `/api/matriculas/{id}/grupo`, `/api/matriculas/{id}/retirar`
+y `/api/grupos/{id}/estudiantes`.
+
 ## Pruebas
 
 ```

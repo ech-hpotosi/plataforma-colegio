@@ -77,6 +77,12 @@ public class Persona {
         return numeroDocumento;
     }
 
+    /** Cambia el documento, por ejemplo cuando un estudiante pasa de tarjeta de identidad a cedula. */
+    public void cambiarDocumento(TipoDocumento tipoDocumento, String numeroDocumento) {
+        this.tipoDocumento = tipoDocumento;
+        this.numeroDocumento = numeroDocumento;
+    }
+
     public String getNombres() {
         return nombres;
     }

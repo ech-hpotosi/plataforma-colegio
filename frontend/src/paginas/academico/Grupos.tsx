@@ -35,6 +35,7 @@ import {
   type Grupo,
   type Jornada,
 } from '../../api/academico';
+import { listarEstudiantesDeGrupo } from '../../api/estudiantes';
 import { mensajeDeError } from './mensajes';
 import SelectorAnio from './SelectorAnio';
 
@@ -45,6 +46,7 @@ export default function Grupos() {
   const [sedeId, setSedeId] = useState<number | null>(null);
   const [editando, setEditando] = useState<Grupo | 'nuevo' | null>(null);
   const [cargaDe, setCargaDe] = useState<Grupo | null>(null);
+  const [listaDe, setListaDe] = useState<Grupo | null>(null);
 
   const sedes = useQuery({ queryKey: ['sedes'], queryFn: listarSedes });
   const docentes = useQuery({ queryKey: ['docentes'], queryFn: listarDocentes });
@@ -108,6 +110,9 @@ export default function Grupos() {
                   <Button size="small" onClick={() => setCargaDe(grupo)}>
                     Carga academica
                   </Button>
+                  <Button size="small" onClick={() => setListaDe(grupo)}>
+                    Estudiantes
+                  </Button>
                 </TableCell>
               </TableRow>
             ))}
@@ -135,6 +140,7 @@ export default function Grupos() {
         />
       )}
       {cargaDe && <DialogoCarga grupo={cargaDe} docentes={docentes.data ?? []} alCerrar={() => setCargaDe(null)} />}
+      {listaDe && <DialogoEstudiantes grupo={listaDe} alCerrar={() => setListaDe(null)} />}
     </>
   );
 }
@@ -403,6 +409,51 @@ function DialogoCarga({ grupo, docentes, alCerrar }: { grupo: Grupo; docentes: D
         <Button variant="contained" onClick={guardar} disabled={guardando || !carga.data?.length}>
           Guardar
         </Button>
+      </DialogActions>
+    </Dialog>
+  );
+}
+
+/** Lista de estudiantes matriculados en el grupo. Se matriculan desde la ficha de cada estudiante. */
+function DialogoEstudiantes({ grupo, alCerrar }: { grupo: Grupo; alCerrar: () => void }) {
+  const lista = useQuery({ queryKey: ['estudiantes-grupo', grupo.id], queryFn: () => listarEstudiantesDeGrupo(grupo.id) });
+  return (
+    <Dialog open onClose={alCerrar} maxWidth="sm" fullWidth>
+      <DialogTitle>
+        Estudiantes de {grupo.grado} {grupo.nombre} ({lista.data?.length ?? 0} de {grupo.cupo})
+      </DialogTitle>
+      <DialogContent>
+        {lista.isError && <Alert severity="error">{lista.error.message}</Alert>}
+        {lista.data?.length === 0 && (
+          <Typography>No hay estudiantes matriculados. Se matriculan desde la ficha de cada estudiante.</Typography>
+        )}
+        {lista.data && lista.data.length > 0 && (
+          <Table size="small">
+            <TableHead>
+              <TableRow>
+                <TableCell>#</TableCell>
+                <TableCell>Estudiante</TableCell>
+                <TableCell>Documento</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {lista.data.map((e, i) => (
+                <TableRow key={e.matriculaId}>
+                  <TableCell>{i + 1}</TableCell>
+                  <TableCell>
+                    {e.apellidos} {e.nombres}
+                  </TableCell>
+                  <TableCell>
+                    {e.tipoDocumento} {e.numeroDocumento}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={alCerrar}>Cerrar</Button>
       </DialogActions>
     </Dialog>
   );
