@@ -116,6 +116,10 @@ Endpoints: `/api/asistencia/cargas`, `/api/asistencia/cargas/{id}?fecha=`, `/api
 `/api/asistencia/grupos/{id}/resumen`, `/api/asistencia/matriculas/{id}/novedades` y
 `/api/asistencia/matriculas/{id}/justificacion`.
 
+Inicio: `/api/asistencia/pendientes` entrega lo pendiente de cada usuario: sus clases sin asistencia de hoy
+(docente), las faltas sin justificar que siguen en plazo (director de grupo, secretaria, coordinador, administrador)
+y los estudiantes que superan el maximo o ya pasaron dos tercios de el. El inicio no repite el menu.
+
 ## Estilo visual del frontend
 
 - Colores del escudo y la bandera en `frontend/src/tema.ts` (`COLORES`): azul laguna, verde parcela y ocre del sol.

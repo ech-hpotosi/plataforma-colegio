@@ -22,6 +22,7 @@ import co.edu.elencano.plataforma.asistencia.web.dto.GrupoAsistenciaDto;
 import co.edu.elencano.plataforma.asistencia.web.dto.GuardarAsistenciaDto;
 import co.edu.elencano.plataforma.asistencia.web.dto.JustificarDto;
 import co.edu.elencano.plataforma.asistencia.web.dto.NovedadAsistenciaDto;
+import co.edu.elencano.plataforma.asistencia.web.dto.PendientesAsistenciaDto;
 import co.edu.elencano.plataforma.asistencia.web.dto.ResumenGrupoDto;
 import co.edu.elencano.plataforma.usuarios.seguridad.UsuarioAutenticado;
 import jakarta.validation.Valid;
@@ -39,6 +40,11 @@ public class AsistenciaController {
 
     public AsistenciaController(AsistenciaService asistenciaService) {
         this.asistenciaService = asistenciaService;
+    }
+
+    @GetMapping("/pendientes")
+    public PendientesAsistenciaDto pendientes(@AuthenticationPrincipal UsuarioAutenticado usuario) {
+        return asistenciaService.pendientes(usuario);
     }
 
     @GetMapping("/cargas")

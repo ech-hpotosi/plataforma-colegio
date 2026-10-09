@@ -88,6 +88,29 @@ export interface NovedadAsistencia {
   fechaLimite: string;
 }
 
+export interface PendientesAsistencia {
+  porcentajeMaximo: number;
+  clasesHoy: { cargaId: number; sede: string; grupo: string; asignatura: string; registrada: boolean }[];
+  faltasPorJustificar: {
+    matriculaId: number;
+    grupoId: number;
+    estudiante: string;
+    grupo: string;
+    fecha: string;
+    horas: number;
+    fechaLimite: string;
+  }[];
+  estudiantesEnRiesgo: {
+    matriculaId: number;
+    grupoId: number;
+    estudiante: string;
+    grupo: string;
+    asignatura: string;
+    porcentaje: number;
+    superaLimite: boolean;
+  }[];
+}
+
 const json = (metodo: string, cuerpo: unknown): RequestInit => ({ method: metodo, body: JSON.stringify(cuerpo) });
 
 /** Fecha de hoy en la hora local del equipo (toISOString usaria la hora UTC y en la noche daria el dia siguiente). */
@@ -97,6 +120,7 @@ export function hoyIso(): string {
   return `${hoy.getFullYear()}-${dos(hoy.getMonth() + 1)}-${dos(hoy.getDate())}`;
 }
 
+export const obtenerPendientesAsistencia = () => llamarApi<PendientesAsistencia>('/asistencia/pendientes');
 export const listarCargasAsistencia = () => llamarApi<CargaDocente[]>('/asistencia/cargas');
 export const obtenerAsistenciaClase = (cargaId: number, fecha: string) =>
   llamarApi<AsistenciaClase>(`/asistencia/cargas/${cargaId}?fecha=${fecha}`);

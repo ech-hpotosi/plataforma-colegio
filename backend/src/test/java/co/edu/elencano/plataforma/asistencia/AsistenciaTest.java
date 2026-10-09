@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -193,6 +194,14 @@ class AsistenciaTest extends PruebaIntegracion {
                 .andExpect(jsonPath("$.estudiantes[1].asignaturas[0].horasJustificadas").value(2))
                 .andExpect(jsonPath("$.estudiantes[1].asignaturas[0].horasRetardo").value(2));
 
+        // En el inicio el director ve a Ana en riesgo; sus faltas de 2022 ya no estan en plazo
+        mockMvc.perform(get("/api/asistencia/pendientes").session(director))
+                .andExpect(jsonPath("$.estudiantesEnRiesgo", hasSize(1)))
+                .andExpect(jsonPath("$.estudiantesEnRiesgo[0].matriculaId").value(e.matricula1()))
+                .andExpect(jsonPath("$.estudiantesEnRiesgo[0].asignatura").value("Etica Asis2"))
+                .andExpect(jsonPath("$.estudiantesEnRiesgo[0].superaLimite").value(true))
+                .andExpect(jsonPath("$.faltasPorJustificar", hasSize(0)));
+
         // El plazo es de 3 dias habiles: del viernes 11 de marzo al miercoles 16
         mockMvc.perform(get("/api/asistencia/matriculas/" + e.matricula1() + "/novedades").session(director))
                 .andExpect(jsonPath("$", hasSize(3)))
@@ -217,6 +226,12 @@ class AsistenciaTest extends PruebaIntegracion {
                 .andExpect(jsonPath("$.estudiantes[0].superaLimite").value(false))
                 .andExpect(jsonPath("$.estudiantes[0].asignaturas[0].horasSinJustificar").value(4))
                 .andExpect(jsonPath("$.estudiantes[0].asignaturas[0].horasJustificadas").value(3));
+
+        // Con 4 horas (10 %) sigue en la lista como cercana al limite: dos tercios del 15 %
+        mockMvc.perform(get("/api/asistencia/pendientes").session(director))
+                .andExpect(jsonPath("$.estudiantesEnRiesgo", hasSize(1)))
+                .andExpect(jsonPath("$.estudiantesEnRiesgo[0].porcentaje").value(10.0))
+                .andExpect(jsonPath("$.estudiantesEnRiesgo[0].superaLimite").value(false));
     }
 
     @Test
@@ -228,9 +243,35 @@ class AsistenciaTest extends PruebaIntegracion {
         MockHttpSession director = iniciarSesion("director.asis3", CONTRASENA);
         MockHttpSession rector = iniciarSesion(crearUsuario("rector.asis3", Rol.RECTOR).getNombreUsuario(), CONTRASENA);
 
+        boolean finDeSemana = hoy.getDayOfWeek() == DayOfWeek.SATURDAY || hoy.getDayOfWeek() == DayOfWeek.SUNDAY;
+        if (!finDeSemana) {
+            mockMvc.perform(get("/api/asistencia/pendientes").session(docente))
+                    .andExpect(jsonPath("$.clasesHoy", hasSize(1)))
+                    .andExpect(jsonPath("$.clasesHoy[0].cargaId").value(e.carga()))
+                    .andExpect(jsonPath("$.clasesHoy[0].registrada").value(false));
+        }
+
         enviar(put("/api/asistencia/cargas/" + e.carga() + "?fecha=" + hoy), docente,
                 jsonClase(1, e.matricula1(), "ASISTIO", e.matricula2(), "FALTA"))
                 .andExpect(status().isOk());
+
+        // Pendientes del inicio: el docente ve su clase registrada; el director, la falta por justificar
+        mockMvc.perform(get("/api/asistencia/pendientes").session(docente))
+                .andExpect(jsonPath("$.clasesHoy", hasSize(finDeSemana ? 0 : 1)))
+                .andExpect(jsonPath("$.faltasPorJustificar", hasSize(0)))
+                .andExpect(jsonPath("$.estudiantesEnRiesgo", hasSize(0)));
+        if (!finDeSemana) {
+            mockMvc.perform(get("/api/asistencia/pendientes").session(docente))
+                    .andExpect(jsonPath("$.clasesHoy[0].registrada").value(true));
+        }
+        mockMvc.perform(get("/api/asistencia/pendientes").session(director))
+                .andExpect(jsonPath("$.faltasPorJustificar", hasSize(1)))
+                .andExpect(jsonPath("$.faltasPorJustificar[0].matriculaId").value(e.matricula2()))
+                .andExpect(jsonPath("$.faltasPorJustificar[0].grupoId").value(e.grupo()))
+                .andExpect(jsonPath("$.faltasPorJustificar[0].horas").value(1))
+                .andExpect(jsonPath("$.estudiantesEnRiesgo", hasSize(0)));
+        mockMvc.perform(get("/api/asistencia/pendientes").session(rector))
+                .andExpect(jsonPath("$.faltasPorJustificar", hasSize(0)));
 
         String justificar = "/api/asistencia/matriculas/" + e.matricula2() + "/justificacion";
         String json = "{\"fecha\": \"%s\", \"justificacion\": \"Calamidad familiar\"}".formatted(hoy);
@@ -240,6 +281,9 @@ class AsistenciaTest extends PruebaIntegracion {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].estado").value("FALTA_JUSTIFICADA"))
                 .andExpect(jsonPath("$[0].justificacion").value("Calamidad familiar"));
+
+        mockMvc.perform(get("/api/asistencia/pendientes").session(director))
+                .andExpect(jsonPath("$.faltasPorJustificar", hasSize(0)));
 
         // El rector puede consultar el consolidado de cualquier grupo
         mockMvc.perform(get("/api/asistencia/grupos/" + e.grupo() + "/resumen").session(rector))

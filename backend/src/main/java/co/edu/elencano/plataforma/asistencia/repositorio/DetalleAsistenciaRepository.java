@@ -38,4 +38,15 @@ public interface DetalleAsistenciaRepository extends JpaRepository<DetalleAsiste
             """)
     List<DetalleAsistencia> listarFaltasSinJustificar(@Param("matriculaId") Long matriculaId,
                                                       @Param("fecha") LocalDate fecha);
+
+    /** Faltas sin justificar desde una fecha, de estudiantes activos; si se indica director, solo de sus grupos. */
+    @Query("""
+            select d from DetalleAsistencia d join fetch d.registro r join fetch d.matricula m
+            join fetch m.estudiante e join fetch e.persona join fetch m.grupo g join fetch g.grado
+            where d.estado = 'FALTA' and r.fecha >= :desde and m.estado = 'ACTIVA'
+            and (:directorId is null or g.director.id = :directorId)
+            order by r.fecha, g.grado.orden, g.nombre, e.persona.apellidos
+            """)
+    List<DetalleAsistencia> listarFaltasRecientes(@Param("desde") LocalDate desde,
+                                                  @Param("directorId") Long directorId);
 }

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useSearchParams } from 'react-router';
 import {
   Alert,
   Button,
@@ -27,7 +28,9 @@ import DialogoNovedades from './DialogoNovedades';
  */
 export default function ConsolidadoAsistencia() {
   const { tieneAlgunRol } = useSesion();
-  const [grupoId, setGrupoId] = useState<number | ''>('');
+  // El inicio enlaza con ?grupo= para abrir directamente el consolidado del grupo
+  const [parametros] = useSearchParams();
+  const [grupoId, setGrupoId] = useState<number | ''>(parametros.get('grupo') ? Number(parametros.get('grupo')) : '');
   const [estudiante, setEstudiante] = useState<{ matriculaId: number; nombre: string } | null>(null);
   const grupos = useQuery({ queryKey: ['asistencia-grupos'], queryFn: listarGruposAsistencia });
   const resumen = useQuery({

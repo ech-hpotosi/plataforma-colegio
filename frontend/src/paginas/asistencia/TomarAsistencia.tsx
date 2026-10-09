@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useSearchParams } from 'react-router';
 import {
   Alert,
   Box,
@@ -37,7 +38,9 @@ const OPCIONES: { valor: EstadoAsistencia; texto: string }[] = [
  */
 export default function TomarAsistencia() {
   const queryClient = useQueryClient();
-  const [cargaId, setCargaId] = useState<number | ''>('');
+  // El inicio enlaza con ?carga= para abrir directamente la clase
+  const [parametros] = useSearchParams();
+  const [cargaId, setCargaId] = useState<number | ''>(parametros.get('carga') ? Number(parametros.get('carga')) : '');
   const [fecha, setFecha] = useState(hoyIso());
   const [horas, setHoras] = useState(1);
   const [filas, setFilas] = useState<EstudianteAsistencia[]>([]);

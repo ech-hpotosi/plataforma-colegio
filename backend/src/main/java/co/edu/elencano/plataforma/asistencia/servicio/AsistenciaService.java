@@ -6,9 +6,11 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
@@ -45,6 +47,10 @@ import co.edu.elencano.plataforma.asistencia.web.dto.GuardarAsistenciaDto;
 import co.edu.elencano.plataforma.asistencia.web.dto.InasistenciaAsignaturaDto;
 import co.edu.elencano.plataforma.asistencia.web.dto.ItemAsistenciaDto;
 import co.edu.elencano.plataforma.asistencia.web.dto.NovedadAsistenciaDto;
+import co.edu.elencano.plataforma.asistencia.web.dto.PendientesAsistenciaDto;
+import co.edu.elencano.plataforma.asistencia.web.dto.PendientesAsistenciaDto.ClaseHoy;
+import co.edu.elencano.plataforma.asistencia.web.dto.PendientesAsistenciaDto.EstudianteEnRiesgo;
+import co.edu.elencano.plataforma.asistencia.web.dto.PendientesAsistenciaDto.FaltaPorJustificar;
 import co.edu.elencano.plataforma.asistencia.web.dto.ResumenGrupoDto;
 import co.edu.elencano.plataforma.comun.excepcion.RecursoNoEncontradoException;
 import co.edu.elencano.plataforma.comun.excepcion.ReglaNegocioException;
@@ -228,6 +234,90 @@ public class AsistenciaService {
                 .toList();
         return new ResumenGrupoDto(grupoId, nombreGrupo(grupo), semanasLectivas, porcentajeMaximo, asignaturas,
                 estudiantes);
+    }
+
+    /**
+     * Pendientes para la pantalla de inicio:
+     * - Clases propias del docente en periodo vigente, con la marca de si ya tienen asistencia de hoy.
+     * - Faltas sin justificar que siguen en plazo, para quien puede justificarlas.
+     * - Estudiantes que superan el maximo de inasistencia o ya pasaron dos tercios de el.
+     * No hay horario, por eso se listan todas las clases del docente y no solo las del dia.
+     */
+    @Transactional(readOnly = true)
+    public PendientesAsistenciaDto pendientes(UsuarioAutenticado usuario) {
+        LocalDate hoy = LocalDate.now();
+        return new PendientesAsistenciaDto(porcentajeMaximo, clasesHoy(usuario, hoy),
+                faltasPorJustificar(usuario, hoy), estudiantesEnRiesgo(usuario));
+    }
+
+    private List<ClaseHoy> clasesHoy(UsuarioAutenticado usuario, LocalDate hoy) {
+        boolean finDeSemana = hoy.getDayOfWeek() == DayOfWeek.SATURDAY || hoy.getDayOfWeek() == DayOfWeek.SUNDAY;
+        if (finDeSemana || usuario.getPersonaId() == null || !usuario.tieneRol(Rol.DOCENTE)) {
+            return List.of();
+        }
+        List<CargaAcademica> cargas = cargaRepository.listarAbiertasDeDocente(usuario.getPersonaId()).stream()
+                .filter(c -> c.getGrupo().getAnioLectivo().getPeriodos().stream()
+                        .anyMatch(p -> !p.isCerrado() && !hoy.isBefore(p.getFechaInicio())
+                                && !hoy.isAfter(p.getFechaFin())))
+                .toList();
+        if (cargas.isEmpty()) {
+            return List.of();
+        }
+        Set<Long> registradas = Set.copyOf(registroRepository.listarCargasRegistradas(
+                cargas.stream().map(CargaAcademica::getId).toList(), hoy));
+        return cargas.stream()
+                .map(c -> new ClaseHoy(c.getId(), c.getGrupo().getSede().getNombre(), nombreGrupo(c.getGrupo()),
+                        c.getAsignatura().getNombre(), registradas.contains(c.getId())))
+                .toList();
+    }
+
+    private List<FaltaPorJustificar> faltasPorJustificar(UsuarioAutenticado usuario, LocalDate hoy) {
+        Long directorId = tieneAlguno(usuario, JUSTIFICAN) ? null : usuario.getPersonaId();
+        if (directorId == null && !tieneAlguno(usuario, JUSTIFICAN)) {
+            return List.of();
+        }
+        // Primer dia cuyas faltas todavia se pueden justificar hoy
+        LocalDate desde = hoy;
+        while (!fechaLimite(desde.minusDays(1)).isBefore(hoy)) {
+            desde = desde.minusDays(1);
+        }
+        Map<String, FaltaPorJustificar> porDia = new LinkedHashMap<>();
+        for (DetalleAsistencia d : detalleRepository.listarFaltasRecientes(desde, directorId)) {
+            Matricula m = d.getMatricula();
+            LocalDate fecha = d.getRegistro().getFecha();
+            porDia.merge(m.getId() + "|" + fecha,
+                    new FaltaPorJustificar(m.getId(), m.getGrupo().getId(),
+                            m.getEstudiante().getPersona().getNombreCompleto(), nombreGrupo(m.getGrupo()), fecha,
+                            d.getRegistro().getHoras(), fechaLimite(fecha)),
+                    (a, b) -> new FaltaPorJustificar(a.matriculaId(), a.grupoId(), a.estudiante(), a.grupo(),
+                            a.fecha(), a.horas() + b.horas(), a.fechaLimite()));
+        }
+        return List.copyOf(porDia.values());
+    }
+
+    private List<EstudianteEnRiesgo> estudiantesEnRiesgo(UsuarioAutenticado usuario) {
+        BigDecimal umbral = porcentajeMaximo.multiply(BigDecimal.valueOf(2))
+                .divide(BigDecimal.valueOf(3), 1, RoundingMode.HALF_UP);
+        Long directorId = tieneAlguno(usuario, VEN_TODOS_LOS_GRUPOS) ? null : usuario.getPersonaId();
+        if (directorId == null && !tieneAlguno(usuario, VEN_TODOS_LOS_GRUPOS)) {
+            return List.of();
+        }
+        List<EstudianteEnRiesgo> enRiesgo = new ArrayList<>();
+        for (Grupo grupo : grupoRepository.listarAbiertos(directorId)) {
+            ResumenGrupoDto resumen = resumenGrupo(grupo.getId(), usuario);
+            Map<Long, String> nombres = resumen.asignaturas().stream()
+                    .collect(Collectors.toMap(AsignaturaResumenDto::asignaturaId, AsignaturaResumenDto::nombre));
+            for (EstudianteResumenDto e : resumen.estudiantes()) {
+                e.asignaturas().stream()
+                        .max(Comparator.comparing(InasistenciaAsignaturaDto::porcentaje))
+                        .filter(a -> a.porcentaje().compareTo(umbral) >= 0)
+                        .ifPresent(a -> enRiesgo.add(new EstudianteEnRiesgo(e.matriculaId(), grupo.getId(),
+                                e.nombres() + " " + e.apellidos(), resumen.grupo(), nombres.get(a.asignaturaId()),
+                                a.porcentaje(), a.superaLimite())));
+            }
+        }
+        enRiesgo.sort(Comparator.comparing(EstudianteEnRiesgo::porcentaje).reversed());
+        return enRiesgo;
     }
 
     @Transactional(readOnly = true)
