@@ -21,6 +21,14 @@ jobs:
       # Las pruebas usan Testcontainers; el runner de GitHub ya trae Docker
       - name: Compilar y probar
         run: ./mvnw -B verify
+      # Si falla, deja el resumen de cada prueba fallida como anotacion del job
+      - name: Resumen de pruebas fallidas
+        if: failure()
+        run: |
+          grep -l -E '<(failure|error)' target/surefire-reports/*.xml target/failsafe-reports/*.xml 2>/dev/null | while read -r f; do
+            msg=$(grep -A6 -E '<(failure|error)' "$f" | head -c 3000 | tr '\n' ' ')
+            echo "::error title=$(basename "$f")::$msg"
+          done
 
   frontend:
     runs-on: ubuntu-latest
