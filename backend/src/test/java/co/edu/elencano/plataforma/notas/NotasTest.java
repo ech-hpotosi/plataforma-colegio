@@ -26,7 +26,7 @@ import co.edu.elencano.plataforma.usuarios.entidad.Rol;
 
 class NotasTest extends PruebaIntegracion {
 
-    private static final AtomicInteger DOCUMENTO = new AtomicInteger(800000);
+    private static final AtomicInteger DOCUMENTO = new AtomicInteger(700000);
 
     @Autowired
     private ObjectMapper objectMapper;
