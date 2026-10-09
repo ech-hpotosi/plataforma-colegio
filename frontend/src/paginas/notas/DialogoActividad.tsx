@@ -6,6 +6,7 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  InputAdornment,
   MenuItem,
   Stack,
   TextField,
@@ -27,19 +28,25 @@ interface Props {
   periodoId: number;
   /** Actividad a editar, o null para crear una nueva. */
   actividad: Actividad | null;
+  /** Actividades del periodo, para mostrar cuanto porcentaje queda en la dimension. */
+  actividades: Actividad[];
   alCerrar: () => void;
   alGuardar: (planilla: PlanillaNotas) => void;
 }
 
 /** Crea, cambia o borra una actividad de la planilla. Borrarla borra tambien sus notas. */
-export default function DialogoActividad({ cargaId, periodoId, actividad, alCerrar, alGuardar }: Props) {
+export default function DialogoActividad({ cargaId, periodoId, actividad, actividades, alCerrar, alGuardar }: Props) {
   const [dimension, setDimension] = useState<Dimension>(actividad?.dimension ?? 'SABER');
   const [nombre, setNombre] = useState(actividad?.nombre ?? '');
   const [fecha, setFecha] = useState(actividad?.fecha ?? '');
-  const [peso, setPeso] = useState(actividad?.peso ?? 1);
+  const [porcentaje, setPorcentaje] = useState(actividad?.porcentaje?.toString() ?? '');
   const [confirmarBorrado, setConfirmarBorrado] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [guardando, setGuardando] = useState(false);
+
+  const asignado = actividades
+    .filter((a) => a.dimension === dimension && a.id !== actividad?.id)
+    .reduce((suma, a) => suma + (a.porcentaje ?? 0), 0);
 
   const ejecutar = async (accion: () => Promise<PlanillaNotas>) => {
     setError(null);
@@ -58,7 +65,12 @@ export default function DialogoActividad({ cargaId, periodoId, actividad, alCerr
       setError('Escriba el nombre de la actividad');
       return;
     }
-    const datos = { dimension, nombre: nombre.trim(), fecha: fecha || null, peso };
+    const valor = porcentaje.trim() === '' ? null : Number(porcentaje);
+    if (valor !== null && (!Number.isInteger(valor) || valor < 1 || valor > 100)) {
+      setError('El porcentaje debe ser un número entero de 1 a 100, o dejarse en blanco');
+      return;
+    }
+    const datos = { dimension, nombre: nombre.trim(), fecha: fecha || null, porcentaje: valor };
     ejecutar(() => (actividad ? modificarActividad(actividad.id, datos) : crearActividad(cargaId, periodoId, datos)));
   };
 
@@ -93,18 +105,19 @@ export default function DialogoActividad({ cargaId, periodoId, actividad, alCerr
               autoFocus
             />
             <TextField
-              select
-              label="Peso"
-              value={peso}
-              onChange={(e) => setPeso(Number(e.target.value))}
-              helperText="Cuánto vale frente a las otras actividades de la misma dimensión."
-            >
-              {[1, 2, 3, 4, 5].map((n) => (
-                <MenuItem key={n} value={n}>
-                  {n === 1 ? '1 (normal)' : n === 2 ? '2 (vale el doble)' : `${n} (vale ${n} veces)`}
-                </MenuItem>
-              ))}
-            </TextField>
+              label={`Porcentaje dentro del ${NOMBRE_DIMENSION[dimension]} (opcional)`}
+              value={porcentaje}
+              onChange={(e) => setPorcentaje(e.target.value.replace(/[^0-9]/g, ''))}
+              slotProps={{
+                htmlInput: { inputMode: 'numeric', maxLength: 3 },
+                input: { endAdornment: <InputAdornment position="end">%</InputAdornment> },
+              }}
+              helperText={
+                (asignado > 0
+                  ? `Las otras actividades del ${NOMBRE_DIMENSION[dimension]} ya tienen ${asignado} %. `
+                  : '') + 'Si lo deja en blanco, se reparte en partes iguales lo que falte para 100 %.'
+              }
+            />
             <TextField
               label="Fecha (opcional)"
               type="date"

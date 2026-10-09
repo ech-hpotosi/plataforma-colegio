@@ -41,9 +41,11 @@ public class ActividadEvaluativa {
 
     private LocalDate fecha;
 
-    /** Peso dentro de su dimension: 1 es normal, 2 vale el doble. */
-    @Column(nullable = false)
-    private int peso = 1;
+    /**
+     * Porcentaje dentro de su dimension (1 a 100). Nulo: la actividad se reparte en partes iguales con las demas
+     * sin porcentaje lo que falte para llegar a 100 %.
+     */
+    private Integer porcentaje;
 
     protected ActividadEvaluativa() {
     }
@@ -53,11 +55,11 @@ public class ActividadEvaluativa {
         this.periodo = periodo;
     }
 
-    public void actualizar(Dimension dimension, String nombre, LocalDate fecha, int peso) {
+    public void actualizar(Dimension dimension, String nombre, LocalDate fecha, Integer porcentaje) {
         this.dimension = dimension;
         this.nombre = nombre;
         this.fecha = fecha;
-        this.peso = peso;
+        this.porcentaje = porcentaje;
     }
 
     public Long getId() {
@@ -84,7 +86,7 @@ public class ActividadEvaluativa {
         return fecha;
     }
 
-    public int getPeso() {
-        return peso;
+    public Integer getPorcentaje() {
+        return porcentaje;
     }
 }

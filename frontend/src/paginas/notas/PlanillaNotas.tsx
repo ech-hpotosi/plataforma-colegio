@@ -40,6 +40,8 @@ import DialogoActividad from './DialogoActividad';
 import RecuperacionFinal from './RecuperacionFinal';
 
 const clave = (actividadId: number, matriculaId: number) => `${actividadId}-${matriculaId}`;
+/** Porcentaje con una decimal solo si la tiene: 50, 33.3. */
+const porcentajeTexto = (valor: number) => String(Math.round(valor * 10) / 10);
 const formato = (valor: number | null | undefined) => (valor === null || valor === undefined ? '' : valor.toFixed(1));
 
 /**
@@ -96,6 +98,9 @@ export default function PlanillaNotas() {
 
   const pendientes = Object.keys(cambios).length + Object.keys(cambiosRec).length;
   const config = planilla.data?.configuracion;
+  const pesoDimension = (d: Dimension) =>
+    !config ? 0 : d === 'SABER' ? config.pesoSaber : d === 'HACER' ? config.pesoHacer : config.pesoSer;
+  const sumaPorcentajes = (d: Dimension) => porDimension[d].reduce((suma, a) => suma + (a.porcentaje ?? 0), 0);
 
   const guardar = async () => {
     if (!planilla.data || !config) return;
@@ -229,6 +234,14 @@ export default function PlanillaNotas() {
             {!planilla.data.editable && ' El periodo está cerrado: las notas solo se consultan, pero aún puede registrar recuperaciones.'}
             {pendientes > 0 && ` Tiene ${pendientes} ${pendientes === 1 ? 'cambio' : 'cambios'} sin guardar.`}
           </Typography>
+          {DIMENSIONES.filter(
+            (d) => porDimension[d].length > 0 && porDimension[d].every((a) => a.porcentaje !== null) && sumaPorcentajes(d) < 100,
+          ).map((d) => (
+            <Alert key={d} severity="warning">
+              Los porcentajes de las actividades del {NOMBRE_DIMENSION[d]} suman {sumaPorcentajes(d)} %. Mientras no lleguen a 100 %,
+              la nota del {NOMBRE_DIMENSION[d]} se calcula en proporción a lo asignado.
+            </Alert>
+          ))}
           {planilla.data.actividades.length === 0 && (
             <Alert severity="info">
               Este periodo aún no tiene actividades. Cree la primera con «Nueva actividad» y elija si evalúa el Saber, el
@@ -247,7 +260,7 @@ export default function PlanillaNotas() {
                     </TableCell>
                     {DIMENSIONES.map((d) => (
                       <TableCell key={d} align="center" colSpan={porDimension[d].length + 1} sx={{ borderLeft: bordeGrupo }}>
-                        {NOMBRE_DIMENSION[d]} ({d === 'SABER' ? config.pesoSaber : d === 'HACER' ? config.pesoHacer : config.pesoSer} %)
+                        {NOMBRE_DIMENSION[d]} ({pesoDimension(d)} %)
                       </TableCell>
                     ))}
                     <TableCell rowSpan={2} align="center" sx={{ borderLeft: bordeGrupo }}>
@@ -280,11 +293,12 @@ export default function PlanillaNotas() {
                           ) : (
                             a.nombre
                           )}
-                          {a.peso > 1 && (
-                            <Typography variant="caption" display="block" color="text.secondary">
-                              Vale x{a.peso}
-                            </Typography>
-                          )}
+                          <Typography variant="caption" display="block" color="text.secondary">
+                            {porcentajeTexto(a.porcentajeEfectivo)} % del {NOMBRE_DIMENSION[d]}
+                          </Typography>
+                          <Typography variant="caption" display="block" color="text.secondary">
+                            {porcentajeTexto((a.porcentajeEfectivo * pesoDimension(d)) / 100)} % del periodo
+                          </Typography>
                         </TableCell>
                       )),
                       <TableCell
@@ -410,6 +424,7 @@ export default function PlanillaNotas() {
           cargaId={cargaId}
           periodoId={periodoId}
           actividad={dialogo.actividad}
+          actividades={planilla.data?.actividades ?? []}
           alCerrar={() => setDialogo(null)}
           alGuardar={(nueva) => {
             actualizarPlanilla(nueva);

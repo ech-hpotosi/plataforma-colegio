@@ -49,7 +49,7 @@ const planilla = {
   editable: true,
   admiteRecuperacion: true,
   configuracion,
-  actividades: [{ id: 21, dimension: 'SABER', nombre: 'Taller 1', fecha: null, peso: 1 }],
+  actividades: [{ id: 21, dimension: 'SABER', nombre: 'Taller 1', fecha: null, porcentaje: null, porcentajeEfectivo: 100 }],
   estudiantes: [
     {
       matriculaId: 30,
@@ -134,6 +134,37 @@ describe('Notas', () => {
     expect(String(envio?.[0])).toContain('/recuperaciones');
     expect(JSON.parse(String(envio?.[1]?.body))).toEqual({
       recuperaciones: [{ matriculaId: 30, nota: 4.5, observacion: null }],
+    });
+  });
+
+  it('la nueva actividad se crea con su porcentaje dentro de la dimensión', async () => {
+    const conPorcentaje = {
+      ...planilla,
+      actividades: [{ ...planilla.actividades[0], porcentaje: 60, porcentajeEfectivo: 60 }],
+    };
+    const fetch = simularApi({
+      'GET /api/yo': { estado: 200, cuerpo: docente },
+      'GET /api/notas/cargas': { estado: 200, cuerpo: cargas },
+      'GET /api/notas/cargas/7/periodos/11': { estado: 200, cuerpo: conPorcentaje },
+      'POST /api/notas/cargas/7/periodos/11/actividades': { estado: 200, cuerpo: conPorcentaje },
+    });
+    renderizarEn('/notas/planilla', <App />);
+
+    expect(await screen.findByText('60 % del Saber')).toBeInTheDocument();
+    expect(screen.getByText('24 % del periodo')).toBeInTheDocument();
+    expect(screen.getByText(/suman 60 %/)).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Nueva actividad' }));
+    expect(screen.getByText(/ya tienen 60 %/)).toBeInTheDocument();
+    await userEvent.type(screen.getByLabelText('Nombre'), 'Evaluación');
+    await userEvent.type(screen.getByLabelText(/Porcentaje dentro del Saber/), '40');
+    await userEvent.click(screen.getByRole('button', { name: 'Guardar' }));
+
+    const envio = fetch.mock.calls.find(([, opciones]) => opciones?.method === 'POST');
+    expect(JSON.parse(String(envio?.[1]?.body))).toEqual({
+      dimension: 'SABER',
+      nombre: 'Evaluación',
+      fecha: null,
+      porcentaje: 40,
     });
   });
 

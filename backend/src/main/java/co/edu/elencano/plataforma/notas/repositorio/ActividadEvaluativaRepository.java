@@ -16,4 +16,7 @@ public interface ActividadEvaluativaRepository extends JpaRepository<ActividadEv
             order by a.fecha nulls last, a.id
             """)
     List<ActividadEvaluativa> listar(@Param("cargaId") Long cargaId, @Param("periodoId") Long periodoId);
+
+    @Query("select a from ActividadEvaluativa a where a.carga.grupo.id = :grupoId")
+    List<ActividadEvaluativa> listarDeGrupo(@Param("grupoId") Long grupoId);
 }

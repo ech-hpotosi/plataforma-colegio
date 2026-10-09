@@ -161,6 +161,7 @@ public class NotasService {
         Periodo periodo = periodoDe(carga, periodoId);
         ConfiguracionEvaluacion config = configuracionDe(carga.getGrupo().getAnioLectivo());
         List<ActividadEvaluativa> actividades = actividadRepository.listar(cargaId, periodoId);
+        Map<Long, BigDecimal> porcentajes = porcentajesEfectivos(actividades);
         Map<Long, List<NotaActividad>> porMatricula = notaRepository.listarDeCargaYPeriodo(cargaId, periodoId).stream()
                 .collect(Collectors.groupingBy(NotaActividad::getMatriculaId));
         Map<Long, Recuperacion> recuperaciones = recuperacionRepository.listarDeCarga(cargaId).stream()
@@ -173,7 +174,7 @@ public class NotasService {
                     List<NotaActividad> notas = porMatricula.getOrDefault(m.getId(), List.of());
                     Map<Long, BigDecimal> valores = new HashMap<>();
                     notas.forEach(n -> valores.put(n.getActividad().getId(), n.getValor()));
-                    NotaPeriodo calculo = CalculoNotas.notaPeriodo(porDimension(notas), config);
+                    NotaPeriodo calculo = CalculoNotas.notaPeriodo(porDimension(notas, porcentajes), config);
                     Recuperacion r = recuperaciones.get(m.getId());
                     BigDecimal definitiva = CalculoNotas.definitiva(calculo.nota(), r == null ? null : r.getNota(),
                             config.getTopeRecuperacion());
@@ -187,7 +188,7 @@ public class NotasService {
         return new PlanillaNotasDto(cargaId, nombreGrupo(carga.getGrupo()), carga.getAsignatura().getNombre(),
                 periodoId, periodo.getNumero(), esEditable(periodo), !periodo.getAnioLectivo().estaCerrado(),
                 ConfiguracionEvaluacionDto.de(config),
-                actividades.stream().map(ActividadDto::de).toList(), filas);
+                actividades.stream().map(a -> ActividadDto.de(a, porcentajes.get(a.getId()))).toList(), filas);
     }
 
     @Transactional
@@ -197,15 +198,18 @@ public class NotasService {
         Periodo periodo = periodoDe(carga, periodoId);
         verificarEditable(periodo);
         ActividadEvaluativa actividad = new ActividadEvaluativa(carga, periodo);
-        actividad.actualizar(datos.dimension(), datos.nombre().trim(), datos.fecha(), datos.pesoOUno());
-        actividadRepository.save(actividad);
+        actividad.actualizar(datos.dimension(), datos.nombre().trim(), datos.fecha(), datos.porcentaje());
+        actividadRepository.saveAndFlush(actividad);
+        validarPorcentajes(cargaId, periodoId, datos.dimension());
         return planilla(cargaId, periodoId, usuario);
     }
 
     @Transactional
     public PlanillaNotasDto modificarActividad(Long actividadId, ActividadEntradaDto datos, UsuarioAutenticado usuario) {
         ActividadEvaluativa actividad = actividadQueRegistra(actividadId, usuario);
-        actividad.actualizar(datos.dimension(), datos.nombre().trim(), datos.fecha(), datos.pesoOUno());
+        actividad.actualizar(datos.dimension(), datos.nombre().trim(), datos.fecha(), datos.porcentaje());
+        actividadRepository.flush();
+        validarPorcentajes(actividad.getCarga().getId(), actividad.getPeriodo().getId(), datos.dimension());
         return planilla(actividad.getCarga().getId(), actividad.getPeriodo().getId(), usuario);
     }
 
@@ -292,6 +296,7 @@ public class NotasService {
         List<Periodo> periodos = grupo.getAnioLectivo().getPeriodos().stream()
                 .sorted(Comparator.comparingInt(Periodo::getNumero))
                 .toList();
+        Map<Long, BigDecimal> porcentajes = porcentajesEfectivos(actividadRepository.listarDeGrupo(grupo.getId()));
         Map<Long, Map<Long, Map<Dimension, List<NotaPonderada>>>> arbol = new HashMap<>();
         for (NotaActividad n : notaRepository.listarDeGrupo(grupo.getId())) {
             ActividadEvaluativa a = n.getActividad();
@@ -299,7 +304,7 @@ public class NotasService {
                 arbol.computeIfAbsent(n.getMatriculaId(), k -> new HashMap<>())
                         .computeIfAbsent(a.getPeriodo().getId(), k -> new EnumMap<>(Dimension.class))
                         .computeIfAbsent(a.getDimension(), k -> new ArrayList<>())
-                        .add(ponderada(n));
+                        .add(ponderada(n, porcentajes));
             }
         }
         List<Recuperacion> lista = recuperacionRepository.listarDeCarga(cargaId);
@@ -406,13 +411,14 @@ public class NotasService {
         Map<String, BigDecimal> recuperaciones = new HashMap<>();
         recuperacionRepository.listarDeGrupo(grupoId).forEach(r ->
                 recuperaciones.put(claveRecuperacion(r.getCargaId(), r.getPeriodoId(), r.getMatriculaId()), r.getNota()));
+        Map<Long, BigDecimal> porcentajes = porcentajesEfectivos(actividadRepository.listarDeGrupo(grupoId));
         for (NotaActividad n : notaRepository.listarDeGrupo(grupoId)) {
             ActividadEvaluativa a = n.getActividad();
             arbol.computeIfAbsent(n.getMatriculaId(), k -> new HashMap<>())
                     .computeIfAbsent(a.getCarga().getId(), k -> new HashMap<>())
                     .computeIfAbsent(a.getPeriodo().getId(), k -> new EnumMap<>(Dimension.class))
                     .computeIfAbsent(a.getDimension(), k -> new ArrayList<>())
-                    .add(ponderada(n));
+                    .add(ponderada(n, porcentajes));
         }
 
         List<ConsolidadoNotasDto.Estudiante> estudiantes = matriculaRepository.listarActivasDeGrupo(grupoId).stream()
@@ -479,14 +485,54 @@ public class NotasService {
 
     // ---------- Apoyo ----------
 
-    private static Map<Dimension, List<NotaPonderada>> porDimension(List<NotaActividad> notas) {
+    private static Map<Dimension, List<NotaPonderada>> porDimension(List<NotaActividad> notas,
+                                                                    Map<Long, BigDecimal> porcentajes) {
         Map<Dimension, List<NotaPonderada>> mapa = new EnumMap<>(Dimension.class);
-        notas.forEach(n -> mapa.computeIfAbsent(n.getActividad().getDimension(), k -> new ArrayList<>()).add(ponderada(n)));
+        notas.forEach(n -> mapa.computeIfAbsent(n.getActividad().getDimension(), k -> new ArrayList<>())
+                .add(ponderada(n, porcentajes)));
         return mapa;
     }
 
-    private static NotaPonderada ponderada(NotaActividad n) {
-        return new NotaPonderada(n.getValor(), BigDecimal.valueOf(n.getActividad().getPeso()));
+    private static NotaPonderada ponderada(NotaActividad n, Map<Long, BigDecimal> porcentajes) {
+        return new NotaPonderada(n.getValor(), porcentajes.getOrDefault(n.getActividad().getId(), BigDecimal.ZERO));
+    }
+
+    /** Porcentaje efectivo de cada actividad (por id), calculado por carga, periodo y dimension. */
+    private static Map<Long, BigDecimal> porcentajesEfectivos(List<ActividadEvaluativa> actividades) {
+        Map<Long, BigDecimal> resultado = new HashMap<>();
+        actividades.stream()
+                .collect(Collectors.groupingBy(a -> a.getCarga().getId() + "-" + a.getPeriodo().getId() + "-" + a.getDimension()))
+                .values()
+                .forEach(grupo -> {
+                    List<BigDecimal> efectivos = CalculoNotas.porcentajesEfectivos(
+                            grupo.stream().map(ActividadEvaluativa::getPorcentaje).toList());
+                    for (int i = 0; i < grupo.size(); i++) {
+                        resultado.put(grupo.get(i).getId(), efectivos.get(i));
+                    }
+                });
+        return resultado;
+    }
+
+    /**
+     * Dentro de una dimension los porcentajes no pasan de 100 %, y si hay actividades sin porcentaje debe
+     * quedar algo para repartir entre ellas.
+     */
+    private void validarPorcentajes(Long cargaId, Long periodoId, Dimension dimension) {
+        List<ActividadEvaluativa> deLaDimension = actividadRepository.listar(cargaId, periodoId).stream()
+                .filter(a -> a.getDimension() == dimension)
+                .toList();
+        int suma = deLaDimension.stream().map(ActividadEvaluativa::getPorcentaje).filter(Objects::nonNull)
+                .mapToInt(Integer::intValue).sum();
+        boolean haySinPorcentaje = deLaDimension.stream().anyMatch(a -> a.getPorcentaje() == null);
+        if (suma > 100) {
+            throw new ReglaNegocioException("Los porcentajes de las actividades del " + dimension.getNombre()
+                    + " sumarían " + suma + " %; no pueden pasar de 100 %.");
+        }
+        if (haySinPorcentaje && suma >= 100) {
+            throw new ReglaNegocioException("Los porcentajes del " + dimension.getNombre()
+                    + " ya suman 100 % y las actividades sin porcentaje quedarían valiendo 0 %. "
+                    + "Asigne un porcentaje a cada una o baje alguno.");
+        }
     }
 
     private CargaAcademica cargaQueRegistra(Long cargaId, UsuarioAutenticado usuario) {

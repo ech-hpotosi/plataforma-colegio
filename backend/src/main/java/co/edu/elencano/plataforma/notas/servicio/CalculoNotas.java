@@ -2,6 +2,7 @@ package co.edu.elencano.plataforma.notas.servicio;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -11,9 +12,9 @@ import co.edu.elencano.plataforma.notas.entidad.Dimension;
 
 /**
  * Calculos de notas, sin acceso a base de datos:
- * - Promedio de cada dimension: promedio de las notas que tiene el estudiante, ponderado por el peso de cada
- *   actividad (1 normal, 2 el doble). Una actividad sin nota no cuenta; si el docente quiere que pese,
- *   registra la nota minima.
+ * - Promedio de cada dimension: promedio de las notas que tiene el estudiante, ponderado por el porcentaje de
+ *   cada actividad dentro de la dimension. Las actividades sin porcentaje se reparten en partes iguales lo que
+ *   falte para 100 %. Una actividad sin nota no cuenta; si el docente quiere que pese, registra la nota minima.
  * - Nota del periodo: promedio ponderado de las dimensiones con nota, con los pesos de la configuracion.
  *   Si falta alguna dimension con peso, la nota queda como parcial (completa = false).
  * - Nota del anio: promedio ponderado de los periodos con nota, segun el porcentaje de cada periodo.
@@ -48,6 +49,20 @@ public final class CalculoNotas {
                 .map(e -> new NotaPonderada(e.getValue(), BigDecimal.valueOf(config.pesoDe(e.getKey()))))
                 .toList();
         return new NotaPeriodo(promedios, ponderado(ponderadas), completa && !ponderadas.isEmpty());
+    }
+
+    /**
+     * Porcentaje efectivo de cada actividad de una dimension, en el mismo orden: el que puso el docente o,
+     * si no puso, una parte igual de lo que falta para 100 % (nunca negativa).
+     */
+    public static List<BigDecimal> porcentajesEfectivos(List<Integer> porcentajes) {
+        int fijos = porcentajes.stream().filter(p -> p != null).mapToInt(Integer::intValue).sum();
+        long sinPorcentaje = porcentajes.stream().filter(p -> p == null).count();
+        BigDecimal parte = sinPorcentaje == 0 ? BigDecimal.ZERO
+                : BigDecimal.valueOf(Math.max(0, 100 - fijos)).divide(BigDecimal.valueOf(sinPorcentaje), 2, RoundingMode.HALF_UP);
+        List<BigDecimal> efectivos = new ArrayList<>();
+        porcentajes.forEach(p -> efectivos.add(p == null ? parte : BigDecimal.valueOf(p)));
+        return efectivos;
     }
 
     /** Promedio ponderado; null si no hay notas. */

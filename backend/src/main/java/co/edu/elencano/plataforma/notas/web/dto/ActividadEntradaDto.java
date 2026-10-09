@@ -9,11 +9,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
-/** peso es opcional: si no viene, la actividad pesa 1 (normal). */
+/** porcentaje es opcional: sin el, la actividad comparte en partes iguales lo que falte para 100 %. */
 public record ActividadEntradaDto(@NotNull Dimension dimension, @NotBlank @Size(max = 120) String nombre,
-                                  LocalDate fecha, @Min(1) @Max(5) Integer peso) {
-
-    public int pesoOUno() {
-        return peso == null ? 1 : peso;
-    }
+                                  LocalDate fecha, @Min(1) @Max(100) Integer porcentaje) {
 }

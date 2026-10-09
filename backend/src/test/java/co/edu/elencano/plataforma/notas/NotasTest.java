@@ -1,5 +1,6 @@
 package co.edu.elencano.plataforma.notas;
 
+import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -149,16 +150,26 @@ class NotasTest extends PruebaIntegracion {
                 .andExpect(jsonPath("$.estudiantes[1].desempeno").value("BAJO"))
                 .andExpect(jsonPath("$.estudiantes[1].completa").value(false));
 
-        // Con la evaluacion de peso 3: Saber (4.0 * 3 + 3.0) / 4 = 3.8 y la nota sube a 4.1
+        // Con la evaluacion al 75 % del Saber, el taller sin porcentaje queda con el 25 %:
+        // Saber (4.0 * 75 + 3.0 * 25) / 100 = 3.8 y la nota sube a 4.1
         enviar(put("/api/notas/actividades/" + evaluacion), docente,
-                "{\"dimension\": \"SABER\", \"nombre\": \"Evaluación célula\", \"peso\": 3}")
+                "{\"dimension\": \"SABER\", \"nombre\": \"Evaluación célula\", \"porcentaje\": 75}")
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.actividades[0].peso").value(3))
+                .andExpect(jsonPath("$.actividades[0].porcentaje").value(75))
+                .andExpect(jsonPath("$.actividades[0].porcentajeEfectivo").value(75))
+                .andExpect(jsonPath("$.actividades[?(@.nombre == 'Taller 1')].porcentajeEfectivo", hasItem(25.0)))
                 .andExpect(jsonPath("$.estudiantes[0].saber").value(3.8))
                 .andExpect(jsonPath("$.estudiantes[0].notaPeriodo").value(4.1));
         enviar(put("/api/notas/actividades/" + evaluacion), docente,
-                "{\"dimension\": \"SABER\", \"nombre\": \"Evaluación célula\", \"peso\": 6}")
+                "{\"dimension\": \"SABER\", \"nombre\": \"Evaluación célula\", \"porcentaje\": 101}")
                 .andExpect(status().isBadRequest());
+        // Con el taller sin porcentaje, la evaluacion no puede quedarse con el 100 %; ni sumar mas de 100 %
+        enviar(put("/api/notas/actividades/" + evaluacion), docente,
+                "{\"dimension\": \"SABER\", \"nombre\": \"Evaluación célula\", \"porcentaje\": 100}")
+                .andExpect(status().isConflict());
+        enviar(post("/api/notas/cargas/%d/periodos/%d/actividades".formatted(e.carga(), e.periodo1())), docente,
+                "{\"dimension\": \"SABER\", \"nombre\": \"Quiz\", \"porcentaje\": 30}")
+                .andExpect(status().isConflict());
 
         // Fuera de escala, mas de una decimal, o de otro docente
         enviar(put(planilla), docente, "{\"notas\": [%s]}".formatted(nota(taller, e.bruno(), "5.5")))

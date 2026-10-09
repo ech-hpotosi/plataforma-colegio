@@ -56,8 +56,10 @@ export interface Actividad {
   dimension: Dimension;
   nombre: string;
   fecha: string | null;
-  /** 1 es normal, 2 vale el doble, hasta 5. */
-  peso: number;
+  /** Porcentaje dentro de su dimension que puso el docente; null si se reparte en partes iguales. */
+  porcentaje: number | null;
+  /** Lo que vale dentro de su dimension despues de repartir lo que falta para 100 %. */
+  porcentajeEfectivo: number;
 }
 
 export interface FilaPlanilla {
@@ -97,7 +99,7 @@ export interface DatosActividad {
   dimension: Dimension;
   nombre: string;
   fecha: string | null;
-  peso: number;
+  porcentaje: number | null;
 }
 
 export interface RecuperacionFinal {

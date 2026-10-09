@@ -125,9 +125,12 @@ y los estudiantes que superan el maximo o ya pasaron dos tercios de el. El inici
 Segun el SIEE (art. 4.2 y 7), cada actividad evalua una dimension: Saber, Hacer o Ser.
 
 - El docente crea las actividades del periodo en su clase y registra las notas en la planilla (`/notas/planilla`).
-- Promedio de cada dimension: promedio de las notas que tiene el estudiante, ponderado por el peso de cada actividad
-  (1 normal, 2 vale el doble, hasta 5; lo elige el docente). Una actividad sin nota no cuenta; si no la presento, el
-  docente registra la nota minima. La escala y los pesos de Saber, Hacer y Ser son institucionales, no por docente.
+- Promedio de cada dimension: promedio de las notas que tiene el estudiante, ponderado por el porcentaje de cada
+  actividad dentro de su dimension (lo elige el docente y es opcional). Las actividades sin porcentaje se reparten en
+  partes iguales lo que falte para 100 %. Dentro de una dimension los porcentajes no pasan de 100 %, y si hay
+  actividades sin porcentaje debe quedar algo para ellas. La planilla muestra cuanto vale cada actividad en su
+  dimension y en el periodo. Una actividad sin nota no cuenta; si no la presento, el docente registra la nota minima.
+  La escala y los pesos de Saber, Hacer y Ser son institucionales, no por docente.
 - Nota del periodo: promedio ponderado de las dimensiones con los pesos del anio. Si falta una dimension, la nota es
   parcial (se marca con *).
 - Nota del anio: promedio ponderado de los periodos segun su porcentaje.

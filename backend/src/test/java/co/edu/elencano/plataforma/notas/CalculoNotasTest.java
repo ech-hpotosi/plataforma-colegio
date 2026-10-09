@@ -3,6 +3,7 @@ package co.edu.elencano.plataforma.notas;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.math.BigDecimal;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -25,7 +26,7 @@ class CalculoNotasTest {
         return new BigDecimal(valor);
     }
 
-    /** Nota de una actividad de peso 1. */
+    /** Nota de una actividad con el mismo peso que las demas. */
     private static NotaPonderada a(String valor) {
         return new NotaPonderada(n(valor), BigDecimal.ONE);
     }
@@ -66,11 +67,24 @@ class CalculoNotasTest {
     }
 
     @Test
-    void unaActividadConPesoDosValeElDoble() {
-        // Taller 3.0 (peso 1) y evaluacion 4.5 (peso 2): (3.0 + 9.0) / 3 = 4.0
+    void elPorcentajeDeCadaActividadPesaEnSuDimension() {
+        // Taller 3.0 al 40 % y evaluacion 4.5 al 60 %: 1.2 + 2.7 = 3.9
         NotaPeriodo nota = CalculoNotas.notaPeriodo(Map.of(
-                Dimension.SABER, List.of(a("3.0"), new NotaPonderada(n("4.5"), BigDecimal.valueOf(2)))), config);
-        assertThat(nota.promedios().get(Dimension.SABER)).isEqualByComparingTo("4.0");
+                Dimension.SABER, List.of(new NotaPonderada(n("3.0"), n("40")), new NotaPonderada(n("4.5"), n("60")))), config);
+        assertThat(nota.promedios().get(Dimension.SABER)).isEqualByComparingTo("3.9");
+    }
+
+    @Test
+    void lasActividadesSinPorcentajeSeRepartenLoQueFalta() {
+        assertThat(CalculoNotas.porcentajesEfectivos(Arrays.asList(50, null, null)))
+                .usingElementComparator(BigDecimal::compareTo)
+                .containsExactly(n("50"), n("25"), n("25"));
+        assertThat(CalculoNotas.porcentajesEfectivos(Arrays.asList(null, null, null)))
+                .usingElementComparator(BigDecimal::compareTo)
+                .containsExactly(n("33.33"), n("33.33"), n("33.33"));
+        assertThat(CalculoNotas.porcentajesEfectivos(List.of(30, 70)))
+                .usingElementComparator(BigDecimal::compareTo)
+                .containsExactly(n("30"), n("70"));
     }
 
     @Test
