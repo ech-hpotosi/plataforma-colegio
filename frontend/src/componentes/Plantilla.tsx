@@ -41,19 +41,6 @@ const MENU: GrupoMenu[] = [
   { titulo: 'Administración', opciones: [{ texto: 'Usuarios', ruta: '/usuarios', roles: ['ADMINISTRADOR'] }] },
 ];
 
-/** Franja con los colores de la bandera: azul, blanco y verde. */
-export function FranjaBandera({ alto = 4 }: { alto?: number }) {
-  return (
-    <Box
-      sx={{
-        height: alto,
-        background: `linear-gradient(to right, ${COLORES.laguna} 0 33.3%, #ffffff 33.3% 66.6%, ${COLORES.parcela} 66.6% 100%)`,
-        borderBottom: `1px solid ${COLORES.linea}`,
-      }}
-    />
-  );
-}
-
 function MenuLateral({ alNavegar }: { alNavegar?: () => void }) {
   const { usuario, tieneAlgunRol, salir } = useSesion();
   const grupos = MENU.map((g) => ({
@@ -134,7 +121,6 @@ function MenuLateral({ alNavegar }: { alNavegar?: () => void }) {
 
 /**
  * Estructura de las pantallas internas: menu lateral fijo en computador y menu desplegable en celular.
- * La franja superior lleva los colores de la bandera del colegio.
  */
 export default function Plantilla() {
   const [abierto, setAbierto] = useState(false);
@@ -144,7 +130,6 @@ export default function Plantilla() {
   return (
     <Box sx={{ minHeight: '100vh' }}>
       <Box sx={{ position: 'sticky', top: 0, zIndex: 1100 }}>
-        <FranjaBandera />
         {/* Barra superior solo en celular */}
         <Box
           sx={{

@@ -164,7 +164,7 @@ function DialogoNombre({
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={alCerrar}>Cancelar</Button>
+          <Button variant="outlined" onClick={alCerrar}>Cancelar</Button>
           <Button type="submit" variant="contained" disabled={guardando}>
             Guardar
           </Button>

@@ -326,7 +326,7 @@ function DialogoAnio({
           </Grid>
         </DialogContent>
         <DialogActions>
-          <Button onClick={alCerrar}>Cancelar</Button>
+          <Button variant="outlined" onClick={alCerrar}>Cancelar</Button>
           <Button type="submit" variant="contained" disabled={isSubmitting}>
             Guardar
           </Button>

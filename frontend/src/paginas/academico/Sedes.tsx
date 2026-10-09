@@ -160,7 +160,7 @@ function DialogoSede({ sede, alCerrar, alGuardar }: { sede: Sede | null; alCerra
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={alCerrar}>Cancelar</Button>
+          <Button variant="outlined" onClick={alCerrar}>Cancelar</Button>
           <Button type="submit" variant="contained" disabled={isSubmitting}>
             Guardar
           </Button>

@@ -69,11 +69,10 @@ export default function Inicio() {
               p: 2.5,
               bgcolor: '#fff',
               border: `1px solid ${COLORES.linea}`,
-              borderTop: `3px solid ${COLORES.laguna}`,
               borderRadius: 1.5,
               color: 'inherit',
               textDecoration: 'none',
-              '&:hover': { borderTopColor: COLORES.sol },
+              '&:hover': { borderColor: COLORES.laguna, bgcolor: COLORES.encabezado },
             }}
           >
             <Typography sx={{ fontWeight: 700 }}>{a.titulo}</Typography>

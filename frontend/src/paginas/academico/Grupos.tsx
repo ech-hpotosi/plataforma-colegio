@@ -297,7 +297,7 @@ function DialogoGrupo({
           </Grid>
         </DialogContent>
         <DialogActions>
-          <Button onClick={alCerrar}>Cancelar</Button>
+          <Button variant="outlined" onClick={alCerrar}>Cancelar</Button>
           <Button type="submit" variant="contained" disabled={guardando}>
             Guardar
           </Button>
@@ -405,7 +405,7 @@ function DialogoCarga({ grupo, docentes, alCerrar }: { grupo: Grupo; docentes: D
         )}
       </DialogContent>
       <DialogActions>
-        <Button onClick={alCerrar}>Cancelar</Button>
+        <Button variant="outlined" onClick={alCerrar}>Cancelar</Button>
         <Button variant="contained" onClick={guardar} disabled={guardando || !carga.data?.length}>
           Guardar
         </Button>
@@ -453,7 +453,7 @@ function DialogoEstudiantes({ grupo, alCerrar }: { grupo: Grupo; alCerrar: () =>
         )}
       </DialogContent>
       <DialogActions>
-        <Button onClick={alCerrar}>Cerrar</Button>
+        <Button variant="outlined" onClick={alCerrar}>Cerrar</Button>
       </DialogActions>
     </Dialog>
   );

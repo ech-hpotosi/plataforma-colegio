@@ -145,7 +145,7 @@ export default function DialogoNovedades({ matriculaId, nombre, grupoId, puedeJu
         )}
       </DialogContent>
       <DialogActions>
-        <Button onClick={alCerrar}>Cerrar</Button>
+        <Button variant="outlined" onClick={alCerrar}>Cerrar</Button>
       </DialogActions>
     </Dialog>
   );

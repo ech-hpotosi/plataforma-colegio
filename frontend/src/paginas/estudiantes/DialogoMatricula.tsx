@@ -81,7 +81,7 @@ export default function DialogoMatricula({ estudianteId, matricula, alCerrar, al
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={alCerrar}>Cancelar</Button>
+        <Button variant="outlined" onClick={alCerrar}>Cancelar</Button>
         <Button variant="contained" onClick={guardar} disabled={guardando || anioId === null}>
           Guardar
         </Button>

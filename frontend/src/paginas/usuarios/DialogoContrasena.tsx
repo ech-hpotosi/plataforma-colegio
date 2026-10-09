@@ -77,7 +77,7 @@ export default function DialogoContrasena({ usuario, alCerrar }: Props) {
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={alCerrar}>{listo ? 'Cerrar' : 'Cancelar'}</Button>
+          <Button variant="outlined" onClick={alCerrar}>{listo ? 'Cerrar' : 'Cancelar'}</Button>
           {!listo && (
             <Button type="submit" variant="contained" disabled={isSubmitting}>
               Guardar

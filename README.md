@@ -121,8 +121,11 @@ Endpoints: `/api/asistencia/cargas`, `/api/asistencia/cargas/{id}?fecha=`, `/api
 - Colores del escudo y la bandera en `frontend/src/tema.ts` (`COLORES`): azul laguna, verde parcela y ocre del sol.
   Tipografias Source Sans 3 (texto) y Source Serif 4 (titulos), incluidas en el proyecto, sin depender de internet.
 - Cada pantalla empieza con `componentes/Encabezado` (titulo, descripcion corta y accion principal).
-- Botones: uno solo `contained` por pantalla o dialogo para la accion principal; `outlined` para acciones secundarias;
+- Botones: uno solo `contained` por pantalla o dialogo para la accion principal; `outlined` para acciones secundarias
+  (Cancelar en los dialogos);
   texto simple para acciones de fila; `color="error"` solo para retirar o quitar.
+- Pestañas para cambiar entre secciones de un mismo modulo (estructura academica, asistencia); tarjetas con borde
+  para agrupar bloques de informacion de un mismo registro (ficha del estudiante). Sin franjas de color.
 - Estados (activo, bloqueado, falta, etc.) con `componentes/Estado`: punto de color y texto, sin fondo.
 - Todo texto visible lleva tildes y ene (año, contraseña, matrícula). Los nombres en el codigo siguen sin tildes.
 
