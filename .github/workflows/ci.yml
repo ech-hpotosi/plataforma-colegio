@@ -25,8 +25,12 @@ jobs:
       - name: Resumen de pruebas fallidas
         if: failure()
         run: |
-          grep -l -E '<(failure|error)' target/surefire-reports/*.xml target/failsafe-reports/*.xml 2>/dev/null | while read -r f; do
-            msg=$(grep -A6 -E '<(failure|error)' "$f" | head -c 3000 | tr '\n' ' ')
+          # Primero las causas raiz (Caused by), que no salen en el mensaje corto
+          grep -h -E '^Caused by' target/surefire-reports/*.txt 2>/dev/null | sort | uniq -c | sort -rn | head -5 | while read -r linea; do
+            echo "::error title=Causa::$(echo "$linea" | head -c 1500)"
+          done
+          grep -l -E '<(failure|error)' target/surefire-reports/*.xml 2>/dev/null | head -3 | while read -r f; do
+            msg=$(grep -A6 -E '<(failure|error)' "$f" | head -c 1500 | tr '\n' ' ')
             echo "::error title=$(basename "$f")::$msg"
           done
 
