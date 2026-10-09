@@ -1,5 +1,6 @@
 package co.edu.elencano.plataforma.matricula.repositorio;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,4 +27,12 @@ public interface MatriculaRepository extends JpaRepository<Matricula, Long> {
     List<Matricula> listarActivasDeGrupo(@Param("grupoId") Long grupoId);
 
     long countByGrupoIdAndEstado(Long grupoId, EstadoMatricula estado);
+
+    @Query("""
+            select new co.edu.elencano.plataforma.matricula.repositorio.ConteoMatriculas(m.grupo.id, count(m))
+            from Matricula m
+            where m.grupo.id in :grupoIds and m.estado = 'ACTIVA'
+            group by m.grupo.id
+            """)
+    List<ConteoMatriculas> contarActivasDeGrupos(@Param("grupoIds") Collection<Long> grupoIds);
 }

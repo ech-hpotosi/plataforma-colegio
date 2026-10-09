@@ -1,5 +1,6 @@
 package co.edu.elencano.plataforma.notas.repositorio;
 
+import java.util.Collection;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -22,4 +23,13 @@ public interface NotaActividadRepository extends JpaRepository<NotaActividad, Lo
             where a.carga.grupo.id = :grupoId
             """)
     List<NotaActividad> listarDeGrupo(@Param("grupoId") Long grupoId);
+
+    /** Notas registradas por carga y periodo, solo de estudiantes que hoy estan en el grupo de la carga. */
+    @Query("""
+            select new co.edu.elencano.plataforma.notas.repositorio.ConteoNotas(a.carga.id, a.periodo.id, count(n))
+            from NotaActividad n join n.actividad a join n.matricula m
+            where a.carga.id in :cargaIds and m.estado = 'ACTIVA' and m.grupo.id = a.carga.grupo.id
+            group by a.carga.id, a.periodo.id
+            """)
+    List<ConteoNotas> contarDeCargas(@Param("cargaIds") Collection<Long> cargaIds);
 }

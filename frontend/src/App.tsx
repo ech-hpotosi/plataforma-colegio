@@ -23,6 +23,7 @@ import PlanillaNotas from './paginas/notas/PlanillaNotas';
 import NoEncontrada from './paginas/NoEncontrada';
 import SinPermiso from './paginas/SinPermiso';
 import ListaUsuarios from './paginas/usuarios/ListaUsuarios';
+import Seguimiento from './paginas/seguimiento/Seguimiento';
 
 export default function App() {
   return (
@@ -40,6 +41,7 @@ export default function App() {
           >
             <Route path="/estudiantes" element={<ListaEstudiantes />} />
             <Route path="/estudiantes/:id" element={<DetalleEstudiante />} />
+            <Route path="/seguimiento" element={<Seguimiento />} />
           </Route>
           <Route
             element={

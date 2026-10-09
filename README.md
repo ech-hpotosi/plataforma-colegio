@@ -149,6 +149,18 @@ Endpoints bajo `/api/notas`: `configuracion/{anioId}`, `cargas`, `cargas/{id}/pe
 `cargas/{id}/periodos/{periodoId}/actividades`, `cargas/{id}/periodos/{periodoId}/recuperaciones` (PUT),
 `cargas/{id}/recuperacion-final` (GET y PUT), `actividades/{id}` (PUT y DELETE) y `grupos/{id}/consolidado`.
 
+## Seguimiento del registro
+
+Avance de notas y asistencia por clase en el periodo (`GET /api/seguimiento/avance?periodo=N`; sin `periodo`, el
+periodo en curso, o el ultimo que empezo). Solo cuentan los anios abiertos que ya empezaron.
+
+- Notas: notas registradas sobre actividades por estudiantes activos. No llega a 100 % mientras falte crear
+  actividades en una dimension que pesa en la nota. Los grados cualitativos no tienen barra.
+- Asistencia: dias con asistencia y la ultima fecha. Como aun no hay horario, no se calcula un porcentaje; la clase
+  se marca atrasada con mas de 7 dias sin registrar (contados hasta hoy o hasta el cierre del periodo).
+- El docente ve en el Inicio sus clases con pendientes. Directivos y secretaria ven un resumen en el Inicio y la
+  pantalla `/seguimiento`, con filtros por periodo, sede y docente, ordenada de la clase mas atrasada a la menos.
+
 ## Estilo visual del frontend
 
 - Colores del escudo y la bandera en `frontend/src/tema.ts` (`COLORES`): azul laguna, verde parcela y ocre del sol.

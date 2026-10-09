@@ -3,23 +3,47 @@ import { useQuery } from '@tanstack/react-query';
 import { Alert, Box, Button, CircularProgress, Paper, Stack, Typography } from '@mui/material';
 import { Link as RouterLink } from 'react-router';
 import { obtenerPendientesAsistencia } from '../api/asistencia';
+import { obtenerAvance, type AvanceClase } from '../api/seguimiento';
+import BarraAvance from '../componentes/BarraAvance';
 import Encabezado from '../componentes/Encabezado';
 import Estado from '../componentes/Estado';
 import { useSesion } from '../sesion/useSesion';
 import { COLORES } from '../tema';
 import { NOMBRE_ROL, type Rol } from '../tipos';
 import { mensajeDeError } from './academico/mensajes';
+import {
+  LIMITE_DIAS_ASISTENCIA,
+  asistenciaAtrasada,
+  estadoAsistencia,
+  fechaCorta,
+  notasCompletas,
+  textoNotas,
+} from './seguimiento/avance';
 
 const ROLES_ASISTENCIA: Rol[] = ['ADMINISTRADOR', 'RECTOR', 'COORDINADOR_ACADEMICO', 'SECRETARIA', 'DOCENTE'];
+const ROLES_SEGUIMIENTO: Rol[] = ['ADMINISTRADOR', 'RECTOR', 'COORDINADOR_ACADEMICO', 'SECRETARIA'];
 const MAXIMO_EN_RIESGO = 10;
 
 const FECHA_LARGA = new Intl.DateTimeFormat('es-CO', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-const FECHA_CORTA = new Intl.DateTimeFormat('es-CO', { weekday: 'short', day: 'numeric', month: 'short' });
+/** Dias que faltan para el cierre del periodo, contados desde hoy segun el servidor. */
+function diasParaCierre(hoy: string, cierre: string) {
+  const fecha = (iso: string) => {
+    const [anio, mes, dia] = iso.split('-').map(Number);
+    return Date.UTC(anio, mes - 1, dia);
+  };
+  return Math.round((fecha(cierre) - fecha(hoy)) / 86_400_000);
+}
 
-/** Fecha ISO (aaaa-mm-dd) en la hora local, sin que el cambio a UTC la corra un dia. */
-function fechaCorta(iso: string) {
-  const [anio, mes, dia] = iso.split('-').map(Number);
-  return FECHA_CORTA.format(new Date(anio, mes - 1, dia));
+function textoCierre(hoy: string, c: AvanceClase) {
+  if (c.periodoCerrado) return `El periodo ${c.periodoNumero} ya está cerrado.`;
+  const dias = diasParaCierre(hoy, c.cierrePeriodo);
+  const cuando =
+    dias < 0
+      ? 'ya terminó'
+      : dias === 0
+        ? 'cierra hoy'
+        : `cierra el ${fechaCorta(c.cierrePeriodo)}, en ${dias} ${dias === 1 ? 'día' : 'días'}`;
+  return `Periodo ${c.periodoNumero}: ${cuando}.`;
 }
 
 /** Bloque del inicio: titulo con un resumen corto y filas separadas por una linea. */
@@ -72,30 +96,46 @@ function Fila({ principal, detalle, estado, accion }: { principal: string; detal
 export default function Inicio() {
   const { usuario, tieneAlgunRol } = useSesion();
   const veAsistencia = tieneAlgunRol(ROLES_ASISTENCIA);
+  const veSeguimiento = tieneAlgunRol(ROLES_SEGUIMIENTO);
   const pendientes = useQuery({
     queryKey: ['asistencia-pendientes'],
     queryFn: obtenerPendientesAsistencia,
     enabled: veAsistencia,
   });
+  // Directivos ven el resumen de todas las clases; el docente, el avance de las suyas
+  const avance = useQuery({ queryKey: ['seguimiento-avance', ''], queryFn: () => obtenerAvance(), enabled: veAsistencia });
   const hoy = FECHA_LARGA.format(new Date());
 
   const contenido = () => {
     if (!veAsistencia) {
       return <Alert severity="info">Por ahora no hay información disponible para su perfil.</Alert>;
     }
-    if (pendientes.isPending) return <CircularProgress />;
+    if (pendientes.isPending || avance.isPending) return <CircularProgress />;
     if (pendientes.isError) return <Alert severity="error">{mensajeDeError(pendientes.error)}</Alert>;
+    if (avance.isError) return <Alert severity="error">{mensajeDeError(avance.error)}</Alert>;
 
     const { clasesHoy, faltasPorJustificar, estudiantesEnRiesgo, porcentajeMaximo } = pendientes.data;
     const sinRegistrar = clasesHoy.filter((c) => !c.registrada).length;
-    const nada = clasesHoy.length === 0 && faltasPorJustificar.length === 0 && estudiantesEnRiesgo.length === 0;
+    const { hoy: hoyServidor, clases } = avance.data;
+    // El docente ve sus clases con pendientes; los directivos, el resumen de todas
+    const propias = veSeguimiento ? [] : clases.filter((c) => !notasCompletas(c) || asistenciaAtrasada(c));
+    const resumenDirectivos = veSeguimiento && clases.length > 0;
+    const completas = clases.filter(notasCompletas).length;
+    const atrasadas = clases.filter(asistenciaAtrasada).length;
+    const nada =
+      clasesHoy.length === 0 &&
+      faltasPorJustificar.length === 0 &&
+      estudiantesEnRiesgo.length === 0 &&
+      propias.length === 0 &&
+      !resumenDirectivos;
 
     if (nada) {
       return (
         <Paper sx={{ px: 2.5, py: 2 }}>
           <Typography sx={{ fontWeight: 600 }}>No tiene pendientes por ahora.</Typography>
           <Typography variant="body2" color="text.secondary">
-            Aquí aparecerán las clases sin asistencia, las faltas por justificar y los estudiantes en riesgo.
+            Aquí aparecerán las clases sin asistencia, las notas por registrar, las faltas por justificar y los
+            estudiantes en riesgo.
           </Typography>
         </Paper>
       );
@@ -125,6 +165,63 @@ export default function Inicio() {
                 }
               />
             ))}
+          </Seccion>
+        )}
+
+        {propias.length > 0 && (
+          <Seccion
+            titulo="Avance del periodo"
+            resumen={`${textoCierre(hoyServidor, propias[0])} Clases con notas incompletas o asistencia sin registrar hace más de ${LIMITE_DIAS_ASISTENCIA} días.`}
+          >
+            {propias.map((c) => {
+              const asistencia = estadoAsistencia(c);
+              const irAAsistencia = notasCompletas(c);
+              return (
+                <Fila
+                  key={c.cargaId}
+                  principal={`${c.grupo} - ${c.asignatura}`}
+                  detalle={`${textoNotas(c)} Asistencia: ${asistencia.texto.charAt(0).toLowerCase()}${asistencia.texto.slice(1)}.`}
+                  estado={
+                    c.cualitativa ? undefined : (
+                      <Box sx={{ width: 170 }}>
+                        <BarraAvance porcentaje={c.porcentajeNotas} etiqueta={`Notas de ${c.grupo} - ${c.asignatura}`} />
+                      </Box>
+                    )
+                  }
+                  accion={
+                    <Button
+                      component={RouterLink}
+                      to={irAAsistencia ? `/asistencia/tomar?carga=${c.cargaId}` : `/notas/planilla?carga=${c.cargaId}`}
+                      size="small"
+                    >
+                      {irAAsistencia ? 'Asistencia' : 'Planilla'}
+                    </Button>
+                  }
+                />
+              );
+            })}
+          </Seccion>
+        )}
+
+        {resumenDirectivos && (
+          <Seccion titulo="Avance del registro" resumen="Notas y asistencia de todas las clases en el periodo en curso.">
+            <Fila
+              principal={`Notas completas en ${completas} de ${clases.length} clases`}
+              detalle={`Asistencia atrasada en ${atrasadas} ${atrasadas === 1 ? 'clase' : 'clases'} (más de ${LIMITE_DIAS_ASISTENCIA} días sin registrar).`}
+              estado={
+                <Box sx={{ width: 170 }}>
+                  <BarraAvance
+                    porcentaje={Math.floor((completas * 100) / clases.length)}
+                    etiqueta="Clases con notas completas"
+                  />
+                </Box>
+              }
+              accion={
+                <Button component={RouterLink} to="/seguimiento" size="small">
+                  Ver seguimiento
+                </Button>
+              }
+            />
           </Seccion>
         )}
 

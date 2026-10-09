@@ -190,6 +190,48 @@ class NotasTest extends PruebaIntegracion {
     }
 
     @Test
+    void elSeguimientoMuestraElAvanceDeNotasYAsistencia() throws Exception {
+        Escenario e = crearEscenario("Seguimiento", 2024, "docente.seg", "director.seg");
+        MockHttpSession docente = iniciarSesion("docente.seg", CONTRASENA);
+        MockHttpSession director = iniciarSesion("director.seg", CONTRASENA);
+        long taller = crearActividad(docente, e, e.periodo1(), "SABER", "Taller");
+        enviar(put("/api/notas/cargas/%d/periodos/%d".formatted(e.carga(), e.periodo1())), docente,
+                "{\"notas\": [%s]}".formatted(nota(taller, e.ana(), "4.0"))).andExpect(status().isOk());
+        enviar(put("/api/asistencia/cargas/" + e.carga() + "?fecha=2024-06-10"), docente, """
+                {"horas": 1, "estudiantes": [{"matriculaId": %d, "estado": "ASISTIO"},
+                                              {"matriculaId": %d, "estado": "FALTA"}]}
+                """.formatted(e.ana(), e.bruno())).andExpect(status().isOk());
+
+        // Periodo 1: una actividad para dos estudiantes, una nota; faltan actividades de Hacer y Ser
+        mockMvc.perform(get("/api/seguimiento/avance?periodo=1").session(docente))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.clases", hasSize(1)))
+                .andExpect(jsonPath("$.clases[0].periodoNumero").value(1))
+                .andExpect(jsonPath("$.clases[0].estudiantes").value(2))
+                .andExpect(jsonPath("$.clases[0].actividades").value(1))
+                .andExpect(jsonPath("$.clases[0].notasRegistradas").value(1))
+                .andExpect(jsonPath("$.clases[0].notasEsperadas").value(2))
+                .andExpect(jsonPath("$.clases[0].porcentajeNotas").value(50))
+                .andExpect(jsonPath("$.clases[0].dimensionesSinActividad", hasSize(2)))
+                .andExpect(jsonPath("$.clases[0].diasConAsistencia").value(1))
+                .andExpect(jsonPath("$.clases[0].ultimaAsistencia").value("2024-06-10"))
+                // Hasta el cierre del periodo (15 de junio), no hasta hoy
+                .andExpect(jsonPath("$.clases[0].diasSinAsistencia").value(5));
+
+        // Sin periodo se toma el ultimo que empezo; sin registros, se cuenta desde su inicio
+        mockMvc.perform(get("/api/seguimiento/avance").session(docente))
+                .andExpect(jsonPath("$.clases[0].periodoNumero").value(2))
+                .andExpect(jsonPath("$.clases[0].porcentajeNotas").value(0))
+                .andExpect(jsonPath("$.clases[0].diasSinAsistencia").value(167));
+
+        // El director de grupo sin carga no ve clases; directivos ven todas
+        mockMvc.perform(get("/api/seguimiento/avance").session(director))
+                .andExpect(jsonPath("$.clases", hasSize(0)));
+        mockMvc.perform(get("/api/seguimiento/avance?periodo=1").session(sesionAdmin))
+                .andExpect(jsonPath("$.clases[?(@.cargaId == %d)].porcentajeNotas".formatted(e.carga()), hasItem(50)));
+    }
+
+    @Test
     void elConsolidadoMuestraElPeriodoYElAcumuladoDelAnio() throws Exception {
         Escenario e = crearEscenario("Notas2", 2039, "docente.notas2", "director.notas2");
         MockHttpSession docente = iniciarSesion("docente.notas2", CONTRASENA);
