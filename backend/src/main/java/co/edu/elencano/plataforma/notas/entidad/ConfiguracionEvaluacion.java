@@ -45,6 +45,10 @@ public class ConfiguracionEvaluacion {
     @Column(name = "limite_superior", nullable = false, precision = 2, scale = 1)
     private BigDecimal limiteSuperior;
 
+    /** Nota maxima que puede quedar despues de una recuperacion; por defecto la nota aprobatoria. */
+    @Column(name = "tope_recuperacion", nullable = false, precision = 2, scale = 1)
+    private BigDecimal topeRecuperacion;
+
     @Column(name = "peso_saber", nullable = false)
     private int pesoSaber;
 
@@ -57,18 +61,22 @@ public class ConfiguracionEvaluacion {
     protected ConfiguracionEvaluacion() {
     }
 
-    /** Valores por defecto: escala 1.0 a 5.0, aprueba con 3.0, Alto desde 4.0, Superior desde 4.6, pesos 40/40/20. */
+    /**
+     * Valores por defecto: escala 1.0 a 5.0, aprueba con 3.0, Alto desde 4.0, Superior desde 4.6, pesos 40/40/20
+     * y la recuperacion deja como maximo 3.0.
+     */
     public static ConfiguracionEvaluacion porDefecto(AnioLectivo anio) {
         ConfiguracionEvaluacion c = new ConfiguracionEvaluacion();
         c.anioLectivo = anio;
         c.actualizar(new BigDecimal("1.0"), new BigDecimal("5.0"), new BigDecimal("3.0"), new BigDecimal("4.0"),
-                new BigDecimal("4.6"), 40, 40, 20);
+                new BigDecimal("4.6"), new BigDecimal("3.0"), 40, 40, 20);
         return c;
     }
 
     public void actualizar(BigDecimal notaMinima, BigDecimal notaMaxima, BigDecimal notaAprobatoria,
-                           BigDecimal limiteAlto, BigDecimal limiteSuperior, int pesoSaber, int pesoHacer,
-                           int pesoSer) {
+                           BigDecimal limiteAlto, BigDecimal limiteSuperior, BigDecimal topeRecuperacion,
+                           int pesoSaber, int pesoHacer, int pesoSer) {
+        this.topeRecuperacion = topeRecuperacion;
         this.notaMinima = notaMinima;
         this.notaMaxima = notaMaxima;
         this.notaAprobatoria = notaAprobatoria;
@@ -130,6 +138,10 @@ public class ConfiguracionEvaluacion {
 
     public BigDecimal getLimiteSuperior() {
         return limiteSuperior;
+    }
+
+    public BigDecimal getTopeRecuperacion() {
+        return topeRecuperacion;
     }
 
     public int getPesoSaber() {

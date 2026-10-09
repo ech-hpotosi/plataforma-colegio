@@ -15,6 +15,7 @@ const configuracion = {
   notaAprobatoria: 3,
   limiteAlto: 4,
   limiteSuperior: 4.6,
+  topeRecuperacion: 3,
   pesoSaber: 40,
   pesoHacer: 40,
   pesoSer: 20,
@@ -46,6 +47,7 @@ const planilla = {
   periodoId: 11,
   periodo: 1,
   editable: true,
+  admiteRecuperacion: true,
   configuracion,
   actividades: [{ id: 21, dimension: 'SABER', nombre: 'Taller 1', fecha: null, peso: 1 }],
   estudiantes: [
@@ -58,6 +60,9 @@ const planilla = {
       hacer: null,
       ser: null,
       notaPeriodo: 4,
+      recuperacion: null,
+      observacionRecuperacion: null,
+      notaDefinitiva: 4,
       desempeno: 'ALTO',
       completa: false,
     },
@@ -70,6 +75,9 @@ const planilla = {
       hacer: null,
       ser: null,
       notaPeriodo: null,
+      recuperacion: null,
+      observacionRecuperacion: null,
+      notaDefinitiva: null,
       desempeno: null,
       completa: false,
     },
@@ -99,6 +107,34 @@ describe('Notas', () => {
 
     const envio = fetch.mock.calls.find(([, opciones]) => opciones?.method === 'PUT');
     expect(JSON.parse(String(envio?.[1]?.body))).toEqual({ notas: [{ actividadId: 21, matriculaId: 31, valor: 3.5 }] });
+  });
+
+  it('a quien queda en Bajo se le registra la recuperación del periodo', async () => {
+    const enBajo = {
+      ...planilla,
+      estudiantes: [
+        { ...planilla.estudiantes[0], notaPeriodo: 2.4, notaDefinitiva: 2.4, desempeno: 'BAJO', completa: true },
+        planilla.estudiantes[1],
+      ],
+    };
+    const fetch = simularApi({
+      'GET /api/yo': { estado: 200, cuerpo: docente },
+      'GET /api/notas/cargas': { estado: 200, cuerpo: cargas },
+      'GET /api/notas/cargas/7/periodos/11': { estado: 200, cuerpo: enBajo },
+      'PUT /api/notas/cargas/7/periodos/11/recuperaciones': { estado: 200, cuerpo: enBajo },
+    });
+    renderizarEn('/notas/planilla', <App />);
+
+    await userEvent.type(await screen.findByLabelText('Recuperación de Valentina Jojoa'), '4,5');
+    expect(screen.queryByLabelText('Recuperación de Mateo Botina')).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Guardar notas' }));
+    expect(await screen.findByText('Notas guardadas')).toBeInTheDocument();
+
+    const envio = fetch.mock.calls.find(([, opciones]) => opciones?.method === 'PUT');
+    expect(String(envio?.[0])).toContain('/recuperaciones');
+    expect(JSON.parse(String(envio?.[1]?.body))).toEqual({
+      recuperaciones: [{ matriculaId: 30, nota: 4.5, observacion: null }],
+    });
   });
 
   it('una nota fuera de la escala no se envía', async () => {

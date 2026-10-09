@@ -24,11 +24,12 @@ import {
   DIMENSIONES,
   NOMBRE_DIMENSION,
   guardarNotas,
+  guardarRecuperaciones,
+  leerNota,
   listarCargasNotas,
   obtenerPlanilla,
   periodoActual,
   type Actividad,
-  type ConfiguracionEvaluacion,
   type Dimension,
   type PlanillaNotas as Planilla,
 } from '../../api/notas';
@@ -36,29 +37,24 @@ import { COLORES } from '../../tema';
 import { mensajeDeError } from '../academico/mensajes';
 import EstadoDesempeno from './Desempeno';
 import DialogoActividad from './DialogoActividad';
+import RecuperacionFinal from './RecuperacionFinal';
 
 const clave = (actividadId: number, matriculaId: number) => `${actividadId}-${matriculaId}`;
 const formato = (valor: number | null | undefined) => (valor === null || valor === undefined ? '' : valor.toFixed(1));
 
-/** Convierte lo que escribe el docente (acepta coma) en nota; undefined si no es valida. */
-function leerNota(texto: string, config: ConfiguracionEvaluacion): number | null | undefined {
-  const limpio = texto.trim().replace(',', '.');
-  if (limpio === '') return null;
-  if (!/^\d+(\.\d)?$/.test(limpio)) return undefined;
-  const valor = Number(limpio);
-  return valor >= config.notaMinima && valor <= config.notaMaxima ? valor : undefined;
-}
-
 /**
  * Planilla de notas de una clase en un periodo. Las actividades se agrupan por dimension;
  * el docente escribe las notas y guarda todas juntas. Enter baja a la siguiente fila.
+ * A quien queda en Bajo se le puede registrar la recuperacion del periodo; la opcion "Recuperación final"
+ * del selector de periodo muestra la recuperacion del anio.
  */
 export default function PlanillaNotas() {
   const queryClient = useQueryClient();
   const [parametros] = useSearchParams();
   const [cargaId, setCargaId] = useState<number | ''>(parametros.get('carga') ? Number(parametros.get('carga')) : '');
-  const [periodoId, setPeriodoId] = useState<number | ''>('');
+  const [periodoId, setPeriodoId] = useState<number | '' | 'final'>('');
   const [cambios, setCambios] = useState<Record<string, string>>({});
+  const [cambiosRec, setCambiosRec] = useState<Record<number, string>>({});
   const [dialogo, setDialogo] = useState<{ actividad: Actividad | null } | null>(null);
   const [mensaje, setMensaje] = useState<{ tipo: 'success' | 'error'; texto: string } | null>(null);
   const [guardando, setGuardando] = useState(false);
@@ -68,7 +64,7 @@ export default function PlanillaNotas() {
   const planilla = useQuery({
     queryKey: ['notas-planilla', cargaId, periodoId],
     queryFn: () => obtenerPlanilla(Number(cargaId), Number(periodoId)),
-    enabled: cargaId !== '' && periodoId !== '' && carga !== undefined && !carga.cualitativa,
+    enabled: cargaId !== '' && typeof periodoId === 'number' && carga !== undefined && !carga.cualitativa,
   });
 
   // Si el docente tiene una sola clase, se selecciona sola
@@ -83,6 +79,7 @@ export default function PlanillaNotas() {
 
   useEffect(() => {
     setCambios({});
+    setCambiosRec({});
     setMensaje(null);
   }, [cargaId, periodoId]);
 
@@ -97,15 +94,21 @@ export default function PlanillaNotas() {
     queryClient.setQueryData(['notas-planilla', cargaId, periodoId], nueva);
   };
 
-  const pendientes = Object.keys(cambios).length;
+  const pendientes = Object.keys(cambios).length + Object.keys(cambiosRec).length;
   const config = planilla.data?.configuracion;
 
   const guardar = async () => {
     if (!planilla.data || !config) return;
     const notas: { actividadId: number; matriculaId: number; valor: number | null }[] = [];
+    const recuperaciones: { matriculaId: number; nota: number | null; observacion: string | null }[] = [];
+    for (const [k, texto] of Object.entries(cambiosRec)) {
+      const nota = leerNota(texto, config);
+      if (nota !== undefined) recuperaciones.push({ matriculaId: Number(k), nota, observacion: null });
+    }
+    const recInvalida = recuperaciones.length !== Object.keys(cambiosRec).length;
     for (const [k, texto] of Object.entries(cambios)) {
       const valor = leerNota(texto, config);
-      if (valor === undefined) {
+      if (valor === undefined || recInvalida) {
         setMensaje({
           tipo: 'error',
           texto: `Hay notas que no son válidas. Use valores de ${formato(config.notaMinima)} a ${formato(config.notaMaxima)} con una decimal.`,
@@ -115,11 +118,25 @@ export default function PlanillaNotas() {
       const [actividadId, matriculaId] = k.split('-').map(Number);
       notas.push({ actividadId, matriculaId, valor });
     }
+    if (recInvalida) {
+      setMensaje({
+        tipo: 'error',
+        texto: `Hay recuperaciones que no son válidas. Use valores de ${formato(config.notaMinima)} a ${formato(config.notaMaxima)} con una decimal.`,
+      });
+      return;
+    }
     setGuardando(true);
     setMensaje(null);
     try {
-      actualizarPlanilla(await guardarNotas(Number(cargaId), Number(periodoId), notas));
-      setCambios({});
+      // Primero las notas, porque la recuperacion depende de la nota ya calculada
+      if (notas.length > 0) {
+        actualizarPlanilla(await guardarNotas(Number(cargaId), Number(periodoId), notas));
+        setCambios({});
+      }
+      if (recuperaciones.length > 0) {
+        actualizarPlanilla(await guardarRecuperaciones(Number(cargaId), Number(periodoId), recuperaciones));
+        setCambiosRec({});
+      }
       setMensaje({ tipo: 'success', texto: 'Notas guardadas' });
     } catch (e) {
       setMensaje({ tipo: 'error', texto: mensajeDeError(e) });
@@ -141,6 +158,10 @@ export default function PlanillaNotas() {
   }
 
   const bordeGrupo = `2px solid ${COLORES.linea}`;
+  // La recuperacion es para quien tiene la nota calculada en Bajo, o ya tiene una registrada
+  const puedeRecuperar = (f: { notaPeriodo: number | null; recuperacion: number | null }) =>
+    f.recuperacion !== null || (f.notaPeriodo !== null && config !== undefined && f.notaPeriodo < config.notaAprobatoria);
+  const mostrarRecuperacion = !!planilla.data?.admiteRecuperacion && !!planilla.data?.estudiantes.some(puedeRecuperar);
 
   return (
     <Stack spacing={2}>
@@ -163,8 +184,8 @@ export default function PlanillaNotas() {
             select
             label="Periodo"
             value={periodoId}
-            onChange={(e) => setPeriodoId(Number(e.target.value))}
-            sx={{ minWidth: 160 }}
+            onChange={(e) => setPeriodoId(e.target.value === 'final' ? 'final' : Number(e.target.value))}
+            sx={{ minWidth: 200 }}
           >
             {carga.periodos.map((p) => (
               <MenuItem key={p.id} value={p.id}>
@@ -172,13 +193,16 @@ export default function PlanillaNotas() {
                 {p.cerrado ? ' (cerrado)' : ''}
               </MenuItem>
             ))}
+            <MenuItem value="final">Recuperación final</MenuItem>
           </TextField>
         )}
-        {planilla.data?.editable && (
+        {typeof periodoId === 'number' && (planilla.data?.editable || planilla.data?.admiteRecuperacion) && (
           <Stack direction="row" spacing={1.5} sx={{ ml: { sm: 'auto' } }}>
-            <Button variant="outlined" onClick={() => setDialogo({ actividad: null })}>
-              Nueva actividad
-            </Button>
+            {planilla.data.editable && (
+              <Button variant="outlined" onClick={() => setDialogo({ actividad: null })}>
+                Nueva actividad
+              </Button>
+            )}
             <Button variant="contained" onClick={guardar} disabled={guardando || pendientes === 0}>
               Guardar notas
             </Button>
@@ -193,15 +217,16 @@ export default function PlanillaNotas() {
         </Alert>
       )}
       {mensaje && <Alert severity={mensaje.tipo}>{mensaje.texto}</Alert>}
+      {periodoId === 'final' && carga && !carga.cualitativa && <RecuperacionFinal cargaId={carga.cargaId} />}
       {planilla.isFetching && !planilla.data && <CircularProgress />}
       {planilla.isError && <Alert severity="error">{mensajeDeError(planilla.error)}</Alert>}
 
-      {planilla.data && config && (
+      {planilla.data && config && typeof periodoId === 'number' && (
         <>
           <Typography variant="body2" color="text.secondary">
             Pesos: Saber {config.pesoSaber} %, Hacer {config.pesoHacer} %, Ser {config.pesoSer} %. Escala de{' '}
             {formato(config.notaMinima)} a {formato(config.notaMaxima)}; aprueba con {formato(config.notaAprobatoria)}.
-            {!planilla.data.editable && ' El periodo está cerrado y solo se puede consultar.'}
+            {!planilla.data.editable && ' El periodo está cerrado: las notas solo se consultan, pero aún puede registrar recuperaciones.'}
             {pendientes > 0 && ` Tiene ${pendientes} ${pendientes === 1 ? 'cambio' : 'cambios'} sin guardar.`}
           </Typography>
           {planilla.data.actividades.length === 0 && (
@@ -214,7 +239,7 @@ export default function PlanillaNotas() {
             <Alert severity="info">El grupo no tiene estudiantes matriculados.</Alert>
           ) : (
             <TableContainer component={Paper}>
-              <Table size="small" sx={{ '& td, & th': { whiteSpace: 'nowrap' } }}>
+              <Table size="small" sx={{ '& td, & th': { whiteSpace: 'nowrap', px: 1 } }}>
                 <TableHead>
                   <TableRow>
                     <TableCell rowSpan={2} sx={{ position: 'sticky', left: 0, zIndex: 3, bgcolor: COLORES.encabezado }}>
@@ -228,14 +253,28 @@ export default function PlanillaNotas() {
                     <TableCell rowSpan={2} align="center" sx={{ borderLeft: bordeGrupo }}>
                       Nota
                     </TableCell>
+                    {mostrarRecuperacion && (
+                      <>
+                        <TableCell rowSpan={2} align="center">
+                          Recuperación
+                          <Typography variant="caption" display="block" color="text.secondary">
+                            máximo {formato(config.topeRecuperacion)}
+                          </Typography>
+                        </TableCell>
+                      </>
+                    )}
                     <TableCell rowSpan={2}>Desempeño</TableCell>
                   </TableRow>
                   <TableRow>
                     {DIMENSIONES.map((d) => [
                       ...porDimension[d].map((a, i) => (
-                        <TableCell key={a.id} align="center" sx={{ borderLeft: i === 0 ? bordeGrupo : undefined, fontWeight: 400 }}>
+                        <TableCell
+                          key={a.id}
+                          align="center"
+                          sx={{ borderLeft: i === 0 ? bordeGrupo : undefined, fontWeight: 400, whiteSpace: 'normal', maxWidth: 110, lineHeight: 1.2 }}
+                        >
                           {planilla.data.editable ? (
-                            <Button size="small" onClick={() => setDialogo({ actividad: a })} title="Editar o borrar la actividad">
+                            <Button size="small" sx={{ lineHeight: 1.2, minWidth: 0 }} onClick={() => setDialogo({ actividad: a })} title="Editar o borrar la actividad">
                               {a.nombre}
                             </Button>
                           ) : (
@@ -307,8 +346,45 @@ export default function PlanillaNotas() {
                         sx={{ borderLeft: bordeGrupo, fontWeight: 700 }}
                         title={f.notaPeriodo !== null && !f.completa ? 'Nota parcial: falta alguna dimensión' : undefined}
                       >
-                        {f.notaPeriodo === null ? '-' : `${formato(f.notaPeriodo)}${f.completa ? '' : '*'}`}
+                        {f.notaDefinitiva === null ? '-' : `${formato(f.notaDefinitiva)}${f.completa ? '' : '*'}`}
+                        {f.recuperacion !== null && (
+                          <Typography variant="caption" display="block" color="text.secondary" sx={{ fontWeight: 400 }}>
+                            sin recuperar {formato(f.notaPeriodo)}
+                          </Typography>
+                        )}
                       </TableCell>
+                      {mostrarRecuperacion && (
+                        <>
+                          <TableCell align="center" sx={{ py: 0.5 }}>
+                            {puedeRecuperar(f) ? (
+                              <InputBase
+                                value={cambiosRec[f.matriculaId] ?? formato(f.recuperacion)}
+                                onChange={(e) => setCambiosRec((c) => ({ ...c, [f.matriculaId]: e.target.value }))}
+                                inputProps={{
+                                  inputMode: 'decimal',
+                                  'aria-label': `Recuperación de ${f.nombres} ${f.apellidos}`,
+                                  style: { textAlign: 'center' },
+                                }}
+                                sx={{
+                                  width: 52,
+                                  px: 0.5,
+                                  border: `1px solid ${
+                                    cambiosRec[f.matriculaId] !== undefined && leerNota(cambiosRec[f.matriculaId], config) === undefined
+                                      ? '#b3261e'
+                                      : cambiosRec[f.matriculaId] !== undefined
+                                        ? COLORES.sol
+                                        : COLORES.linea
+                                  }`,
+                                  borderRadius: 1,
+                                  bgcolor: cambiosRec[f.matriculaId] !== undefined ? '#fdf7ea' : '#fff',
+                                }}
+                              />
+                            ) : (
+                              ''
+                            )}
+                          </TableCell>
+                        </>
+                      )}
                       <TableCell>
                         <EstadoDesempeno desempeno={f.desempeno} />
                       </TableCell>
@@ -322,12 +398,14 @@ export default function PlanillaNotas() {
             <Typography variant="caption" color="text.secondary">
               * Nota parcial: todavía falta alguna dimensión con notas. Una actividad sin nota no cuenta en el promedio;
               si el estudiante no la presentó, registre la nota mínima.
+              {mostrarRecuperacion &&
+                ` La recuperación aparece para quien queda en Bajo; la nota final del periodo es la mayor entre la calculada y la recuperación, sin pasar de ${formato(config.topeRecuperacion)}.`}
             </Typography>
           </Box>
         </>
       )}
 
-      {dialogo && cargaId !== '' && periodoId !== '' && (
+      {dialogo && cargaId !== '' && typeof periodoId === 'number' && (
         <DialogoActividad
           cargaId={cargaId}
           periodoId={periodoId}

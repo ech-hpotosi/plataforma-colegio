@@ -21,7 +21,9 @@ import co.edu.elencano.plataforma.notas.web.dto.ConfiguracionEvaluacionDto;
 import co.edu.elencano.plataforma.notas.web.dto.ConsolidadoNotasDto;
 import co.edu.elencano.plataforma.notas.web.dto.GuardarConfiguracionDto;
 import co.edu.elencano.plataforma.notas.web.dto.GuardarNotasDto;
+import co.edu.elencano.plataforma.notas.web.dto.GuardarRecuperacionesDto;
 import co.edu.elencano.plataforma.notas.web.dto.PlanillaNotasDto;
+import co.edu.elencano.plataforma.notas.web.dto.RecuperacionFinalDto;
 import co.edu.elencano.plataforma.usuarios.seguridad.UsuarioAutenticado;
 import jakarta.validation.Valid;
 
@@ -87,6 +89,26 @@ public class NotasController {
     public PlanillaNotasDto eliminarActividad(@PathVariable Long id,
                                               @AuthenticationPrincipal UsuarioAutenticado usuario) {
         return notasService.eliminarActividad(id, usuario);
+    }
+
+    @PutMapping("/cargas/{cargaId}/periodos/{periodoId}/recuperaciones")
+    public PlanillaNotasDto guardarRecuperaciones(@PathVariable Long cargaId, @PathVariable Long periodoId,
+                                                  @Valid @RequestBody GuardarRecuperacionesDto datos,
+                                                  @AuthenticationPrincipal UsuarioAutenticado usuario) {
+        return notasService.guardarRecuperaciones(cargaId, periodoId, datos, usuario);
+    }
+
+    @GetMapping("/cargas/{cargaId}/recuperacion-final")
+    public RecuperacionFinalDto recuperacionFinal(@PathVariable Long cargaId,
+                                                  @AuthenticationPrincipal UsuarioAutenticado usuario) {
+        return notasService.recuperacionFinal(cargaId, usuario);
+    }
+
+    @PutMapping("/cargas/{cargaId}/recuperacion-final")
+    public RecuperacionFinalDto guardarRecuperacionFinal(@PathVariable Long cargaId,
+                                                         @Valid @RequestBody GuardarRecuperacionesDto datos,
+                                                         @AuthenticationPrincipal UsuarioAutenticado usuario) {
+        return notasService.guardarRecuperacionFinal(cargaId, datos, usuario);
     }
 
     @GetMapping("/grupos/{grupoId}/consolidado")

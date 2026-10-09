@@ -74,6 +74,17 @@ class CalculoNotasTest {
     }
 
     @Test
+    void laRecuperacionNoPasaDelTope() {
+        BigDecimal tope = n("3.0");
+        assertThat(CalculoNotas.definitiva(n("2.4"), n("4.5"), tope)).isEqualByComparingTo("3.0");
+        assertThat(CalculoNotas.definitiva(n("2.4"), n("2.8"), tope)).isEqualByComparingTo("2.8");
+        // Si la recuperacion sale peor, se conserva la nota calculada
+        assertThat(CalculoNotas.definitiva(n("2.4"), n("1.5"), tope)).isEqualByComparingTo("2.4");
+        assertThat(CalculoNotas.definitiva(n("2.4"), null, tope)).isEqualByComparingTo("2.4");
+        assertThat(CalculoNotas.definitiva(null, n("3.0"), tope)).isNull();
+    }
+
+    @Test
     void laNotaDelAnioPonderaLosPeriodos() {
         BigDecimal anual = CalculoNotas.ponderado(List.of(
                 new NotaPonderada(n("4.0"), n("30")),

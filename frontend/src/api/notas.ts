@@ -20,6 +20,8 @@ export interface ConfiguracionEvaluacion {
   notaAprobatoria: number;
   limiteAlto: number;
   limiteSuperior: number;
+  /** Nota maxima que deja una recuperacion. */
+  topeRecuperacion: number;
   pesoSaber: number;
   pesoHacer: number;
   pesoSer: number;
@@ -67,7 +69,12 @@ export interface FilaPlanilla {
   saber: number | null;
   hacer: number | null;
   ser: number | null;
+  /** Nota calculada del periodo, antes de la recuperacion. */
   notaPeriodo: number | null;
+  recuperacion: number | null;
+  observacionRecuperacion: string | null;
+  notaDefinitiva: number | null;
+  /** Desempeno de la nota definitiva. */
   desempeno: Desempeno | null;
   completa: boolean;
 }
@@ -79,6 +86,8 @@ export interface PlanillaNotas {
   periodoId: number;
   periodo: number;
   editable: boolean;
+  /** Las recuperaciones se registran aunque el periodo este cerrado, mientras el anio siga abierto. */
+  admiteRecuperacion: boolean;
   configuracion: ConfiguracionEvaluacion;
   actividades: Actividad[];
   estudiantes: FilaPlanilla[];
@@ -90,6 +99,27 @@ export interface DatosActividad {
   fecha: string | null;
   peso: number;
 }
+
+export interface RecuperacionFinal {
+  cargaId: number;
+  grupo: string;
+  asignatura: string;
+  editable: boolean;
+  configuracion: ConfiguracionEvaluacion;
+  estudiantes: {
+    matriculaId: number;
+    nombres: string;
+    apellidos: string;
+    notaAnio: number | null;
+    completa: boolean;
+    recuperacion: number | null;
+    observacion: string | null;
+    notaDefinitiva: number | null;
+    desempeno: Desempeno | null;
+  }[];
+}
+
+export type ItemRecuperacion = { matriculaId: number; nota: number | null; observacion: string | null };
 
 export interface NotaConsolidado {
   cargaId: number;
@@ -115,6 +145,15 @@ export interface ConsolidadoNotas {
 }
 
 const json = (metodo: string, cuerpo: unknown): RequestInit => ({ method: metodo, body: JSON.stringify(cuerpo) });
+
+/** Convierte lo que escribe el docente (acepta coma) en nota; undefined si no es valida, null si esta vacia. */
+export function leerNota(texto: string, config: ConfiguracionEvaluacion): number | null | undefined {
+  const limpio = texto.trim().replace(',', '.');
+  if (limpio === '') return null;
+  if (!/^\d+(\.\d)?$/.test(limpio)) return undefined;
+  const valor = Number(limpio);
+  return valor >= config.notaMinima && valor <= config.notaMaxima ? valor : undefined;
+}
 
 /** Periodo que contiene la fecha de hoy; si no hay, el ultimo que ya empezo o el primero. */
 export function periodoActual(periodos: PeriodoNotas[], hoy: string): PeriodoNotas | undefined {
@@ -144,6 +183,16 @@ export const modificarActividad = (id: number, datos: DatosActividad) =>
   llamarApi<PlanillaNotas>(`/notas/actividades/${id}`, json('PUT', datos));
 export const eliminarActividad = (id: number) =>
   llamarApi<PlanillaNotas>(`/notas/actividades/${id}`, { method: 'DELETE' });
+
+export const guardarRecuperaciones = (cargaId: number, periodoId: number, recuperaciones: ItemRecuperacion[]) =>
+  llamarApi<PlanillaNotas>(
+    `/notas/cargas/${cargaId}/periodos/${periodoId}/recuperaciones`,
+    json('PUT', { recuperaciones }),
+  );
+export const obtenerRecuperacionFinal = (cargaId: number) =>
+  llamarApi<RecuperacionFinal>(`/notas/cargas/${cargaId}/recuperacion-final`);
+export const guardarRecuperacionFinal = (cargaId: number, recuperaciones: ItemRecuperacion[]) =>
+  llamarApi<RecuperacionFinal>(`/notas/cargas/${cargaId}/recuperacion-final`, json('PUT', { recuperaciones }));
 
 export const obtenerConsolidadoNotas = (grupoId: number, periodoId: number | null) =>
   llamarApi<ConsolidadoNotas>(

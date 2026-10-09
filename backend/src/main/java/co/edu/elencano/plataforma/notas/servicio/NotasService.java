@@ -1,6 +1,7 @@
 package co.edu.elencano.plataforma.notas.servicio;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.EnumMap;
@@ -8,6 +9,7 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -32,9 +34,11 @@ import co.edu.elencano.plataforma.notas.entidad.ConfiguracionEvaluacion;
 import co.edu.elencano.plataforma.notas.entidad.Desempeno;
 import co.edu.elencano.plataforma.notas.entidad.Dimension;
 import co.edu.elencano.plataforma.notas.entidad.NotaActividad;
+import co.edu.elencano.plataforma.notas.entidad.Recuperacion;
 import co.edu.elencano.plataforma.notas.repositorio.ActividadEvaluativaRepository;
 import co.edu.elencano.plataforma.notas.repositorio.ConfiguracionEvaluacionRepository;
 import co.edu.elencano.plataforma.notas.repositorio.NotaActividadRepository;
+import co.edu.elencano.plataforma.notas.repositorio.RecuperacionRepository;
 import co.edu.elencano.plataforma.notas.servicio.CalculoNotas.NotaPeriodo;
 import co.edu.elencano.plataforma.notas.servicio.CalculoNotas.NotaPonderada;
 import co.edu.elencano.plataforma.notas.web.dto.ActividadDto;
@@ -44,10 +48,13 @@ import co.edu.elencano.plataforma.notas.web.dto.ConfiguracionEvaluacionDto;
 import co.edu.elencano.plataforma.notas.web.dto.ConsolidadoNotasDto;
 import co.edu.elencano.plataforma.notas.web.dto.GuardarConfiguracionDto;
 import co.edu.elencano.plataforma.notas.web.dto.GuardarNotasDto;
+import co.edu.elencano.plataforma.notas.web.dto.GuardarRecuperacionesDto;
 import co.edu.elencano.plataforma.notas.web.dto.PeriodoNotasDto;
 import co.edu.elencano.plataforma.notas.web.dto.PlanillaNotasDto;
+import co.edu.elencano.plataforma.notas.web.dto.RecuperacionFinalDto;
 import co.edu.elencano.plataforma.usuarios.entidad.Persona;
 import co.edu.elencano.plataforma.usuarios.entidad.Rol;
+import co.edu.elencano.plataforma.usuarios.repositorio.UsuarioRepository;
 import co.edu.elencano.plataforma.usuarios.seguridad.UsuarioAutenticado;
 
 /**
@@ -57,6 +64,8 @@ import co.edu.elencano.plataforma.usuarios.seguridad.UsuarioAutenticado;
  * - Registrar notas y actividades: el docente de la carga, el administrador o el coordinador academico.
  * - Ver el consolidado de un grupo: directivos, secretaria y el director del grupo.
  * - Cambiar la escala y los pesos: administrador y coordinador academico.
+ * - Recuperaciones: quien registra notas en la carga, solo para estudiantes en desempeno Bajo y
+ *   mientras el anio no este cerrado (aunque el periodo ya este cerrado).
  */
 @Service
 public class NotasService {
@@ -72,11 +81,14 @@ public class NotasService {
     private final AnioLectivoRepository anioRepository;
     private final GrupoService grupoService;
     private final MatriculaRepository matriculaRepository;
+    private final RecuperacionRepository recuperacionRepository;
+    private final UsuarioRepository usuarioRepository;
 
     public NotasService(ConfiguracionEvaluacionRepository configuracionRepository,
                         ActividadEvaluativaRepository actividadRepository, NotaActividadRepository notaRepository,
                         CargaAcademicaRepository cargaRepository, AnioLectivoRepository anioRepository,
-                        GrupoService grupoService, MatriculaRepository matriculaRepository) {
+                        GrupoService grupoService, MatriculaRepository matriculaRepository,
+                        RecuperacionRepository recuperacionRepository, UsuarioRepository usuarioRepository) {
         this.configuracionRepository = configuracionRepository;
         this.actividadRepository = actividadRepository;
         this.notaRepository = notaRepository;
@@ -84,6 +96,8 @@ public class NotasService {
         this.anioRepository = anioRepository;
         this.grupoService = grupoService;
         this.matriculaRepository = matriculaRepository;
+        this.recuperacionRepository = recuperacionRepository;
+        this.usuarioRepository = usuarioRepository;
     }
 
     // ---------- Configuracion ----------
@@ -110,12 +124,18 @@ public class NotasService {
             throw new ReglaNegocioException("La escala debe ir en orden: nota mínima, nota para aprobar, "
                     + "inicio de Alto, inicio de Superior y nota máxima");
         }
+        if (datos.topeRecuperacion().compareTo(datos.notaAprobatoria()) < 0
+                || datos.topeRecuperacion().compareTo(datos.notaMaxima()) > 0) {
+            throw new ReglaNegocioException("La nota máxima después de una recuperación debe estar entre la nota "
+                    + "para aprobar y la nota máxima");
+        }
         if (datos.pesoSaber() + datos.pesoHacer() + datos.pesoSer() != 100) {
             throw new ReglaNegocioException("Los pesos de Saber, Hacer y Ser deben sumar 100 %");
         }
         ConfiguracionEvaluacion config = configuracionDe(anio);
         config.actualizar(datos.notaMinima(), datos.notaMaxima(), datos.notaAprobatoria(), datos.limiteAlto(),
-                datos.limiteSuperior(), datos.pesoSaber(), datos.pesoHacer(), datos.pesoSer());
+                datos.limiteSuperior(), datos.topeRecuperacion(), datos.pesoSaber(), datos.pesoHacer(),
+                datos.pesoSer());
         return ConfiguracionEvaluacionDto.de(config);
     }
 
@@ -143,6 +163,9 @@ public class NotasService {
         List<ActividadEvaluativa> actividades = actividadRepository.listar(cargaId, periodoId);
         Map<Long, List<NotaActividad>> porMatricula = notaRepository.listarDeCargaYPeriodo(cargaId, periodoId).stream()
                 .collect(Collectors.groupingBy(NotaActividad::getMatriculaId));
+        Map<Long, Recuperacion> recuperaciones = recuperacionRepository.listarDeCarga(cargaId).stream()
+                .filter(r -> periodoId.equals(r.getPeriodoId()))
+                .collect(Collectors.toMap(Recuperacion::getMatriculaId, Function.identity()));
 
         List<PlanillaNotasDto.Fila> filas = matriculaRepository.listarActivasDeGrupo(carga.getGrupo().getId()).stream()
                 .map(m -> {
@@ -151,14 +174,19 @@ public class NotasService {
                     Map<Long, BigDecimal> valores = new HashMap<>();
                     notas.forEach(n -> valores.put(n.getActividad().getId(), n.getValor()));
                     NotaPeriodo calculo = CalculoNotas.notaPeriodo(porDimension(notas), config);
+                    Recuperacion r = recuperaciones.get(m.getId());
+                    BigDecimal definitiva = CalculoNotas.definitiva(calculo.nota(), r == null ? null : r.getNota(),
+                            config.getTopeRecuperacion());
                     return new PlanillaNotasDto.Fila(m.getId(), p.getNombres(), p.getApellidos(), valores,
                             calculo.promedios().get(Dimension.SABER), calculo.promedios().get(Dimension.HACER),
                             calculo.promedios().get(Dimension.SER), calculo.nota(),
-                            calculo.nota() == null ? null : config.desempenoDe(calculo.nota()), calculo.completa());
+                            r == null ? null : r.getNota(), r == null ? null : r.getObservacion(), definitiva,
+                            definitiva == null ? null : config.desempenoDe(definitiva), calculo.completa());
                 })
                 .toList();
         return new PlanillaNotasDto(cargaId, nombreGrupo(carga.getGrupo()), carga.getAsignatura().getNombre(),
-                periodoId, periodo.getNumero(), esEditable(periodo), ConfiguracionEvaluacionDto.de(config),
+                periodoId, periodo.getNumero(), esEditable(periodo), !periodo.getAnioLectivo().estaCerrado(),
+                ConfiguracionEvaluacionDto.de(config),
                 actividades.stream().map(ActividadDto::de).toList(), filas);
     }
 
@@ -241,6 +269,118 @@ public class NotasService {
         return planilla(cargaId, periodoId, usuario);
     }
 
+    // ---------- Recuperaciones ----------
+
+    /** Guarda las recuperaciones del periodo; solo para quien tiene desempeno Bajo en la nota calculada. */
+    @Transactional
+    public PlanillaNotasDto guardarRecuperaciones(Long cargaId, Long periodoId, GuardarRecuperacionesDto datos,
+                                                  UsuarioAutenticado usuario) {
+        CargaAcademica carga = cargaQueRegistra(cargaId, usuario);
+        Periodo periodo = periodoDe(carga, periodoId);
+        PlanillaNotasDto actual = planilla(cargaId, periodoId, usuario);
+        Map<Long, BigDecimal> calculadas = new HashMap<>();
+        actual.estudiantes().forEach(f -> calculadas.put(f.matriculaId(), f.notaPeriodo()));
+        aplicarRecuperaciones(carga, periodo, datos, calculadas, usuario);
+        return planilla(cargaId, periodoId, usuario);
+    }
+
+    @Transactional
+    public RecuperacionFinalDto recuperacionFinal(Long cargaId, UsuarioAutenticado usuario) {
+        CargaAcademica carga = cargaQueRegistra(cargaId, usuario);
+        Grupo grupo = carga.getGrupo();
+        ConfiguracionEvaluacion config = configuracionDe(grupo.getAnioLectivo());
+        List<Periodo> periodos = grupo.getAnioLectivo().getPeriodos().stream()
+                .sorted(Comparator.comparingInt(Periodo::getNumero))
+                .toList();
+        Map<Long, Map<Long, Map<Dimension, List<NotaPonderada>>>> arbol = new HashMap<>();
+        for (NotaActividad n : notaRepository.listarDeGrupo(grupo.getId())) {
+            ActividadEvaluativa a = n.getActividad();
+            if (a.getCarga().getId().equals(cargaId)) {
+                arbol.computeIfAbsent(n.getMatriculaId(), k -> new HashMap<>())
+                        .computeIfAbsent(a.getPeriodo().getId(), k -> new EnumMap<>(Dimension.class))
+                        .computeIfAbsent(a.getDimension(), k -> new ArrayList<>())
+                        .add(ponderada(n));
+            }
+        }
+        List<Recuperacion> lista = recuperacionRepository.listarDeCarga(cargaId);
+        Map<String, BigDecimal> recuperaciones = new HashMap<>();
+        lista.forEach(r -> recuperaciones.put(claveRecuperacion(cargaId, r.getPeriodoId(), r.getMatriculaId()), r.getNota()));
+        Map<Long, Recuperacion> finales = lista.stream()
+                .filter(r -> r.getPeriodoId() == null)
+                .collect(Collectors.toMap(Recuperacion::getMatriculaId, Function.identity()));
+
+        List<RecuperacionFinalDto.Fila> filas = matriculaRepository.listarActivasDeGrupo(grupo.getId()).stream()
+                .map(m -> {
+                    Persona p = m.getEstudiante().getPersona();
+                    Resultado res = resultado(cargaId, m.getId(), arbol.getOrDefault(m.getId(), Map.of()),
+                            recuperaciones, periodos, config);
+                    Recuperacion r = finales.get(m.getId());
+                    return new RecuperacionFinalDto.Fila(m.getId(), p.getNombres(), p.getApellidos(), res.anio(),
+                            res.anioCompleta(), r == null ? null : r.getNota(), r == null ? null : r.getObservacion(),
+                            res.anioDefinitiva(),
+                            res.anioDefinitiva() == null ? null : config.desempenoDe(res.anioDefinitiva()));
+                })
+                .toList();
+        return new RecuperacionFinalDto(cargaId, nombreGrupo(grupo), carga.getAsignatura().getNombre(),
+                !grupo.getAnioLectivo().estaCerrado(), ConfiguracionEvaluacionDto.de(config), filas);
+    }
+
+    /** Guarda las recuperaciones finales; solo para quien tiene la nota del anio en Bajo. */
+    @Transactional
+    public RecuperacionFinalDto guardarRecuperacionFinal(Long cargaId, GuardarRecuperacionesDto datos,
+                                                         UsuarioAutenticado usuario) {
+        CargaAcademica carga = cargaQueRegistra(cargaId, usuario);
+        Map<Long, BigDecimal> notasAnio = new HashMap<>();
+        recuperacionFinal(cargaId, usuario).estudiantes().forEach(f -> notasAnio.put(f.matriculaId(), f.notaAnio()));
+        aplicarRecuperaciones(carga, null, datos, notasAnio, usuario);
+        return recuperacionFinal(cargaId, usuario);
+    }
+
+    /** periodo nulo es la recuperacion final; calculadas es la nota antes de recuperar de cada matricula. */
+    private void aplicarRecuperaciones(CargaAcademica carga, Periodo periodo, GuardarRecuperacionesDto datos,
+                                       Map<Long, BigDecimal> calculadas, UsuarioAutenticado usuario) {
+        AnioLectivo anio = carga.getGrupo().getAnioLectivo();
+        if (anio.estaCerrado()) {
+            throw new ReglaNegocioException("El año lectivo " + anio.getAnio() + " está cerrado y no admite cambios");
+        }
+        ConfiguracionEvaluacion config = configuracionDe(anio);
+        Long periodoId = periodo == null ? null : periodo.getId();
+        Map<Long, Matricula> delGrupo = matriculaRepository.listarActivasDeGrupo(carga.getGrupo().getId()).stream()
+                .collect(Collectors.toMap(Matricula::getId, Function.identity()));
+        Map<Long, Recuperacion> existentes = recuperacionRepository.listarDeCarga(carga.getId()).stream()
+                .filter(r -> Objects.equals(r.getPeriodoId(), periodoId))
+                .collect(Collectors.toMap(Recuperacion::getMatriculaId, Function.identity()));
+        LocalDateTime ahora = LocalDateTime.now();
+        for (GuardarRecuperacionesDto.Item item : datos.recuperaciones()) {
+            Matricula matricula = delGrupo.get(item.matriculaId());
+            if (matricula == null) {
+                throw new ReglaNegocioException("La matrícula " + item.matriculaId() + " no está activa en el grupo");
+            }
+            Recuperacion existente = existentes.get(matricula.getId());
+            if (item.nota() == null) {
+                if (existente != null) {
+                    recuperacionRepository.delete(existente);
+                }
+                continue;
+            }
+            String nombre = matricula.getEstudiante().getPersona().getNombreCompleto();
+            BigDecimal calculada = calculadas.get(matricula.getId());
+            if (calculada == null || config.desempenoDe(calculada) != Desempeno.BAJO) {
+                throw new ReglaNegocioException("Solo se registra recuperación a quien tiene desempeño Bajo. "
+                        + nombre + (calculada == null ? " no tiene nota" : " tiene " + calculada));
+            }
+            if (item.nota().scale() > 1 || !config.estaEnEscala(item.nota())) {
+                throw new ReglaNegocioException("La recuperación de " + nombre + " debe estar entre "
+                        + config.getNotaMinima() + " y " + config.getNotaMaxima() + " con una sola decimal");
+            }
+            Recuperacion r = existente != null ? existente : new Recuperacion(carga, periodo, matricula);
+            String observacion = item.observacion() == null || item.observacion().isBlank() ? null : item.observacion().trim();
+            r.registrar(item.nota(), observacion, usuarioRepository.getReferenceById(usuario.getId()), ahora);
+            recuperacionRepository.save(r);
+        }
+        recuperacionRepository.flush();
+    }
+
     // ---------- Consolidado del grupo ----------
 
     @Transactional
@@ -263,6 +403,9 @@ public class NotasService {
 
         // matricula -> carga -> periodo -> dimension -> notas
         Map<Long, Map<Long, Map<Long, Map<Dimension, List<NotaPonderada>>>>> arbol = new HashMap<>();
+        Map<String, BigDecimal> recuperaciones = new HashMap<>();
+        recuperacionRepository.listarDeGrupo(grupoId).forEach(r ->
+                recuperaciones.put(claveRecuperacion(r.getCargaId(), r.getPeriodoId(), r.getMatriculaId()), r.getNota()));
         for (NotaActividad n : notaRepository.listarDeGrupo(grupoId)) {
             ActividadEvaluativa a = n.getActividad();
             arbol.computeIfAbsent(n.getMatriculaId(), k -> new HashMap<>())
@@ -279,7 +422,11 @@ public class NotasService {
                     for (CargaAcademica c : cargas) {
                         Map<Long, Map<Dimension, List<NotaPonderada>>> porPeriodo =
                                 arbol.getOrDefault(m.getId(), Map.of()).getOrDefault(c.getId(), Map.of());
-                        notas.add(notaAsignatura(c.getId(), porPeriodo, periodos, periodoId, config));
+                        Resultado res = resultado(c.getId(), m.getId(), porPeriodo, recuperaciones, periodos, config);
+                        BigDecimal nota = periodoId == null ? res.anioDefinitiva() : res.periodos().get(periodoId);
+                        boolean completa = periodoId == null ? res.anioCompleta() : res.completos().get(periodoId);
+                        notas.add(new ConsolidadoNotasDto.Nota(c.getId(), nota,
+                                nota == null ? null : config.desempenoDe(nota), completa && nota != null));
                     }
                     int enBajo = (int) notas.stream().filter(n -> n.desempeno() == Desempeno.BAJO).count();
                     return new ConsolidadoNotasDto.Estudiante(m.getId(), p.getNombres(), p.getApellidos(), notas, enBajo);
@@ -293,30 +440,41 @@ public class NotasService {
                 estudiantes);
     }
 
-    /** Nota de una asignatura en un periodo, o acumulada del anio si periodoId es nulo. */
-    private ConsolidadoNotasDto.Nota notaAsignatura(Long cargaId, Map<Long, Map<Dimension, List<NotaPonderada>>> porPeriodo,
-                                                    List<Periodo> periodos, Long periodoId,
-                                                    ConfiguracionEvaluacion config) {
-        BigDecimal nota;
-        boolean completa;
-        if (periodoId != null) {
-            NotaPeriodo calculo = CalculoNotas.notaPeriodo(porPeriodo.getOrDefault(periodoId, Map.of()), config);
-            nota = calculo.nota();
-            completa = calculo.completa();
-        } else {
-            List<NotaPonderada> ponderadas = new ArrayList<>();
-            completa = true;
-            for (Periodo p : periodos) {
-                NotaPeriodo calculo = CalculoNotas.notaPeriodo(porPeriodo.getOrDefault(p.getId(), Map.of()), config);
-                if (calculo.nota() != null) {
-                    ponderadas.add(new NotaPonderada(calculo.nota(), p.getPorcentaje()));
-                }
-                completa &= calculo.completa();
+    /**
+     * Notas de una asignatura para un estudiante: definitiva de cada periodo (con su recuperacion),
+     * nota del anio ponderada por periodos y definitiva del anio con la recuperacion final.
+     */
+    private record Resultado(Map<Long, BigDecimal> periodos, Map<Long, Boolean> completos, BigDecimal anio,
+                             boolean anioCompleta, BigDecimal anioDefinitiva) {
+    }
+
+    private static Resultado resultado(Long cargaId, Long matriculaId,
+                                       Map<Long, Map<Dimension, List<NotaPonderada>>> porPeriodo,
+                                       Map<String, BigDecimal> recuperaciones, List<Periodo> periodos,
+                                       ConfiguracionEvaluacion config) {
+        Map<Long, BigDecimal> definitivas = new HashMap<>();
+        Map<Long, Boolean> completos = new HashMap<>();
+        List<NotaPonderada> ponderadas = new ArrayList<>();
+        boolean completa = true;
+        for (Periodo p : periodos) {
+            NotaPeriodo calculo = CalculoNotas.notaPeriodo(porPeriodo.getOrDefault(p.getId(), Map.of()), config);
+            BigDecimal definitiva = CalculoNotas.definitiva(calculo.nota(),
+                    recuperaciones.get(claveRecuperacion(cargaId, p.getId(), matriculaId)), config.getTopeRecuperacion());
+            definitivas.put(p.getId(), definitiva);
+            completos.put(p.getId(), calculo.completa());
+            if (definitiva != null) {
+                ponderadas.add(new NotaPonderada(definitiva, p.getPorcentaje()));
             }
-            nota = CalculoNotas.ponderado(ponderadas);
+            completa &= calculo.completa();
         }
-        return new ConsolidadoNotasDto.Nota(cargaId, nota, nota == null ? null : config.desempenoDe(nota),
-                completa && nota != null);
+        BigDecimal anio = CalculoNotas.ponderado(ponderadas);
+        BigDecimal anioDefinitiva = CalculoNotas.definitiva(anio,
+                recuperaciones.get(claveRecuperacion(cargaId, null, matriculaId)), config.getTopeRecuperacion());
+        return new Resultado(definitivas, completos, anio, completa && anio != null, anioDefinitiva);
+    }
+
+    private static String claveRecuperacion(Long cargaId, Long periodoId, Long matriculaId) {
+        return cargaId + "|" + (periodoId == null ? "final" : periodoId) + "|" + matriculaId;
     }
 
     // ---------- Apoyo ----------

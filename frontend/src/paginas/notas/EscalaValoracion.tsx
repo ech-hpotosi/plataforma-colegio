@@ -13,6 +13,7 @@ const CAMPOS_ESCALA: { campo: Campo; texto: string }[] = [
   { campo: 'notaAprobatoria', texto: 'Aprueba con' },
   { campo: 'limiteAlto', texto: 'Alto desde' },
   { campo: 'limiteSuperior', texto: 'Superior desde' },
+  { campo: 'topeRecuperacion', texto: 'Máximo tras recuperar' },
 ];
 
 const CAMPOS_PESO: { campo: Campo; texto: string }[] = [
@@ -49,6 +50,7 @@ export default function EscalaValoracion() {
         notaAprobatoria: una(d.notaAprobatoria),
         limiteAlto: una(d.limiteAlto),
         limiteSuperior: una(d.limiteSuperior),
+        topeRecuperacion: una(d.topeRecuperacion),
         pesoSaber: String(d.pesoSaber),
         pesoHacer: String(d.pesoHacer),
         pesoSer: String(d.pesoSer),
@@ -94,7 +96,7 @@ export default function EscalaValoracion() {
             <Typography variant="h6" component="h2" sx={{ mb: 2 }}>
               Escala numérica
             </Typography>
-            <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: { xs: '1fr 1fr', sm: 'repeat(5, 1fr)' } }}>
+            <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: { xs: '1fr 1fr', sm: 'repeat(3, 1fr)', md: 'repeat(6, 1fr)' } }}>
               {CAMPOS_ESCALA.map(({ campo, texto }) => (
                 <TextField
                   key={campo}
@@ -110,6 +112,10 @@ export default function EscalaValoracion() {
               Bajo: {una(numeros.notaMinima)} a {antes(numeros.notaAprobatoria)}. Básico: {una(numeros.notaAprobatoria)} a{' '}
               {antes(numeros.limiteAlto)}. Alto: {una(numeros.limiteAlto)} a {antes(numeros.limiteSuperior)}. Superior:{' '}
               {una(numeros.limiteSuperior)} a {una(numeros.notaMaxima)}.
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+              Quien recupera una asignatura queda como máximo con {una(numeros.topeRecuperacion)}, aunque saque más en la
+              recuperación. Si saca menos que su nota, conserva la nota.
             </Typography>
           </Paper>
           <Paper sx={{ p: 2.5 }}>

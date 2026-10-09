@@ -59,4 +59,16 @@ public final class CalculoNotas {
         BigDecimal suma = notas.stream().map(n -> n.valor().multiply(n.peso())).reduce(BigDecimal.ZERO, BigDecimal::add);
         return suma.divide(pesos, 1, RoundingMode.HALF_UP);
     }
+
+    /**
+     * Nota despues de la recuperacion: la mayor entre la calculada y la recuperacion, sin que la
+     * recuperacion deje mas que el tope. Sin nota calculada no hay definitiva.
+     */
+    public static BigDecimal definitiva(BigDecimal calculada, BigDecimal recuperacion, BigDecimal tope) {
+        if (calculada == null || recuperacion == null) {
+            return calculada;
+        }
+        BigDecimal conTope = recuperacion.min(tope);
+        return calculada.max(conTope);
+    }
 }

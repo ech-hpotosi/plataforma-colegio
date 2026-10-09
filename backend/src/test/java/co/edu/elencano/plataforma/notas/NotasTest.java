@@ -216,6 +216,35 @@ class NotasTest extends PruebaIntegracion {
                 .andExpect(jsonPath("$.estudiantes[1].notas[0].completa").value(false));
         mockMvc.perform(get(consolidado).session(docente)).andExpect(status().isForbidden());
 
+        // Recuperacion del periodo 1: Bruno (2.4, Bajo) saca 4.5 pero la definitiva queda en el tope de 3.0
+        String recuperaciones = p1 + "/recuperaciones";
+        String rec = "{\"recuperaciones\": [{\"matriculaId\": %d, \"nota\": %s, \"observacion\": \"Taller de refuerzo\"}]}";
+        enviar(put(recuperaciones), docente, rec.formatted(e.ana(), "4.0")).andExpect(status().isConflict());
+        enviar(put(recuperaciones), docente, rec.formatted(e.bruno(), "4.5"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.estudiantes[1].notaPeriodo").value(2.4))
+                .andExpect(jsonPath("$.estudiantes[1].recuperacion").value(4.5))
+                .andExpect(jsonPath("$.estudiantes[1].notaDefinitiva").value(3.0))
+                .andExpect(jsonPath("$.estudiantes[1].desempeno").value("BASICO"));
+        mockMvc.perform(get(consolidado + "?periodoId=" + e.periodo1()).session(director))
+                .andExpect(jsonPath("$.estudiantes[1].notas[0].nota").value(3.0))
+                .andExpect(jsonPath("$.estudiantes[1].asignaturasEnBajo").value(0));
+
+        // Recuperacion final: solo con la nota del anio en Bajo
+        String finalUrl = "/api/notas/cargas/" + e.carga() + "/recuperacion-final";
+        enviar(put(finalUrl), docente, rec.formatted(e.bruno(), "3.5")).andExpect(status().isConflict());
+        enviar(put(recuperaciones), docente, rec.formatted(e.bruno(), "null")).andExpect(status().isOk());
+        mockMvc.perform(get(finalUrl).session(docente))
+                .andExpect(jsonPath("$.estudiantes[1].notaAnio").value(2.4))
+                .andExpect(jsonPath("$.estudiantes[1].desempeno").value("BAJO"));
+        enviar(put(finalUrl), docente, rec.formatted(e.bruno(), "3.5"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.estudiantes[1].recuperacion").value(3.5))
+                .andExpect(jsonPath("$.estudiantes[1].notaDefinitiva").value(3.0));
+        mockMvc.perform(get(consolidado).session(director))
+                .andExpect(jsonPath("$.estudiantes[1].notas[0].nota").value(3.0));
+        enviar(put(finalUrl), docente, rec.formatted(e.bruno(), "null")).andExpect(status().isOk());
+
         // Configuracion: valores por defecto; solo administrador o coordinacion la cambian y los pesos suman 100
         String config = "/api/notas/configuracion/" + e.anio();
         mockMvc.perform(get(config).session(docente))
@@ -224,7 +253,7 @@ class NotasTest extends PruebaIntegracion {
                 .andExpect(jsonPath("$.pesoSer").value(20));
         String json = """
                 {"notaMinima": 1.0, "notaMaxima": 5.0, "notaAprobatoria": 3.0, "limiteAlto": 4.0,
-                 "limiteSuperior": 4.6, "pesoSaber": %d, "pesoHacer": 30, "pesoSer": 30}
+                 "limiteSuperior": 4.6, "topeRecuperacion": 3.0, "pesoSaber": %d, "pesoHacer": 30, "pesoSer": 30}
                 """;
         enviar(put(config), docente, json.formatted(40)).andExpect(status().isForbidden());
         enviar(put(config), sesionAdmin, json.formatted(50)).andExpect(status().isConflict());

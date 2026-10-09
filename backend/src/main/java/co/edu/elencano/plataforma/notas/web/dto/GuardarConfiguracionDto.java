@@ -14,6 +14,7 @@ public record GuardarConfiguracionDto(
         @NotNull @DecimalMin("0.0") @DecimalMax("9.9") BigDecimal notaAprobatoria,
         @NotNull @DecimalMin("0.0") @DecimalMax("9.9") BigDecimal limiteAlto,
         @NotNull @DecimalMin("0.0") @DecimalMax("9.9") BigDecimal limiteSuperior,
+        @NotNull @DecimalMin("0.0") @DecimalMax("9.9") BigDecimal topeRecuperacion,
         @Min(0) @Max(100) int pesoSaber,
         @Min(0) @Max(100) int pesoHacer,
         @Min(0) @Max(100) int pesoSer) {

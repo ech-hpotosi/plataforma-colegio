@@ -137,9 +137,14 @@ Segun el SIEE (art. 4.2 y 7), cada actividad evalua una dimension: Saber, Hacer 
   academico los confirme. Los cambia administrador o coordinacion en `/notas/escala`.
 - Los grados con evaluacion cualitativa (Transicion) no tienen planilla numerica.
 - Consolidado por grupo (`/notas/consolidado`): directivos, secretaria y director del grupo.
+- Recuperaciones (SIEE art. 9 y 11): solo para quien queda en Bajo. Hay una por periodo y una final sobre la nota
+  del anio (opcion "Recuperacion final" del selector de periodo). La nota definitiva es la mayor entre la calculada y
+  la recuperacion, sin pasar del tope (`tope_recuperacion`, por defecto la nota aprobatoria, 3.0). Se puede registrar
+  aunque el periodo este cerrado, mientras el anio siga abierto. Borrar la nota de recuperacion la elimina.
 
 Endpoints bajo `/api/notas`: `configuracion/{anioId}`, `cargas`, `cargas/{id}/periodos/{periodoId}` (GET y PUT),
-`cargas/{id}/periodos/{periodoId}/actividades`, `actividades/{id}` (PUT y DELETE) y `grupos/{id}/consolidado`.
+`cargas/{id}/periodos/{periodoId}/actividades`, `cargas/{id}/periodos/{periodoId}/recuperaciones` (PUT),
+`cargas/{id}/recuperacion-final` (GET y PUT), `actividades/{id}` (PUT y DELETE) y `grupos/{id}/consolidado`.
 
 ## Estilo visual del frontend
 
