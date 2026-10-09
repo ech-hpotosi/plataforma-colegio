@@ -255,4 +255,41 @@ describe('Notas', () => {
     expect(screen.queryByRole('tab', { name: 'Planilla de notas' })).not.toBeInTheDocument();
     expect(screen.queryByRole('tab', { name: 'Escala de valoración' })).not.toBeInTheDocument();
   });
+
+  it('desde el consolidado de un periodo se piden los boletines en PDF', async () => {
+    const consolidado = {
+      grupoId: 3,
+      grupo: 'Sexto 01',
+      periodoId: 11,
+      periodos,
+      configuracion,
+      asignaturas: [{ cargaId: 7, nombre: 'Ciencias', docente: 'Ana Docente' }],
+      estudiantes: [
+        { matriculaId: 31, nombres: 'Mateo', apellidos: 'Botina', notas: [{ cargaId: 7, nota: 3.5, desempeno: 'BASICO', completa: true }], asignaturasEnBajo: 0 },
+      ],
+    };
+    const fetch = simularApi({
+      'GET /api/yo': { estado: 200, cuerpo: rector },
+      'GET /api/asistencia/grupos': {
+        estado: 200,
+        cuerpo: [{ grupoId: 3, anio: 2027, sede: 'Colegio El Encano', grupo: 'Sexto 01' }],
+      },
+      'GET /api/notas/grupos/3/consolidado': { estado: 200, cuerpo: consolidado },
+      'GET /api/notas/grupos/3/periodos/11/boletines': {
+        estado: 409,
+        cuerpo: { mensaje: 'Transición se evalúa de forma cualitativa' },
+      },
+    });
+    renderizarEn('/notas/consolidado', <App />);
+
+    await screen.findByText('3.5');
+    expect(screen.queryByRole('button', { name: 'Descargar boletines (PDF)' })).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole('combobox', { name: 'Periodo' }));
+    await userEvent.click(screen.getByRole('option', { name: /^Periodo 1/ }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Boletín de Mateo Botina' }));
+    expect(await screen.findByText('Transición se evalúa de forma cualitativa')).toBeInTheDocument();
+    const pedido = fetch.mock.calls.find(([url]) => String(url).includes('/boletines'));
+    expect(String(pedido?.[0])).toBe('/api/notas/grupos/3/periodos/11/boletines?matriculaId=31');
+    expect(screen.getByRole('button', { name: 'Descargar boletines (PDF)' })).toBeEnabled();
+  });
 });

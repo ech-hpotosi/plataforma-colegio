@@ -74,6 +74,11 @@ public class InformeEstudiante {
         return id;
     }
 
+    /** Id de la carga sin cargarla. */
+    public Long getCargaId() {
+        return carga.getId();
+    }
+
     /** Id de la matricula sin cargarla. */
     public Long getMatriculaId() {
         return matricula.getId();

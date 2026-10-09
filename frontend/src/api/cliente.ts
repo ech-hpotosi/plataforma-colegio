@@ -44,19 +44,42 @@ export async function llamarApi<T>(ruta: string, opciones: RequestInit = {}): Pr
     credentials: 'same-origin',
   });
   if (!respuesta.ok) {
-    let mensaje = `Error ${respuesta.status}`;
-    let errores: Record<string, string> = {};
-    try {
-      const cuerpo = await respuesta.json();
-      mensaje = cuerpo.mensaje ?? mensaje;
-      errores = cuerpo.errores ?? {};
-    } catch {
-      // La respuesta no trae JSON; se deja el mensaje generico
-    }
-    throw new ErrorApi(respuesta.status, mensaje, errores);
+    throw await errorDe(respuesta);
   }
   if (respuesta.status === 204) {
     return undefined as T;
   }
   return respuesta.json() as Promise<T>;
+}
+
+/** Descarga un archivo de la API (por ejemplo un PDF) con el nombre que envia el servidor. */
+export async function descargarArchivo(ruta: string, nombrePorDefecto: string): Promise<void> {
+  const respuesta = await fetch('/api' + ruta, {
+    headers: { Accept: 'application/pdf, application/json' },
+    credentials: 'same-origin',
+  });
+  if (!respuesta.ok) {
+    throw await errorDe(respuesta);
+  }
+  const disposicion = respuesta.headers.get('Content-Disposition') ?? '';
+  const nombre = /filename="?([^";]+)"?/.exec(disposicion)?.[1] ?? nombrePorDefecto;
+  const url = URL.createObjectURL(await respuesta.blob());
+  const enlace = document.createElement('a');
+  enlace.href = url;
+  enlace.download = nombre;
+  enlace.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+async function errorDe(respuesta: Response): Promise<ErrorApi> {
+  let mensaje = `Error ${respuesta.status}`;
+  let errores: Record<string, string> = {};
+  try {
+    const cuerpo = await respuesta.json();
+    mensaje = cuerpo.mensaje ?? mensaje;
+    errores = cuerpo.errores ?? {};
+  } catch {
+    // La respuesta no trae JSON; se deja el mensaje generico
+  }
+  return new ErrorApi(respuesta.status, mensaje, errores);
 }

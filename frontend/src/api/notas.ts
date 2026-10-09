@@ -1,4 +1,4 @@
-import { llamarApi } from './cliente';
+import { descargarArchivo, llamarApi } from './cliente';
 
 export type Dimension = 'SABER' | 'HACER' | 'SER';
 export type Desempeno = 'BAJO' | 'BASICO' | 'ALTO' | 'SUPERIOR';
@@ -231,6 +231,13 @@ export const obtenerInforme = (cargaId: number, periodoId: number) =>
   llamarApi<InformePeriodo>(`/notas/cargas/${cargaId}/periodos/${periodoId}/informe`);
 export const guardarInforme = (cargaId: number, periodoId: number, datos: DatosInforme) =>
   llamarApi<InformePeriodo>(`/notas/cargas/${cargaId}/periodos/${periodoId}/informe`, json('PUT', datos));
+
+/** Boletines del grupo en el periodo en un PDF; con matriculaId, solo el de ese estudiante. */
+export const descargarBoletines = (grupoId: number, periodoId: number, matriculaId?: number) =>
+  descargarArchivo(
+    `/notas/grupos/${grupoId}/periodos/${periodoId}/boletines${matriculaId ? `?matriculaId=${matriculaId}` : ''}`,
+    'boletin.pdf',
+  );
 
 export const obtenerConsolidadoNotas = (grupoId: number, periodoId: number | null) =>
   llamarApi<ConsolidadoNotas>(

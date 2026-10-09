@@ -49,4 +49,14 @@ public interface DetalleAsistenciaRepository extends JpaRepository<DetalleAsiste
             """)
     List<DetalleAsistencia> listarFaltasRecientes(@Param("desde") LocalDate desde,
                                                   @Param("directorId") Long directorId);
+
+    /** Horas de inasistencia por estudiante, clase y estado en un periodo de las clases del grupo. */
+    @Query("""
+            select new co.edu.elencano.plataforma.asistencia.repositorio.FaltasPeriodo(
+                   d.matricula.id, r.carga.id, d.estado, sum(r.horas))
+            from DetalleAsistencia d join d.registro r
+            where r.carga.grupo.id = :grupoId and r.periodo.id = :periodoId and d.estado <> 'ASISTIO'
+            group by d.matricula.id, r.carga.id, d.estado
+            """)
+    List<FaltasPeriodo> contarDePeriodo(@Param("grupoId") Long grupoId, @Param("periodoId") Long periodoId);
 }

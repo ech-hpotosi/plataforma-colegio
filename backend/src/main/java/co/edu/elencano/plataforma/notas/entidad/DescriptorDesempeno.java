@@ -58,6 +58,11 @@ public class DescriptorDesempeno {
         return id;
     }
 
+    /** Id de la carga sin cargarla. */
+    public Long getCargaId() {
+        return carga.getId();
+    }
+
     public Desempeno getDesempeno() {
         return desempeno;
     }

@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router';
 import {
   Alert,
+  Button,
   CircularProgress,
   MenuItem,
   Paper,
@@ -17,7 +18,7 @@ import {
   Typography,
 } from '@mui/material';
 import { listarGruposAsistencia } from '../../api/asistencia';
-import { NOMBRE_DESEMPENO, obtenerConsolidadoNotas } from '../../api/notas';
+import { NOMBRE_DESEMPENO, descargarBoletines, obtenerConsolidadoNotas } from '../../api/notas';
 import { COLORES } from '../../tema';
 import { mensajeDeError } from '../academico/mensajes';
 
@@ -30,6 +31,8 @@ export default function ConsolidadoNotas() {
   const [grupoId, setGrupoId] = useState<number | ''>(parametros.get('grupo') ? Number(parametros.get('grupo')) : '');
   // '' es el acumulado del anio
   const [periodoId, setPeriodoId] = useState<number | ''>('');
+  const [descargando, setDescargando] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const grupos = useQuery({ queryKey: ['asistencia-grupos'], queryFn: listarGruposAsistencia });
   const consolidado = useQuery({
     queryKey: ['notas-consolidado', grupoId, periodoId],
@@ -48,6 +51,19 @@ export default function ConsolidadoNotas() {
   }
 
   const datos = consolidado.data;
+
+  const boletines = async (matriculaId?: number) => {
+    if (grupoId === '' || periodoId === '') return;
+    setDescargando(true);
+    setError(null);
+    try {
+      await descargarBoletines(grupoId, periodoId, matriculaId);
+    } catch (e) {
+      setError(mensajeDeError(e));
+    } finally {
+      setDescargando(false);
+    }
+  };
   const conBajo = datos?.estudiantes.filter((e) => e.asignaturasEnBajo > 0).length ?? 0;
 
   return (
@@ -86,7 +102,18 @@ export default function ConsolidadoNotas() {
             ))}
           </TextField>
         )}
+        {datos && periodoId !== '' && datos.estudiantes.length > 0 && (
+          <Button
+            variant="contained"
+            onClick={() => boletines()}
+            disabled={descargando}
+            sx={{ ml: { sm: 'auto' }, alignSelf: { sm: 'center' } }}
+          >
+            Descargar boletines (PDF)
+          </Button>
+        )}
       </Stack>
+      {error && <Alert severity="error">{error}</Alert>}
 
       {consolidado.isFetching && !datos && <CircularProgress />}
       {consolidado.isError && <Alert severity="error">{mensajeDeError(consolidado.error)}</Alert>}
@@ -117,6 +144,7 @@ export default function ConsolidadoNotas() {
                       </TableCell>
                     ))}
                     <TableCell align="center">En Bajo</TableCell>
+                    {periodoId !== '' && <TableCell align="center">Boletín</TableCell>}
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -148,6 +176,18 @@ export default function ConsolidadoNotas() {
                       >
                         {e.asignaturasEnBajo}
                       </TableCell>
+                      {periodoId !== '' && (
+                        <TableCell align="center" sx={{ py: 0 }}>
+                          <Button
+                            size="small"
+                            onClick={() => boletines(e.matriculaId)}
+                            disabled={descargando}
+                            aria-label={`Boletín de ${e.nombres} ${e.apellidos}`}
+                          >
+                            PDF
+                          </Button>
+                        </TableCell>
+                      )}
                     </TableRow>
                   ))}
                 </TableBody>

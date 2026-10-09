@@ -2,6 +2,10 @@ package co.edu.elencano.plataforma.notas.web;
 
 import java.util.List;
 
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -14,6 +18,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import co.edu.elencano.plataforma.notas.servicio.BoletinPdf;
+import co.edu.elencano.plataforma.notas.servicio.BoletinService;
+import co.edu.elencano.plataforma.notas.servicio.DatosBoletin;
 import co.edu.elencano.plataforma.notas.servicio.InformePeriodoService;
 import co.edu.elencano.plataforma.notas.servicio.NotasService;
 import co.edu.elencano.plataforma.notas.web.dto.ActividadEntradaDto;
@@ -41,10 +48,15 @@ public class NotasController {
 
     private final NotasService notasService;
     private final InformePeriodoService informeService;
+    private final BoletinService boletinService;
+    private final BoletinPdf boletinPdf;
 
-    public NotasController(NotasService notasService, InformePeriodoService informeService) {
+    public NotasController(NotasService notasService, InformePeriodoService informeService,
+                           BoletinService boletinService, BoletinPdf boletinPdf) {
         this.notasService = notasService;
         this.informeService = informeService;
+        this.boletinService = boletinService;
+        this.boletinPdf = boletinPdf;
     }
 
     @GetMapping("/configuracion/{anioId}")
@@ -133,5 +145,19 @@ public class NotasController {
     public ConsolidadoNotasDto consolidado(@PathVariable Long grupoId, @RequestParam(required = false) Long periodoId,
                                            @AuthenticationPrincipal UsuarioAutenticado usuario) {
         return notasService.consolidado(grupoId, periodoId, usuario);
+    }
+
+    /** Boletines del grupo en el periodo en un PDF, un estudiante por pagina; con matriculaId, solo ese. */
+    @GetMapping(value = "/grupos/{grupoId}/periodos/{periodoId}/boletines", produces = MediaType.APPLICATION_PDF_VALUE)
+    public ResponseEntity<byte[]> boletines(@PathVariable Long grupoId, @PathVariable Long periodoId,
+                                            @RequestParam(required = false) Long matriculaId,
+                                            @AuthenticationPrincipal UsuarioAutenticado usuario) {
+        DatosBoletin datos = boletinService.datos(grupoId, periodoId, matriculaId, usuario);
+        String archivo = ("boletin " + datos.grupo() + " periodo " + datos.periodo() + " " + datos.anio())
+                .replaceAll("[^A-Za-z0-9]+", "-").toLowerCase() + ".pdf";
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_PDF)
+                .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.inline().filename(archivo).build().toString())
+                .body(boletinPdf.generar(datos));
     }
 }

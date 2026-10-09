@@ -1,11 +1,13 @@
 package co.edu.elencano.plataforma.notas;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -21,6 +23,8 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.lowagie.text.pdf.PdfReader;
+import com.lowagie.text.pdf.parser.PdfTextExtractor;
 
 import co.edu.elencano.plataforma.PruebaIntegracion;
 import co.edu.elencano.plataforma.usuarios.entidad.Rol;
@@ -274,6 +278,28 @@ class NotasTest extends PruebaIntegracion {
         enviar(put(informe), docente, "{\"descriptores\": {\"ALTO\": \"%s\"}}".formatted("a".repeat(601)))
                 .andExpect(status().isBadRequest());
         mockMvc.perform(get(informe).session(otro)).andExpect(status().isForbidden());
+
+        // Boletin del periodo: lo ve el director del grupo, no el docente de la asignatura
+        String boletines = "/api/notas/grupos/%d/periodos/%d/boletines".formatted(e.grupo(), e.periodo1());
+        byte[] pdf = mockMvc.perform(get(boletines).session(otro))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_PDF))
+                .andReturn().getResponse().getContentAsByteArray();
+        try (PdfReader lector = new PdfReader(pdf)) {
+            assertThat(lector.getNumberOfPages()).isEqualTo(2);
+            PdfTextExtractor extractor = new PdfTextExtractor(lector);
+            String ana = extractor.getTextFromPage(1);
+            assertThat(ana).contains("Boletín de aprendizaje y convivencia", "Periodo 1", "Notas Ana",
+                    "Ciencias Informe", "Explica con autonomía las funciones de la célula.", "Participa en clase.",
+                    "Valoración del comportamiento: 4.5 (Alto)");
+            assertThat(extractor.getTextFromPage(2)).contains("Notas Bruno", "Sin concepto registrado.");
+        }
+        byte[] solo = mockMvc.perform(get(boletines + "?matriculaId=" + e.bruno()).session(sesionAdmin))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsByteArray();
+        try (PdfReader lector = new PdfReader(solo)) {
+            assertThat(lector.getNumberOfPages()).isEqualTo(1);
+        }
+        mockMvc.perform(get(boletines).session(docente)).andExpect(status().isForbidden());
     }
 
     @Test

@@ -146,13 +146,20 @@ Segun el SIEE (art. 4.2 y 7), cada actividad evalua una dimension: Saber, Hacer 
   aunque el periodo este cerrado, mientras el anio siga abierto. Borrar la nota de recuperacion la elimina.
 - Informe del periodo (`/notas/informe`, SIEE art. 14): por clase y periodo, el docente escribe el concepto
   descriptivo de cada desempeno (el boletin muestra el del desempeno que obtuvo el estudiante) y, por estudiante, la
-  valoracion del comportamiento en la escala y una observacion para la familia. El boletin promediara el
+  valoracion del comportamiento en la escala y una observacion para la familia. El boletin promedia el
   comportamiento de todos los docentes. Se cambia mientras el periodo este abierto.
+- Boletin del periodo en PDF (SIEE art. 14): desde el consolidado, al elegir un periodo, se descarga el de todo el
+  grupo (un estudiante por pagina) o el de un estudiante. Trae identificacion, por asignatura la intensidad horaria,
+  la nota definitiva (con * si faltan notas), el desempeno, el concepto, la observacion y las faltas justificadas y
+  sin justificar en horas; la valoracion del comportamiento (promedio), la escala y las firmas. El nombre de
+  coordinacion solo aparece si hay un unico coordinador academico activo. Aun no hay boletin para Transicion.
+  Se genera con OpenPDF; el escudo esta en `backend/src/main/resources/boletin/escudo.png`.
 
 Endpoints bajo `/api/notas`: `configuracion/{anioId}`, `cargas`, `cargas/{id}/periodos/{periodoId}` (GET y PUT),
 `cargas/{id}/periodos/{periodoId}/informe` (GET y PUT),
 `cargas/{id}/periodos/{periodoId}/actividades`, `cargas/{id}/periodos/{periodoId}/recuperaciones` (PUT),
-`cargas/{id}/recuperacion-final` (GET y PUT), `actividades/{id}` (PUT y DELETE) y `grupos/{id}/consolidado`.
+`cargas/{id}/recuperacion-final` (GET y PUT), `actividades/{id}` (PUT y DELETE), `grupos/{id}/consolidado` y
+`grupos/{id}/periodos/{periodoId}/boletines?matriculaId=` (PDF).
 
 ## Seguimiento del registro
 
