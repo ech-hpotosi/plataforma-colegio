@@ -120,6 +120,26 @@ Inicio: `/api/asistencia/pendientes` entrega lo pendiente de cada usuario: sus c
 (docente), las faltas sin justificar que siguen en plazo (director de grupo, secretaria, coordinador, administrador)
 y los estudiantes que superan el maximo o ya pasaron dos tercios de el. El inicio no repite el menu.
 
+## Notas
+
+Segun el SIEE (art. 4.2 y 7), cada actividad evalua una dimension: Saber, Hacer o Ser.
+
+- El docente crea las actividades del periodo en su clase y registra las notas en la planilla (`/notas/planilla`).
+- Promedio de cada dimension: promedio simple de las notas que tiene el estudiante. Una actividad sin nota no cuenta;
+  si no la presento, el docente registra la nota minima.
+- Nota del periodo: promedio ponderado de las dimensiones con los pesos del anio. Si falta una dimension, la nota es
+  parcial (se marca con *).
+- Nota del anio: promedio ponderado de los periodos segun su porcentaje.
+- Desempeno: Bajo por debajo de la nota aprobatoria, luego Basico, Alto y Superior segun los limites del anio.
+- La escala y los pesos se guardan por anio (`configuracion_evaluacion`). El SIEE no fija numeros; por defecto se
+  usan 1.0 a 5.0, aprueba con 3.0, Alto desde 4.0, Superior desde 4.6 y pesos 40/40/20, hasta que el consejo
+  academico los confirme. Los cambia administrador o coordinacion en `/notas/escala`.
+- Los grados con evaluacion cualitativa (Transicion) no tienen planilla numerica.
+- Consolidado por grupo (`/notas/consolidado`): directivos, secretaria y director del grupo.
+
+Endpoints bajo `/api/notas`: `configuracion/{anioId}`, `cargas`, `cargas/{id}/periodos/{periodoId}` (GET y PUT),
+`cargas/{id}/periodos/{periodoId}/actividades`, `actividades/{id}` (PUT y DELETE) y `grupos/{id}/consolidado`.
+
 ## Estilo visual del frontend
 
 - Colores del escudo y la bandera en `frontend/src/tema.ts` (`COLORES`): azul laguna, verde parcela y ocre del sol.

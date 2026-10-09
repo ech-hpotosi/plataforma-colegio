@@ -16,6 +16,10 @@ import DetalleEstudiante from './paginas/estudiantes/DetalleEstudiante';
 import ListaEstudiantes from './paginas/estudiantes/ListaEstudiantes';
 import Inicio from './paginas/Inicio';
 import Login from './paginas/Login';
+import ConsolidadoNotas from './paginas/notas/ConsolidadoNotas';
+import EscalaValoracion from './paginas/notas/EscalaValoracion';
+import Notas from './paginas/notas/Notas';
+import PlanillaNotas from './paginas/notas/PlanillaNotas';
 import NoEncontrada from './paginas/NoEncontrada';
 import SinPermiso from './paginas/SinPermiso';
 import ListaUsuarios from './paginas/usuarios/ListaUsuarios';
@@ -45,6 +49,13 @@ export default function App() {
             <Route path="/asistencia" element={<Asistencia />}>
               <Route path="tomar" element={<TomarAsistencia />} />
               <Route path="consolidado" element={<ConsolidadoAsistencia />} />
+            </Route>
+            <Route path="/notas" element={<Notas />}>
+              <Route path="planilla" element={<PlanillaNotas />} />
+              <Route path="consolidado" element={<ConsolidadoNotas />} />
+              <Route element={<RutaProtegida roles={['ADMINISTRADOR', 'COORDINADOR_ACADEMICO']} />}>
+                <Route path="escala" element={<EscalaValoracion />} />
+              </Route>
             </Route>
           </Route>
           <Route element={<RutaProtegida roles={['ADMINISTRADOR', 'COORDINADOR_ACADEMICO']} />}>

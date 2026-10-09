@@ -31,6 +31,11 @@ const MENU: GrupoMenu[] = [
         roles: ['ADMINISTRADOR', 'RECTOR', 'COORDINADOR_ACADEMICO', 'SECRETARIA'],
       },
       {
+        texto: 'Notas',
+        ruta: '/notas',
+        roles: ['ADMINISTRADOR', 'RECTOR', 'COORDINADOR_ACADEMICO', 'SECRETARIA', 'DOCENTE'],
+      },
+      {
         texto: 'Asistencia',
         ruta: '/asistencia',
         roles: ['ADMINISTRADOR', 'RECTOR', 'COORDINADOR_ACADEMICO', 'SECRETARIA', 'DOCENTE'],
