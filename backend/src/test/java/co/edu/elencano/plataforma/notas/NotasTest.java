@@ -232,6 +232,51 @@ class NotasTest extends PruebaIntegracion {
     }
 
     @Test
+    void elInformeDelPeriodoGuardaDescriptoresComportamientoYObservaciones() throws Exception {
+        Escenario e = crearEscenario("Informe", 2040, "docente.informe", "director.informe");
+        MockHttpSession docente = iniciarSesion("docente.informe", CONTRASENA);
+        MockHttpSession otro = iniciarSesion("director.informe", CONTRASENA);
+        String informe = "/api/notas/cargas/%d/periodos/%d/informe".formatted(e.carga(), e.periodo1());
+        long taller = crearActividad(docente, e, e.periodo1(), "SABER", "Taller");
+        enviar(put("/api/notas/cargas/%d/periodos/%d".formatted(e.carga(), e.periodo1())), docente,
+                "{\"notas\": [%s, %s]}".formatted(nota(taller, e.ana(), "4.8"), nota(taller, e.bruno(), "2.0")))
+                .andExpect(status().isOk());
+
+        enviar(put(informe), docente, """
+                {"descriptores": {"SUPERIOR": "Explica con autonomía las funciones de la célula.",
+                                  "BAJO": "  Se le dificulta identificar las partes de la célula.  "},
+                 "estudiantes": [{"matriculaId": %d, "comportamiento": 4.5, "observacion": "Participa en clase."},
+                                 {"matriculaId": %d, "comportamiento": 3.0}]}
+                """.formatted(e.ana(), e.bruno()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.descriptores.SUPERIOR").value("Explica con autonomía las funciones de la célula."))
+                .andExpect(jsonPath("$.descriptores.BAJO").value("Se le dificulta identificar las partes de la célula."))
+                .andExpect(jsonPath("$.estudiantes[0].nombres").value("Ana"))
+                .andExpect(jsonPath("$.estudiantes[0].desempeno").value("SUPERIOR"))
+                .andExpect(jsonPath("$.estudiantes[0].comportamiento").value(4.5))
+                .andExpect(jsonPath("$.estudiantes[0].observacion").value("Participa en clase."))
+                .andExpect(jsonPath("$.estudiantes[1].desempeno").value("BAJO"))
+                .andExpect(jsonPath("$.estudiantes[1].observacion").isEmpty());
+
+        // Solo cambia lo enviado: texto vacio borra el descriptor y sin datos se borra el informe del estudiante
+        enviar(put(informe), docente, """
+                {"descriptores": {"BAJO": ""}, "estudiantes": [{"matriculaId": %d}]}
+                """.formatted(e.bruno()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.descriptores.SUPERIOR").exists())
+                .andExpect(jsonPath("$.descriptores.BAJO").doesNotExist())
+                .andExpect(jsonPath("$.estudiantes[0].comportamiento").value(4.5))
+                .andExpect(jsonPath("$.estudiantes[1].comportamiento").isEmpty());
+
+        // Fuera de escala, descriptor muy largo, o de otro docente
+        enviar(put(informe), docente, "{\"estudiantes\": [{\"matriculaId\": %d, \"comportamiento\": 6}]}".formatted(e.ana()))
+                .andExpect(status().isConflict());
+        enviar(put(informe), docente, "{\"descriptores\": {\"ALTO\": \"%s\"}}".formatted("a".repeat(601)))
+                .andExpect(status().isBadRequest());
+        mockMvc.perform(get(informe).session(otro)).andExpect(status().isForbidden());
+    }
+
+    @Test
     void elConsolidadoMuestraElPeriodoYElAcumuladoDelAnio() throws Exception {
         Escenario e = crearEscenario("Notas2", 2039, "docente.notas2", "director.notas2");
         MockHttpSession docente = iniciarSesion("docente.notas2", CONTRASENA);

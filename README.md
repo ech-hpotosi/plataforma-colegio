@@ -144,8 +144,13 @@ Segun el SIEE (art. 4.2 y 7), cada actividad evalua una dimension: Saber, Hacer 
   del anio (opcion "Recuperacion final" del selector de periodo). La nota definitiva es la mayor entre la calculada y
   la recuperacion, sin pasar del tope (`tope_recuperacion`, por defecto la nota aprobatoria, 3.0). Se puede registrar
   aunque el periodo este cerrado, mientras el anio siga abierto. Borrar la nota de recuperacion la elimina.
+- Informe del periodo (`/notas/informe`, SIEE art. 14): por clase y periodo, el docente escribe el concepto
+  descriptivo de cada desempeno (el boletin muestra el del desempeno que obtuvo el estudiante) y, por estudiante, la
+  valoracion del comportamiento en la escala y una observacion para la familia. El boletin promediara el
+  comportamiento de todos los docentes. Se cambia mientras el periodo este abierto.
 
 Endpoints bajo `/api/notas`: `configuracion/{anioId}`, `cargas`, `cargas/{id}/periodos/{periodoId}` (GET y PUT),
+`cargas/{id}/periodos/{periodoId}/informe` (GET y PUT),
 `cargas/{id}/periodos/{periodoId}/actividades`, `cargas/{id}/periodos/{periodoId}/recuperaciones` (PUT),
 `cargas/{id}/recuperacion-final` (GET y PUT), `actividades/{id}` (PUT y DELETE) y `grupos/{id}/consolidado`.
 

@@ -102,6 +102,37 @@ export interface DatosActividad {
   porcentaje: number | null;
 }
 
+/** Lo que la clase aporta al boletin del periodo (SIEE art. 14). */
+export interface InformePeriodo {
+  cargaId: number;
+  grupo: string;
+  asignatura: string;
+  periodoId: number;
+  periodo: number;
+  editable: boolean;
+  configuracion: ConfiguracionEvaluacion;
+  /** Concepto descriptivo de cada desempeno; falta la clave si no se ha escrito. */
+  descriptores: Partial<Record<Desempeno, string>>;
+  estudiantes: FilaInforme[];
+}
+
+export interface FilaInforme {
+  matriculaId: number;
+  nombres: string;
+  apellidos: string;
+  notaDefinitiva: number | null;
+  desempeno: Desempeno | null;
+  completa: boolean;
+  comportamiento: number | null;
+  observacion: string | null;
+}
+
+/** Solo lo que cambia: un descriptor vacio se borra; cada estudiante enviado reemplaza sus dos datos. */
+export interface DatosInforme {
+  descriptores?: Partial<Record<Desempeno, string>>;
+  estudiantes?: { matriculaId: number; comportamiento: number | null; observacion: string | null }[];
+}
+
 export interface RecuperacionFinal {
   cargaId: number;
   grupo: string;
@@ -195,6 +226,11 @@ export const obtenerRecuperacionFinal = (cargaId: number) =>
   llamarApi<RecuperacionFinal>(`/notas/cargas/${cargaId}/recuperacion-final`);
 export const guardarRecuperacionFinal = (cargaId: number, recuperaciones: ItemRecuperacion[]) =>
   llamarApi<RecuperacionFinal>(`/notas/cargas/${cargaId}/recuperacion-final`, json('PUT', { recuperaciones }));
+
+export const obtenerInforme = (cargaId: number, periodoId: number) =>
+  llamarApi<InformePeriodo>(`/notas/cargas/${cargaId}/periodos/${periodoId}/informe`);
+export const guardarInforme = (cargaId: number, periodoId: number, datos: DatosInforme) =>
+  llamarApi<InformePeriodo>(`/notas/cargas/${cargaId}/periodos/${periodoId}/informe`, json('PUT', datos));
 
 export const obtenerConsolidadoNotas = (grupoId: number, periodoId: number | null) =>
   llamarApi<ConsolidadoNotas>(

@@ -19,6 +19,7 @@ import Login from './paginas/Login';
 import ConsolidadoNotas from './paginas/notas/ConsolidadoNotas';
 import EscalaValoracion from './paginas/notas/EscalaValoracion';
 import Notas from './paginas/notas/Notas';
+import InformePeriodo from './paginas/notas/InformePeriodo';
 import PlanillaNotas from './paginas/notas/PlanillaNotas';
 import NoEncontrada from './paginas/NoEncontrada';
 import SinPermiso from './paginas/SinPermiso';
@@ -54,6 +55,7 @@ export default function App() {
             </Route>
             <Route path="/notas" element={<Notas />}>
               <Route path="planilla" element={<PlanillaNotas />} />
+              <Route path="informe" element={<InformePeriodo />} />
               <Route path="consolidado" element={<ConsolidadoNotas />} />
               <Route element={<RutaProtegida roles={['ADMINISTRADOR', 'COORDINADOR_ACADEMICO']} />}>
                 <Route path="escala" element={<EscalaValoracion />} />

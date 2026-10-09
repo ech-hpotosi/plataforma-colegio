@@ -168,6 +168,44 @@ describe('Notas', () => {
     });
   });
 
+  it('el informe del periodo guarda el concepto de cada desempeño y el comportamiento', async () => {
+    const informe = {
+      cargaId: 7,
+      grupo: 'Sexto 01',
+      asignatura: 'Ciencias',
+      periodoId: 11,
+      periodo: 1,
+      editable: true,
+      configuracion,
+      descriptores: { SUPERIOR: 'Explica con autonomía.' },
+      estudiantes: [
+        { matriculaId: 30, nombres: 'Valentina', apellidos: 'Jojoa', notaDefinitiva: 4.8, desempeno: 'SUPERIOR', completa: true, comportamiento: null, observacion: null },
+        { matriculaId: 31, nombres: 'Mateo', apellidos: 'Botina', notaDefinitiva: 2.1, desempeno: 'BAJO', completa: true, comportamiento: 4, observacion: null },
+      ],
+    };
+    const fetch = simularApi({
+      'GET /api/yo': { estado: 200, cuerpo: docente },
+      'GET /api/notas/cargas': { estado: 200, cuerpo: cargas },
+      'GET /api/notas/cargas/7/periodos/11/informe': { estado: 200, cuerpo: informe },
+      'PUT /api/notas/cargas/7/periodos/11/informe': { estado: 200, cuerpo: informe },
+    });
+    renderizarEn('/notas/informe', <App />);
+
+    expect(await screen.findByText(/Hay estudiantes en Bajo y aún no tiene el concepto/)).toBeInTheDocument();
+    expect(screen.getByLabelText('Comportamiento de Mateo Botina')).toHaveValue('4.0');
+    await userEvent.type(screen.getByLabelText('Bajo (1 estudiante)'), 'Debe reforzar.');
+    await userEvent.type(screen.getByLabelText('Comportamiento de Valentina Jojoa'), '4,5');
+    await userEvent.type(screen.getByLabelText('Observación de Valentina Jojoa'), 'Participa.');
+    await userEvent.click(screen.getByRole('button', { name: 'Guardar informe' }));
+    expect(await screen.findByText('Informe guardado')).toBeInTheDocument();
+
+    const envio = fetch.mock.calls.find(([, opciones]) => opciones?.method === 'PUT');
+    expect(JSON.parse(String(envio?.[1]?.body))).toEqual({
+      descriptores: { BAJO: 'Debe reforzar.' },
+      estudiantes: [{ matriculaId: 30, comportamiento: 4.5, observacion: 'Participa.' }],
+    });
+  }, 15000);
+
   it('una nota fuera de la escala no se envía', async () => {
     const fetch = simularApi({
       'GET /api/yo': { estado: 200, cuerpo: docente },

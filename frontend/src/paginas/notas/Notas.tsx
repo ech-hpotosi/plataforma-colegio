@@ -6,6 +6,7 @@ import Encabezado from '../../componentes/Encabezado';
 
 const SECCIONES: { texto: string; ruta: string; roles: Rol[] }[] = [
   { texto: 'Planilla de notas', ruta: 'planilla', roles: ['DOCENTE', 'ADMINISTRADOR', 'COORDINADOR_ACADEMICO'] },
+  { texto: 'Informe del periodo', ruta: 'informe', roles: ['DOCENTE', 'ADMINISTRADOR', 'COORDINADOR_ACADEMICO'] },
   {
     texto: 'Consolidado por grupo',
     ruta: 'consolidado',

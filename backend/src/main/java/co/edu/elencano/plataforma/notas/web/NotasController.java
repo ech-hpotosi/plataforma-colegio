@@ -14,14 +14,17 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import co.edu.elencano.plataforma.notas.servicio.InformePeriodoService;
 import co.edu.elencano.plataforma.notas.servicio.NotasService;
 import co.edu.elencano.plataforma.notas.web.dto.ActividadEntradaDto;
 import co.edu.elencano.plataforma.notas.web.dto.CargaNotasDto;
 import co.edu.elencano.plataforma.notas.web.dto.ConfiguracionEvaluacionDto;
 import co.edu.elencano.plataforma.notas.web.dto.ConsolidadoNotasDto;
 import co.edu.elencano.plataforma.notas.web.dto.GuardarConfiguracionDto;
+import co.edu.elencano.plataforma.notas.web.dto.GuardarInformeDto;
 import co.edu.elencano.plataforma.notas.web.dto.GuardarNotasDto;
 import co.edu.elencano.plataforma.notas.web.dto.GuardarRecuperacionesDto;
+import co.edu.elencano.plataforma.notas.web.dto.InformePeriodoDto;
 import co.edu.elencano.plataforma.notas.web.dto.PlanillaNotasDto;
 import co.edu.elencano.plataforma.notas.web.dto.RecuperacionFinalDto;
 import co.edu.elencano.plataforma.usuarios.seguridad.UsuarioAutenticado;
@@ -37,9 +40,11 @@ import jakarta.validation.Valid;
 public class NotasController {
 
     private final NotasService notasService;
+    private final InformePeriodoService informeService;
 
-    public NotasController(NotasService notasService) {
+    public NotasController(NotasService notasService, InformePeriodoService informeService) {
         this.notasService = notasService;
+        this.informeService = informeService;
     }
 
     @GetMapping("/configuracion/{anioId}")
@@ -70,6 +75,19 @@ public class NotasController {
                                          @Valid @RequestBody GuardarNotasDto datos,
                                          @AuthenticationPrincipal UsuarioAutenticado usuario) {
         return notasService.guardarNotas(cargaId, periodoId, datos, usuario);
+    }
+
+    @GetMapping("/cargas/{cargaId}/periodos/{periodoId}/informe")
+    public InformePeriodoDto informe(@PathVariable Long cargaId, @PathVariable Long periodoId,
+                                     @AuthenticationPrincipal UsuarioAutenticado usuario) {
+        return informeService.informe(cargaId, periodoId, usuario);
+    }
+
+    @PutMapping("/cargas/{cargaId}/periodos/{periodoId}/informe")
+    public InformePeriodoDto guardarInforme(@PathVariable Long cargaId, @PathVariable Long periodoId,
+                                            @Valid @RequestBody GuardarInformeDto datos,
+                                            @AuthenticationPrincipal UsuarioAutenticado usuario) {
+        return informeService.guardar(cargaId, periodoId, datos, usuario);
     }
 
     @PostMapping("/cargas/{cargaId}/periodos/{periodoId}/actividades")
