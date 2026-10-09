@@ -29,11 +29,11 @@ import { NOMBRE_TIPO_DOCUMENTO, type TipoDocumento } from '../../tipos';
 
 const esquema = z.object({
   tipoDocumento: z.enum(['RC', 'TI', 'CC', 'CE', 'PPT']),
-  numeroDocumento: z.string().trim().regex(/^[0-9A-Za-z]{3,20}$/, 'Solo letras y numeros, entre 3 y 20 caracteres'),
+  numeroDocumento: z.string().trim().regex(/^[0-9A-Za-z]{3,20}$/, 'Solo letras y números, entre 3 y 20 caracteres'),
   nombres: z.string().trim().min(1, 'Ingrese los nombres').max(100),
   apellidos: z.string().trim().min(1, 'Ingrese los apellidos').max(100),
   telefono: z.string().trim().max(20),
-  correo: z.union([z.literal(''), z.email('Correo invalido').max(150)]),
+  correo: z.union([z.literal(''), z.email('Correo inválido').max(150)]),
   ocupacion: z.string().trim().max(100),
   parentesco: z.enum(Object.keys(NOMBRE_PARENTESCO) as [Parentesco, ...Parentesco[]], 'Seleccione el parentesco'),
   principal: z.boolean(),
@@ -112,7 +112,7 @@ export default function DialogoAcudiente({ estudianteId, acudiente, alCerrar, al
           marcarError(campo as keyof Datos, { message: mensaje }),
         );
       } else {
-        setError('No hay conexion con el servidor');
+        setError('No hay conexión con el servidor');
       }
     }
   };
@@ -161,15 +161,15 @@ export default function DialogoAcudiente({ estudianteId, acudiente, alCerrar, al
                 )}
               />
             </Grid>
-            {campo('numeroDocumento', 'Numero de documento', 7, {
+            {campo('numeroDocumento', 'Número de documento', 7, {
               disabled: !!acudiente,
               ...register('numeroDocumento', { onBlur: buscarPersona }),
             })}
             {campo('nombres', 'Nombres', 6)}
             {campo('apellidos', 'Apellidos', 6)}
-            {campo('telefono', 'Telefono', 6)}
+            {campo('telefono', 'Teléfono', 6)}
             {campo('correo', 'Correo', 6, { type: 'email' })}
-            {campo('ocupacion', 'Ocupacion', 6)}
+            {campo('ocupacion', 'Ocupación', 6)}
             <Grid size={{ xs: 12, sm: 6 }}>
               <Controller
                 name="parentesco"

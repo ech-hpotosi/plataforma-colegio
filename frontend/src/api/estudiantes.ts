@@ -20,7 +20,7 @@ export const NOMBRE_PARENTESCO: Record<Parentesco, string> = {
   MADRE: 'Madre',
   PADRE: 'Padre',
   ABUELO: 'Abuelo(a)',
-  TIO: 'Tio(a)',
+  TIO: 'Tío(a)',
   HERMANO: 'Hermano(a)',
   TUTOR: 'Tutor legal',
   OTRO: 'Otro',

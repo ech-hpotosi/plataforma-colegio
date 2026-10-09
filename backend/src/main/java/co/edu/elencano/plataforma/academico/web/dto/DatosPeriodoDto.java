@@ -14,6 +14,6 @@ public record DatosPeriodoDto(
         @NotNull(message = "Ingrese el porcentaje")
         @DecimalMin(value = "0.01", message = "El porcentaje debe ser mayor que cero")
         @DecimalMax(value = "100", message = "El porcentaje no puede ser mayor que 100")
-        @Digits(integer = 3, fraction = 2, message = "Use maximo dos decimales")
+        @Digits(integer = 3, fraction = 2, message = "Use máximo dos decimales")
         BigDecimal porcentaje) {
 }

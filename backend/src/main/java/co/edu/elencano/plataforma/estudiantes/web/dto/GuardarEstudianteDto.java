@@ -14,17 +14,17 @@ import jakarta.validation.constraints.Size;
 /** Datos de la ficha del estudiante, para crearla o actualizarla. */
 public record GuardarEstudianteDto(
         @NotNull(message = "Seleccione el tipo de documento") TipoDocumento tipoDocumento,
-        @NotBlank(message = "Ingrese el numero de documento")
-        @Pattern(regexp = "[0-9A-Za-z]{3,20}", message = "Solo letras y numeros, entre 3 y 20 caracteres")
+        @NotBlank(message = "Ingrese el número de documento")
+        @Pattern(regexp = "[0-9A-Za-z]{3,20}", message = "Solo letras y números, entre 3 y 20 caracteres")
         String numeroDocumento,
         @NotBlank(message = "Ingrese los nombres") @Size(max = 100) String nombres,
         @NotBlank(message = "Ingrese los apellidos") @Size(max = 100) String apellidos,
         @Size(max = 20) String telefono,
-        @Email(message = "Correo invalido") @Size(max = 150) String correo,
+        @Email(message = "Correo inválido") @Size(max = 150) String correo,
         @Size(max = 20) String codigo,
         @NotNull(message = "Ingrese la fecha de nacimiento")
         @Past(message = "La fecha de nacimiento debe ser anterior a hoy") LocalDate fechaNacimiento,
-        @NotNull(message = "Seleccione el genero") Genero genero,
+        @NotNull(message = "Seleccione el género") Genero genero,
         @Size(max = 200) String direccion,
         @Size(max = 100) String eps,
         @Size(max = 5) String grupoSanguineo,

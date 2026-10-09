@@ -41,11 +41,11 @@ export default function Areas() {
     <>
       <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
         <Button variant="contained" onClick={() => setEdicion({ tipo: 'area', area: null })}>
-          Nueva area
+          Nueva área
         </Button>
       </Box>
       {consulta.isError && <Alert severity="error">{consulta.error.message}</Alert>}
-      {consulta.data?.length === 0 && <Typography>No hay areas registradas</Typography>}
+      {consulta.data?.length === 0 && <Typography>No hay áreas registradas</Typography>}
       <Stack spacing={2}>
         {consulta.data?.map((area) => (
           <Card key={area.id} variant="outlined">
@@ -153,7 +153,7 @@ function DialogoNombre({
           <Stack spacing={2} sx={{ pt: 1 }}>
             <TextField label="Nombre" value={nombre} onChange={(e) => setNombre(e.target.value)} autoFocus />
             {!esArea && (
-              <TextField select label="Area" value={areaId} onChange={(e) => setAreaId(Number(e.target.value))}>
+              <TextField select label="Área" value={areaId} onChange={(e) => setAreaId(Number(e.target.value))}>
                 {areas.map((area) => (
                   <MenuItem key={area.id} value={area.id}>
                     {area.nombre}

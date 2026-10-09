@@ -51,7 +51,7 @@ public class SedeService {
             throw new ReglaNegocioException("Ya existe una sede llamada " + nombre);
         }
         if (codigoDane != null && sedeRepository.existsByCodigoDaneAndIdNot(codigoDane, id)) {
-            throw new ReglaNegocioException("El codigo DANE " + codigoDane + " ya esta registrado en otra sede");
+            throw new ReglaNegocioException("El código DANE " + codigoDane + " ya está registrado en otra sede");
         }
         sede.setNombre(nombre);
         sede.setCodigoDane(codigoDane);

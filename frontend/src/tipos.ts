@@ -20,7 +20,7 @@ export const ROLES: Rol[] = [
 export const NOMBRE_ROL: Record<Rol, string> = {
   ADMINISTRADOR: 'Administrador',
   RECTOR: 'Rector',
-  COORDINADOR_ACADEMICO: 'Coordinador academico',
+  COORDINADOR_ACADEMICO: 'Coordinador académico',
   SECRETARIA: 'Secretaria',
   DOCENTE: 'Docente',
   ESTUDIANTE: 'Estudiante',
@@ -32,9 +32,9 @@ export type TipoDocumento = 'RC' | 'TI' | 'CC' | 'CE' | 'PPT';
 export const NOMBRE_TIPO_DOCUMENTO: Record<TipoDocumento, string> = {
   RC: 'Registro civil',
   TI: 'Tarjeta de identidad',
-  CC: 'Cedula de ciudadania',
-  CE: 'Cedula de extranjeria',
-  PPT: 'Permiso por proteccion temporal',
+  CC: 'Cédula de ciudadanía',
+  CE: 'Cédula de extranjería',
+  PPT: 'Permiso por protección temporal',
 };
 
 export interface Pagina<T> {

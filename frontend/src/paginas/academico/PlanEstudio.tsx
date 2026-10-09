@@ -107,7 +107,7 @@ export default function PlanEstudio() {
           {mensaje.texto}
         </Alert>
       )}
-      {gradoId === null && <Typography>Seleccione el anio y el grado para ver su plan de estudios.</Typography>}
+      {gradoId === null && <Typography>Seleccione el año y el grado para ver su plan de estudios.</Typography>}
       {plan.data && (
         <TableContainer component={Paper}>
           <Table size="small">
@@ -115,7 +115,7 @@ export default function PlanEstudio() {
               <TableRow>
                 <TableCell padding="checkbox" />
                 <TableCell>Asignatura</TableCell>
-                <TableCell>Area</TableCell>
+                <TableCell>Área</TableCell>
                 <TableCell>Horas semanales</TableCell>
               </TableRow>
             </TableHead>

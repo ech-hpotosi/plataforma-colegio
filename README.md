@@ -116,6 +116,16 @@ Endpoints: `/api/asistencia/cargas`, `/api/asistencia/cargas/{id}?fecha=`, `/api
 `/api/asistencia/grupos/{id}/resumen`, `/api/asistencia/matriculas/{id}/novedades` y
 `/api/asistencia/matriculas/{id}/justificacion`.
 
+## Estilo visual del frontend
+
+- Colores del escudo y la bandera en `frontend/src/tema.ts` (`COLORES`): azul laguna, verde parcela y ocre del sol.
+  Tipografias Source Sans 3 (texto) y Source Serif 4 (titulos), incluidas en el proyecto, sin depender de internet.
+- Cada pantalla empieza con `componentes/Encabezado` (titulo, descripcion corta y accion principal).
+- Botones: uno solo `contained` por pantalla o dialogo para la accion principal; `outlined` para acciones secundarias;
+  texto simple para acciones de fila; `color="error"` solo para retirar o quitar.
+- Estados (activo, bloqueado, falta, etc.) con `componentes/Estado`: punto de color y texto, sin fondo.
+- Todo texto visible lleva tildes y ene (año, contraseña, matrícula). Los nombres en el codigo siguen sin tildes.
+
 ## Pruebas
 
 ```

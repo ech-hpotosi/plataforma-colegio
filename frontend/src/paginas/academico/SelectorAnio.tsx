@@ -24,11 +24,11 @@ export default function SelectorAnio({ valor, alCambiar }: Props) {
     <TextField
       select
       size="small"
-      label="Anio lectivo"
+      label="Año lectivo"
       value={anios.some((a) => a.id === valor) ? valor : ''}
       onChange={(e) => alCambiar(Number(e.target.value))}
       sx={{ minWidth: 180 }}
-      helperText={consulta.isSuccess && anios.length === 0 ? 'Primero cree un anio lectivo' : undefined}
+      helperText={consulta.isSuccess && anios.length === 0 ? 'Primero cree un año lectivo' : undefined}
     >
       {anios.map((a) => (
         <MenuItem key={a.id} value={a.id}>

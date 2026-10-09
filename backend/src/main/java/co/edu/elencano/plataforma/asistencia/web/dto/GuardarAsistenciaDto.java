@@ -9,7 +9,7 @@ import jakarta.validation.constraints.NotNull;
 
 /** Asistencia que envia el docente: horas dictadas y estado de cada estudiante. */
 public record GuardarAsistenciaDto(
-        @NotNull(message = "Ingrese las horas de clase") @Min(value = 1, message = "Minimo 1 hora")
-        @Max(value = 10, message = "Maximo 10 horas") Integer horas,
+        @NotNull(message = "Ingrese las horas de clase") @Min(value = 1, message = "Mínimo 1 hora")
+        @Max(value = 10, message = "Máximo 10 horas") Integer horas,
         @NotNull(message = "Falta la lista de estudiantes") List<@Valid ItemAsistenciaDto> estudiantes) {
 }

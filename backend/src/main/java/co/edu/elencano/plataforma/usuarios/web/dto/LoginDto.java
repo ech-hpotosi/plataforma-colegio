@@ -4,5 +4,5 @@ import jakarta.validation.constraints.NotBlank;
 
 public record LoginDto(
         @NotBlank(message = "Ingrese el usuario") String nombreUsuario,
-        @NotBlank(message = "Ingrese la contrasena") String contrasena) {
+        @NotBlank(message = "Ingrese la contraseña") String contrasena) {
 }

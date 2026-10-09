@@ -13,18 +13,18 @@ import jakarta.validation.constraints.Size;
 
 public record CrearUsuarioDto(
         @NotNull(message = "Seleccione el tipo de documento") TipoDocumento tipoDocumento,
-        @NotBlank(message = "Ingrese el numero de documento")
-        @Pattern(regexp = "[0-9A-Za-z]{3,20}", message = "Solo letras y numeros, entre 3 y 20 caracteres")
+        @NotBlank(message = "Ingrese el número de documento")
+        @Pattern(regexp = "[0-9A-Za-z]{3,20}", message = "Solo letras y números, entre 3 y 20 caracteres")
         String numeroDocumento,
         @NotBlank(message = "Ingrese los nombres") @Size(max = 100) String nombres,
         @NotBlank(message = "Ingrese los apellidos") @Size(max = 100) String apellidos,
         @Size(max = 20) String telefono,
-        @Email(message = "Correo invalido") @Size(max = 150) String correo,
+        @Email(message = "Correo inválido") @Size(max = 150) String correo,
         @NotBlank(message = "Ingrese el nombre de usuario")
-        @Pattern(regexp = "[a-z0-9._-]{3,50}", message = "Use minusculas, numeros, punto, guion o guion bajo (3 a 50)")
+        @Pattern(regexp = "[a-z0-9._-]{3,50}", message = "Use minúsculas, números, punto, guion o guion bajo (3 a 50)")
         String nombreUsuario,
-        @NotBlank(message = "Ingrese la contrasena")
-        @Size(min = 8, max = 72, message = "La contrasena debe tener entre 8 y 72 caracteres")
+        @NotBlank(message = "Ingrese la contraseña")
+        @Size(min = 8, max = 72, message = "La contraseña debe tener entre 8 y 72 caracteres")
         String contrasena,
         @NotEmpty(message = "Seleccione al menos un rol") Set<Rol> roles) {
 }

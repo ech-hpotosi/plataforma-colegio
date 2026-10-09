@@ -1,8 +1,10 @@
-import { AppBar, Box, Button, Container, Toolbar, Typography } from '@mui/material';
-import { Link as RouterLink, Outlet } from 'react-router';
+import { useState } from 'react';
+import { Box, Button, Drawer, Typography } from '@mui/material';
+import { NavLink, Outlet, useLocation } from 'react-router';
 import escudo from '../assets/escudo.png';
 import { useSesion } from '../sesion/useSesion';
-import type { Rol } from '../tipos';
+import { COLORES } from '../tema';
+import { NOMBRE_ROL, type Rol } from '../tipos';
 
 interface OpcionMenu {
   texto: string;
@@ -10,58 +12,189 @@ interface OpcionMenu {
   roles?: Rol[];
 }
 
+interface GrupoMenu {
+  titulo: string;
+  opciones: OpcionMenu[];
+}
+
+const ANCHO_MENU = 248;
+
 // Cada modulo nuevo agrega aqui su opcion de menu con los roles que la pueden ver
-const MENU: OpcionMenu[] = [
-  { texto: 'Inicio', ruta: '/' },
-  { texto: 'Usuarios', ruta: '/usuarios', roles: ['ADMINISTRADOR'] },
+const MENU: GrupoMenu[] = [
+  { titulo: 'General', opciones: [{ texto: 'Inicio', ruta: '/' }] },
   {
-    texto: 'Estudiantes',
-    ruta: '/estudiantes',
-    roles: ['ADMINISTRADOR', 'RECTOR', 'COORDINADOR_ACADEMICO', 'SECRETARIA'],
+    titulo: 'Académico',
+    opciones: [
+      {
+        texto: 'Estudiantes',
+        ruta: '/estudiantes',
+        roles: ['ADMINISTRADOR', 'RECTOR', 'COORDINADOR_ACADEMICO', 'SECRETARIA'],
+      },
+      {
+        texto: 'Asistencia',
+        ruta: '/asistencia',
+        roles: ['ADMINISTRADOR', 'RECTOR', 'COORDINADOR_ACADEMICO', 'SECRETARIA', 'DOCENTE'],
+      },
+      { texto: 'Estructura académica', ruta: '/academico', roles: ['ADMINISTRADOR', 'COORDINADOR_ACADEMICO'] },
+    ],
   },
-  {
-    texto: 'Asistencia',
-    ruta: '/asistencia',
-    roles: ['ADMINISTRADOR', 'RECTOR', 'COORDINADOR_ACADEMICO', 'SECRETARIA', 'DOCENTE'],
-  },
-  { texto: 'Estructura academica', ruta: '/academico', roles: ['ADMINISTRADOR', 'COORDINADOR_ACADEMICO'] },
+  { titulo: 'Administración', opciones: [{ texto: 'Usuarios', ruta: '/usuarios', roles: ['ADMINISTRADOR'] }] },
 ];
 
-/** Barra superior con el menu segun los roles del usuario y el boton de cerrar sesion. */
-export default function Plantilla() {
-  const { usuario, tieneAlgunRol, salir } = useSesion();
+/** Franja con los colores de la bandera: azul, blanco y verde. */
+export function FranjaBandera({ alto = 4 }: { alto?: number }) {
   return (
-    <>
-      <AppBar position="static">
-        <Toolbar sx={{ gap: 1, flexWrap: 'wrap' }}>
-          {/* Fondo blanco circular para que los colores del escudo se vean sobre la barra azul */}
-          <Box
-            component="img"
-            src={escudo}
-            alt=""
-            sx={{ height: 44, width: 44, objectFit: 'contain', bgcolor: 'common.white', borderRadius: '50%', p: 0.5 }}
-          />
-          <Typography variant="h6" component="div" sx={{ mr: 2 }}>
+    <Box
+      sx={{
+        height: alto,
+        background: `linear-gradient(to right, ${COLORES.laguna} 0 33.3%, #ffffff 33.3% 66.6%, ${COLORES.parcela} 66.6% 100%)`,
+        borderBottom: `1px solid ${COLORES.linea}`,
+      }}
+    />
+  );
+}
+
+function MenuLateral({ alNavegar }: { alNavegar?: () => void }) {
+  const { usuario, tieneAlgunRol, salir } = useSesion();
+  const grupos = MENU.map((g) => ({
+    ...g,
+    opciones: g.opciones.filter((o) => !o.roles || tieneAlgunRol(o.roles)),
+  })).filter((g) => g.opciones.length > 0);
+
+  return (
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', bgcolor: '#fff' }}>
+      <Box sx={{ px: 2.5, pt: 3, pb: 2.5, display: 'flex', alignItems: 'center', gap: 1.5 }}>
+        <Box component="img" src={escudo} alt="" sx={{ width: 48, height: 48, objectFit: 'contain' }} />
+        <Box>
+          <Typography sx={{ fontFamily: (t) => t.typography.h6.fontFamily, fontWeight: 600, lineHeight: 1.2 }}>
             IEM El Encano
           </Typography>
-          <Box sx={{ flexGrow: 1, display: 'flex', gap: 1 }}>
-            {MENU.filter((opcion) => !opcion.roles || tieneAlgunRol(opcion.roles)).map((opcion) => (
-              <Button key={opcion.ruta} color="inherit" component={RouterLink} to={opcion.ruta}>
+          <Typography variant="caption" color="text.secondary">
+            Estudio, trabajo y ciencia
+          </Typography>
+        </Box>
+      </Box>
+
+      <Box component="nav" aria-label="Menú principal" sx={{ flexGrow: 1, px: 1.5 }}>
+        {grupos.map((grupo) => (
+          <Box key={grupo.titulo} sx={{ mb: 2 }}>
+            <Typography
+              variant="caption"
+              component="div"
+              sx={{ px: 1.5, mb: 0.5, color: 'text.secondary', fontWeight: 600, letterSpacing: '0.04em' }}
+            >
+              {grupo.titulo}
+            </Typography>
+            {grupo.opciones.map((opcion) => (
+              <Box
+                key={opcion.ruta}
+                component={NavLink}
+                to={opcion.ruta}
+                end={opcion.ruta === '/'}
+                onClick={alNavegar}
+                sx={{
+                  display: 'block',
+                  px: 1.5,
+                  py: 0.9,
+                  borderRadius: 1,
+                  borderLeft: '3px solid transparent',
+                  color: 'text.primary',
+                  textDecoration: 'none',
+                  fontWeight: 500,
+                  '&:hover': { bgcolor: COLORES.encabezado },
+                  '&.active': {
+                    bgcolor: '#eef2f6',
+                    borderLeftColor: COLORES.sol,
+                    color: COLORES.lagunaOscuro,
+                    fontWeight: 700,
+                  },
+                }}
+              >
                 {opcion.texto}
-              </Button>
+              </Box>
             ))}
           </Box>
-          <Typography variant="body2" sx={{ display: { xs: 'none', sm: 'block' } }}>
-            {usuario?.nombreCompleto}
+        ))}
+      </Box>
+
+      <Box sx={{ px: 2.5, py: 2, borderTop: `1px solid ${COLORES.linea}` }}>
+        <Typography variant="body2" sx={{ fontWeight: 600 }}>
+          {usuario?.nombreCompleto}
+        </Typography>
+        <Typography variant="caption" color="text.secondary" component="div" sx={{ mb: 1 }}>
+          {usuario?.roles.map((r) => NOMBRE_ROL[r]).join(', ')}
+        </Typography>
+        <Button variant="outlined" size="small" onClick={salir}>
+          Cerrar sesión
+        </Button>
+      </Box>
+    </Box>
+  );
+}
+
+/**
+ * Estructura de las pantallas internas: menu lateral fijo en computador y menu desplegable en celular.
+ * La franja superior lleva los colores de la bandera del colegio.
+ */
+export default function Plantilla() {
+  const [abierto, setAbierto] = useState(false);
+  const { pathname } = useLocation();
+  const bordeMenu = `1px solid ${COLORES.linea}`;
+
+  return (
+    <Box sx={{ minHeight: '100vh' }}>
+      <Box sx={{ position: 'sticky', top: 0, zIndex: 1100 }}>
+        <FranjaBandera />
+        {/* Barra superior solo en celular */}
+        <Box
+          sx={{
+            display: { xs: 'flex', md: 'none' },
+            alignItems: 'center',
+            gap: 1.5,
+            px: 2,
+            py: 1,
+            bgcolor: '#fff',
+            borderBottom: bordeMenu,
+          }}
+        >
+          <Box component="img" src={escudo} alt="" sx={{ width: 32, height: 32, objectFit: 'contain' }} />
+          <Typography sx={{ flexGrow: 1, fontFamily: (t) => t.typography.h6.fontFamily, fontWeight: 600 }}>
+            IEM El Encano
           </Typography>
-          <Button color="inherit" onClick={salir}>
-            Cerrar sesion
+          <Button variant="outlined" size="small" onClick={() => setAbierto(true)}>
+            Menú
           </Button>
-        </Toolbar>
-      </AppBar>
-      <Container sx={{ py: 3 }}>
-        <Outlet />
-      </Container>
-    </>
+        </Box>
+      </Box>
+
+      <Box
+        component="aside"
+        sx={{
+          display: { xs: 'none', md: 'block' },
+          position: 'fixed',
+          top: 4,
+          bottom: 0,
+          left: 0,
+          width: ANCHO_MENU,
+          borderRight: bordeMenu,
+        }}
+      >
+        <MenuLateral />
+      </Box>
+      <Drawer
+        open={abierto}
+        onClose={() => setAbierto(false)}
+        sx={{ display: { md: 'none' } }}
+        slotProps={{ paper: { sx: { width: ANCHO_MENU } } }}
+      >
+        <MenuLateral key={pathname} alNavegar={() => setAbierto(false)} />
+      </Drawer>
+
+      <Box component="main" sx={{ ml: { md: `${ANCHO_MENU}px` }, px: { xs: 2, sm: 3, md: 5 }, py: { xs: 2.5, md: 4 } }}>
+        <Box sx={{ maxWidth: 1200 }}>
+          <Outlet />
+        </Box>
+      </Box>
+    </Box>
   );
 }

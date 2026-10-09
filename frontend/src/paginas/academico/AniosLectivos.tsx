@@ -7,7 +7,6 @@ import {
   Alert,
   Box,
   Button,
-  Chip,
   Dialog,
   DialogActions,
   DialogContent,
@@ -33,12 +32,13 @@ import {
   type AnioLectivo,
 } from '../../api/academico';
 import { mensajeDeError } from './mensajes';
+import Estado from '../../componentes/Estado';
 
 const fecha = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Ingrese la fecha');
 
 // Las reglas de fechas y porcentajes las valida el backend; aqui solo se revisa que esten completos
 const esquema = z.object({
-  anio: z.coerce.number<string>().int().min(2020, 'Anio invalido').max(2100, 'Anio invalido'),
+  anio: z.coerce.number<string>().int().min(2020, 'Año inválido').max(2100, 'Año inválido'),
   fechaInicio: fecha,
   fechaFin: fecha,
   periodos: z
@@ -46,11 +46,11 @@ const esquema = z.object({
       z.object({
         fechaInicio: fecha,
         fechaFin: fecha,
-        porcentaje: z.coerce.number<string>().gt(0, 'Mayor que cero').max(100, 'Maximo 100'),
+        porcentaje: z.coerce.number<string>().gt(0, 'Mayor que cero').max(100, 'Máximo 100'),
       }),
     )
     .min(1, 'Ingrese al menos un periodo')
-    .max(6, 'Maximo 6 periodos'),
+    .max(6, 'Máximo 6 periodos'),
 });
 
 type Entrada = z.input<typeof esquema>;
@@ -79,7 +79,7 @@ export default function AniosLectivos() {
     <>
       <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
         <Button variant="contained" onClick={() => setEditando('nuevo')}>
-          Nuevo anio lectivo
+          Nuevo año lectivo
         </Button>
       </Box>
       {consulta.isError && <Alert severity="error">{consulta.error.message}</Alert>}
@@ -92,7 +92,7 @@ export default function AniosLectivos() {
         <Table size="small">
           <TableHead>
             <TableRow>
-              <TableCell>Anio</TableCell>
+              <TableCell>Año</TableCell>
               <TableCell>Fechas</TableCell>
               <TableCell>Periodos</TableCell>
               <TableCell>Estado</TableCell>
@@ -116,10 +116,9 @@ export default function AniosLectivos() {
                     ))}
                   </TableCell>
                   <TableCell>
-                    <Chip
-                      size="small"
-                      color={anio.estado === 'EN_CURSO' ? 'success' : 'default'}
-                      label={NOMBRE_ESTADO_ANIO[anio.estado]}
+                    <Estado
+                      tono={anio.estado === 'EN_CURSO' ? 'positivo' : anio.estado === 'CERRADO' ? 'neutro' : 'informativo'}
+                      texto={NOMBRE_ESTADO_ANIO[anio.estado]}
                     />
                   </TableCell>
                   <TableCell align="right">
@@ -133,7 +132,7 @@ export default function AniosLectivos() {
                         size="small"
                         disabled={avanzar.isPending}
                         onClick={() => {
-                          if (window.confirm(`Pasar el anio ${anio.anio} a ${NOMBRE_ESTADO_ANIO[siguiente]}? No se puede devolver.`)) {
+                          if (window.confirm(`Pasar el año ${anio.anio} a ${NOMBRE_ESTADO_ANIO[siguiente]}? No se puede devolver.`)) {
                             avanzar.mutate(anio);
                           }
                         }}
@@ -148,7 +147,7 @@ export default function AniosLectivos() {
             {consulta.data?.length === 0 && (
               <TableRow>
                 <TableCell colSpan={5} align="center">
-                  No hay anios lectivos registrados
+                  No hay años lectivos registrados
                 </TableCell>
               </TableRow>
             )}
@@ -228,7 +227,7 @@ function DialogoAnio({
 
   return (
     <Dialog open onClose={alCerrar} maxWidth="md" fullWidth>
-      <DialogTitle>{anio ? `Editar anio ${anio.anio}` : 'Nuevo anio lectivo'}</DialogTitle>
+      <DialogTitle>{anio ? `Editar año ${anio.anio}` : 'Nuevo año lectivo'}</DialogTitle>
       <form onSubmit={handleSubmit(guardar)} noValidate>
         <DialogContent>
           {error && (
@@ -239,7 +238,7 @@ function DialogoAnio({
           <Grid container spacing={2} sx={{ pt: 1 }}>
             <Grid size={{ xs: 12, sm: 4 }}>
               <TextField
-                label="Anio"
+                label="Año"
                 type="number"
                 fullWidth
                 disabled={anio !== null}

@@ -82,9 +82,9 @@ class EstructuraAcademicaTest extends PruebaIntegracion {
         mockMvc.perform(get("/api/grados").session(sesionAdmin))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(12)))
-                .andExpect(jsonPath("$[0].nombre").value("Transicion"))
+                .andExpect(jsonPath("$[0].nombre").value("Transición"))
                 .andExpect(jsonPath("$[0].evaluacionCualitativa").value(true))
-                .andExpect(jsonPath("$[11].nombre").value("Undecimo"));
+                .andExpect(jsonPath("$[11].nombre").value("Undécimo"));
     }
 
     @Test
@@ -121,7 +121,7 @@ class EstructuraAcademicaTest extends PruebaIntegracion {
         String json = jsonAnio(2032, "30", "30", "40").replace("2032-05-04", "2032-04-20");
         enviar(post("/api/anios"), sesionAdmin, json)
                 .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.mensaje").value("El periodo 2 debe empezar despues de que termine el anterior"));
+                .andExpect(jsonPath("$.mensaje").value("El periodo 2 debe empezar después de que termine el anterior"));
     }
 
     @Test

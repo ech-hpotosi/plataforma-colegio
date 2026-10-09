@@ -58,7 +58,7 @@ public class UsuarioService {
     @Transactional
     public Usuario crear(CrearUsuarioDto datos) {
         if (usuarioRepository.existsByNombreUsuario(datos.nombreUsuario())) {
-            throw new ReglaNegocioException("El nombre de usuario " + datos.nombreUsuario() + " ya esta en uso");
+            throw new ReglaNegocioException("El nombre de usuario " + datos.nombreUsuario() + " ya está en uso");
         }
         Persona persona = personaRepository
                 .findByTipoDocumentoAndNumeroDocumento(datos.tipoDocumento(), datos.numeroDocumento())

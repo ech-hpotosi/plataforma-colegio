@@ -8,12 +8,12 @@ import { ErrorApi } from '../../api/cliente';
 
 const esquema = z
   .object({
-    contrasena: z.string().min(8, 'Minimo 8 caracteres').max(72, 'Maximo 72 caracteres'),
+    contrasena: z.string().min(8, 'Mínimo 8 caracteres').max(72, 'Máximo 72 caracteres'),
     confirmacion: z.string(),
   })
   .refine((d) => d.contrasena === d.confirmacion, {
     path: ['confirmacion'],
-    message: 'Las contrasenas no coinciden',
+    message: 'Las contraseñas no coinciden',
   });
 
 type Datos = z.infer<typeof esquema>;
@@ -39,22 +39,22 @@ export default function DialogoContrasena({ usuario, alCerrar }: Props) {
       await cambiarContrasena(usuario.id, datos.contrasena);
       setListo(true);
     } catch (e) {
-      setError(e instanceof ErrorApi ? e.message : 'No hay conexion con el servidor');
+      setError(e instanceof ErrorApi ? e.message : 'No hay conexión con el servidor');
     }
   };
 
   return (
     <Dialog open onClose={alCerrar} maxWidth="xs" fullWidth>
-      <DialogTitle>Cambiar contrasena de {usuario.nombreUsuario}</DialogTitle>
+      <DialogTitle>Cambiar contraseña de {usuario.nombreUsuario}</DialogTitle>
       <form onSubmit={handleSubmit(guardar)} noValidate>
         <DialogContent>
           {error && <Alert severity="error">{error}</Alert>}
           {listo ? (
-            <Alert severity="success">Contrasena actualizada</Alert>
+            <Alert severity="success">Contraseña actualizada</Alert>
           ) : (
             <>
               <TextField
-                label="Contrasena nueva"
+                label="Contraseña nueva"
                 type="password"
                 fullWidth
                 margin="normal"
@@ -64,7 +64,7 @@ export default function DialogoContrasena({ usuario, alCerrar }: Props) {
                 helperText={errors.contrasena?.message}
               />
               <TextField
-                label="Repita la contrasena"
+                label="Repita la contraseña"
                 type="password"
                 fullWidth
                 margin="normal"

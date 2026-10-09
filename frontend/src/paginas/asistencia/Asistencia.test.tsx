@@ -8,13 +8,13 @@ const docente = { id: 2, nombreUsuario: 'docente', nombreCompleto: 'Ana Docente'
 const rector = { id: 5, nombreUsuario: 'rector', nombreCompleto: 'Raul Rector', roles: ['RECTOR'] };
 
 const cargas = [
-  { cargaId: 7, grupoId: 3, anio: 2027, sede: 'Colegio El Encano', grupo: 'Sexto 01', asignatura: 'Etica', docente: 'Ana Docente' },
+  { cargaId: 7, grupoId: 3, anio: 2027, sede: 'Colegio El Encano', grupo: 'Sexto 01', asignatura: 'Ética', docente: 'Ana Docente' },
 ];
 
 const clase = {
   cargaId: 7,
   grupo: 'Sexto 01',
-  asignatura: 'Etica',
+  asignatura: 'Ética',
   fecha: '2027-03-01',
   periodo: 1,
   horas: 1,
@@ -30,7 +30,7 @@ const resumen = {
   grupo: 'Sexto 01',
   semanasLectivas: 40,
   porcentajeMaximo: 15,
-  asignaturas: [{ asignaturaId: 9, nombre: 'Etica', horasAnuales: 40 }],
+  asignaturas: [{ asignaturaId: 9, nombre: 'Ética', horasAnuales: 40 }],
   estudiantes: [
     {
       matriculaId: 30,
@@ -59,7 +59,7 @@ describe('Asistencia', () => {
 
     const fila = (await screen.findByText(/Jojoa Valentina/)).closest('div.MuiPaper-root') as HTMLElement;
     await userEvent.click(within(fila).getByRole('button', { name: 'Falta' }));
-    await userEvent.type(within(fila).getByLabelText('Observacion'), 'No llego');
+    await userEvent.type(within(fila).getByLabelText('Observación'), 'No llegó');
     expect(screen.getByText(/Faltas: 1\./)).toBeInTheDocument();
 
     await userEvent.click(screen.getByRole('button', { name: 'Guardar asistencia' }));
@@ -69,7 +69,7 @@ describe('Asistencia', () => {
     const cuerpo = JSON.parse(String(envio?.[1]?.body));
     expect(cuerpo.horas).toBe(1);
     expect(cuerpo.estudiantes).toEqual([
-      { matriculaId: 30, estado: 'FALTA', observacion: 'No llego' },
+      { matriculaId: 30, estado: 'FALTA', observacion: 'No llegó' },
       { matriculaId: 31, estado: 'ASISTIO', observacion: null },
     ]);
   });

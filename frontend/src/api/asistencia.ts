@@ -3,7 +3,7 @@ import { llamarApi } from './cliente';
 export type EstadoAsistencia = 'ASISTIO' | 'FALTA' | 'FALTA_JUSTIFICADA' | 'RETARDO' | 'PERMISO';
 
 export const NOMBRE_ESTADO_ASISTENCIA: Record<EstadoAsistencia, string> = {
-  ASISTIO: 'Asistio',
+  ASISTIO: 'Asistió',
   FALTA: 'Falta',
   FALTA_JUSTIFICADA: 'Falta justificada',
   RETARDO: 'Retardo',

@@ -27,14 +27,14 @@ import { NOMBRE_TIPO_DOCUMENTO, type TipoDocumento } from '../../tipos';
 // Las mismas reglas que valida el backend en GuardarEstudianteDto
 const esquema = z.object({
   tipoDocumento: z.enum(['RC', 'TI', 'CC', 'CE', 'PPT']),
-  numeroDocumento: z.string().trim().regex(/^[0-9A-Za-z]{3,20}$/, 'Solo letras y numeros, entre 3 y 20 caracteres'),
+  numeroDocumento: z.string().trim().regex(/^[0-9A-Za-z]{3,20}$/, 'Solo letras y números, entre 3 y 20 caracteres'),
   nombres: z.string().trim().min(1, 'Ingrese los nombres').max(100),
   apellidos: z.string().trim().min(1, 'Ingrese los apellidos').max(100),
   telefono: z.string().trim().max(20),
-  correo: z.union([z.literal(''), z.email('Correo invalido').max(150)]),
+  correo: z.union([z.literal(''), z.email('Correo inválido').max(150)]),
   codigo: z.string().trim().max(20),
   fechaNacimiento: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Ingrese la fecha de nacimiento'),
-  genero: z.enum(['FEMENINO', 'MASCULINO'], 'Seleccione el genero'),
+  genero: z.enum(['FEMENINO', 'MASCULINO'], 'Seleccione el género'),
   direccion: z.string().trim().max(200),
   eps: z.string().trim().max(100),
   grupoSanguineo: z.string().trim().max(5),
@@ -93,7 +93,7 @@ export default function DialogoEstudiante({ estudiante, alCerrar, alGuardar }: P
           marcarError(campo as keyof Datos, { message: mensaje }),
         );
       } else {
-        setError('No hay conexion con el servidor');
+        setError('No hay conexión con el servidor');
       }
     }
   };
@@ -137,8 +137,8 @@ export default function DialogoEstudiante({ estudiante, alCerrar, alGuardar }: P
                 )}
               />
             </Grid>
-            {campo('numeroDocumento', 'Numero de documento', 4)}
-            {campo('codigo', 'Codigo interno (opcional)', 4)}
+            {campo('numeroDocumento', 'Número de documento', 4)}
+            {campo('codigo', 'Código interno (opcional)', 4)}
             {campo('nombres', 'Nombres', 6)}
             {campo('apellidos', 'Apellidos', 6)}
             {campo('fechaNacimiento', 'Fecha de nacimiento', 4, {
@@ -154,7 +154,7 @@ export default function DialogoEstudiante({ estudiante, alCerrar, alGuardar }: P
                     {...field}
                     value={field.value ?? ''}
                     select
-                    label="Genero"
+                    label="Género"
                     fullWidth
                     error={!!errors.genero}
                     helperText={errors.genero?.message}
@@ -168,11 +168,11 @@ export default function DialogoEstudiante({ estudiante, alCerrar, alGuardar }: P
                 )}
               />
             </Grid>
-            {campo('grupoSanguineo', 'Grupo sanguineo (RH)', 4)}
-            {campo('telefono', 'Telefono', 4)}
+            {campo('grupoSanguineo', 'Grupo sanguíneo (RH)', 4)}
+            {campo('telefono', 'Teléfono', 4)}
             {campo('correo', 'Correo', 4, { type: 'email' })}
             {campo('eps', 'EPS', 4)}
-            {campo('direccion', 'Direccion o vereda', 12)}
+            {campo('direccion', 'Dirección o vereda', 12)}
             {campo('condicionDiscapacidad', 'Discapacidad (si aplica)', 8)}
             <Grid size={{ xs: 12, sm: 4 }} sx={{ display: 'flex', alignItems: 'center' }}>
               <Controller

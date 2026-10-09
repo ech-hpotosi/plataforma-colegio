@@ -13,7 +13,7 @@ public record ActualizarUsuarioDto(
         @NotBlank(message = "Ingrese los nombres") @Size(max = 100) String nombres,
         @NotBlank(message = "Ingrese los apellidos") @Size(max = 100) String apellidos,
         @Size(max = 20) String telefono,
-        @Email(message = "Correo invalido") @Size(max = 150) String correo,
+        @Email(message = "Correo inválido") @Size(max = 150) String correo,
         boolean activo,
         @NotEmpty(message = "Seleccione al menos un rol") Set<Rol> roles) {
 }

@@ -25,7 +25,7 @@ const anio2027 = {
   ],
 };
 
-describe('Estructura academica', () => {
+describe('Estructura académica', () => {
   afterEach(() => vi.restoreAllMocks());
 
   it('el coordinador ve el menu y la lista de sedes', async () => {
@@ -40,25 +40,25 @@ describe('Estructura academica', () => {
 
     expect(await screen.findByText('Sede Central')).toBeInTheDocument();
     expect(screen.getByText('Principal')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Estructura academica' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Estructura académica' })).toBeInTheDocument();
   });
 
-  it('un docente no puede entrar a la estructura academica', async () => {
+  it('un docente no puede entrar a la estructura académica', async () => {
     simularApi({ 'GET /api/yo': { estado: 200, cuerpo: docente } });
     renderizarEn('/academico/sedes', <App />);
 
-    expect(await screen.findByText('No tiene permiso para ver esta pagina')).toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: 'Estructura academica' })).not.toBeInTheDocument();
+    expect(await screen.findByText('No tiene permiso para ver esta página')).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Estructura académica' })).not.toBeInTheDocument();
   });
 
-  it('muestra los periodos del anio y el mensaje del servidor al avanzar de estado', async () => {
+  it('muestra los periodos del año y el mensaje del servidor al avanzar de estado', async () => {
     vi.spyOn(window, 'confirm').mockReturnValue(true);
     simularApi({
       'GET /api/yo': { estado: 200, cuerpo: coordinador },
       'GET /api/anios': { estado: 200, cuerpo: [anio2027] },
       'PUT /api/anios/1/estado': {
         estado: 409,
-        cuerpo: { mensaje: 'Ya hay otro anio lectivo en curso. Cierrelo primero', errores: {} },
+        cuerpo: { mensaje: 'Ya hay otro año lectivo en curso. Ciérrelo primero', errores: {} },
       },
     });
     renderizarEn('/academico/anios', <App />);
@@ -66,18 +66,18 @@ describe('Estructura academica', () => {
     const fila = (await screen.findByText('2027')).closest('tr')!;
     expect(within(fila).getByText('P3: 17/08/2027 a 26/11/2027 (40%)')).toBeInTheDocument();
 
-    await userEvent.click(within(fila).getByRole('button', { name: 'Pasar a Matricula' }));
-    expect(await screen.findByText('Ya hay otro anio lectivo en curso. Cierrelo primero')).toBeInTheDocument();
+    await userEvent.click(within(fila).getByRole('button', { name: 'Pasar a Matrícula' }));
+    expect(await screen.findByText('Ya hay otro año lectivo en curso. Ciérrelo primero')).toBeInTheDocument();
   });
 
-  it('el formulario de anio nuevo trae tres periodos y suma los porcentajes', async () => {
+  it('el formulario de año nuevo trae tres periodos y suma los porcentajes', async () => {
     simularApi({
       'GET /api/yo': { estado: 200, cuerpo: coordinador },
       'GET /api/anios': { estado: 200, cuerpo: [] },
     });
     renderizarEn('/academico/anios', <App />);
 
-    await userEvent.click(await screen.findByRole('button', { name: 'Nuevo anio lectivo' }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Nuevo año lectivo' }));
     expect(screen.getByText('Periodo 3')).toBeInTheDocument();
     expect(screen.getByText('Suma de porcentajes: 100%')).toBeInTheDocument();
 

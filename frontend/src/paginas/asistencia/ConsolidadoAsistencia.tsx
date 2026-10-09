@@ -68,8 +68,8 @@ export default function ConsolidadoAsistencia() {
       {resumen.data && (
         <>
           <Typography variant="body2" color="text.secondary">
-            Horas de inasistencia sin justificar en el anio y su porcentaje frente a las horas de la asignatura
-            (intensidad semanal por {resumen.data.semanasLectivas} semanas). Segun el SIEE se pierde la asignatura
+            Horas de inasistencia sin justificar en el año y su porcentaje frente a las horas de la asignatura
+            (intensidad semanal por {resumen.data.semanasLectivas} semanas). Según el SIEE se pierde la asignatura
             al pasar el {resumen.data.porcentajeMaximo}%.
           </Typography>
           {resumen.data.estudiantes.length === 0 ? (
@@ -83,8 +83,8 @@ export default function ConsolidadoAsistencia() {
                     {resumen.data.asignaturas.map((a) => (
                       <TableCell key={a.asignaturaId} align="center">
                         {a.nombre}
-                        <Typography variant="caption" display="block" color="text.secondary">
-                          {a.horasAnuales} h/anio
+                        <Typography variant="caption" display="block" color="text.secondary" sx={{ whiteSpace: 'nowrap' }}>
+                          {a.horasAnuales} h/año
                         </Typography>
                       </TableCell>
                     ))}

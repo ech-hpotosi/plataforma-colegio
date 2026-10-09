@@ -4,7 +4,6 @@ import {
   Alert,
   Box,
   Button,
-  Chip,
   CircularProgress,
   MenuItem,
   Paper,
@@ -23,9 +22,10 @@ import {
   type EstudianteAsistencia,
 } from '../../api/asistencia';
 import { mensajeDeError } from '../academico/mensajes';
+import Estado from '../../componentes/Estado';
 
 const OPCIONES: { valor: EstadoAsistencia; texto: string }[] = [
-  { valor: 'ASISTIO', texto: 'Asistio' },
+  { valor: 'ASISTIO', texto: 'Asistió' },
   { valor: 'FALTA', texto: 'Falta' },
   { valor: 'RETARDO', texto: 'Retardo' },
   { valor: 'PERMISO', texto: 'Permiso' },
@@ -107,7 +107,7 @@ export default function TomarAsistencia() {
   if (cargas.isPending) return <CircularProgress />;
   if (cargas.isError) return <Alert severity="error">{mensajeDeError(cargas.error)}</Alert>;
   if (cargas.data.length === 0) {
-    return <Alert severity="info">No tiene grupos ni asignaturas asignadas en la carga academica.</Alert>;
+    return <Alert severity="info">No tiene grupos ni asignaturas asignadas en la carga académica.</Alert>;
   }
 
   return (
@@ -157,7 +157,7 @@ export default function TomarAsistencia() {
       {clase.data && !clase.isError && (
         <>
           <Typography variant="body2" color="text.secondary">
-            Periodo {clase.data.periodo}. {clase.data.registrada ? 'Asistencia ya registrada; puede corregirla.' : 'Aun no se ha tomado asistencia.'}{' '}
+            Periodo {clase.data.periodo}. {clase.data.registrada ? 'Asistencia ya registrada; puede corregirla.' : 'Aún no se ha tomado asistencia.'}{' '}
             Estudiantes: {filas.length}. Faltas: {faltas}. Retardos: {retardos}.
           </Typography>
           {filas.length === 0 && <Alert severity="info">El grupo no tiene estudiantes matriculados.</Alert>}
@@ -169,7 +169,9 @@ export default function TomarAsistencia() {
                     {i + 1}. {f.apellidos} {f.nombres}
                   </Typography>
                   {f.estado === 'FALTA_JUSTIFICADA' && (
-                    <Chip size="small" color="success" label={'Justificada: ' + (f.justificacion ?? '')} sx={{ mt: 0.5 }} />
+                    <Typography variant="body2" sx={{ mt: 0.5 }}>
+                      <Estado tono="positivo" texto={'Justificada: ' + (f.justificacion ?? '')} />
+                    </Typography>
                   )}
                 </Box>
                 <ToggleButtonGroup
@@ -188,7 +190,7 @@ export default function TomarAsistencia() {
                 {f.estado !== 'ASISTIO' && (
                   <TextField
                     size="small"
-                    label="Observacion"
+                    label="Observación"
                     value={f.observacion ?? ''}
                     onChange={(e) => cambiarObservacion(f.matriculaId, e.target.value)}
                     slotProps={{ htmlInput: { maxLength: 300 } }}

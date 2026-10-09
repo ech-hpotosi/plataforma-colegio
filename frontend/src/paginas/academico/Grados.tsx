@@ -25,7 +25,7 @@ export default function Grados() {
   return (
     <>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-        Los grados con evaluacion cualitativa no llevan nota numerica en el boletin (por ejemplo Transicion, segun
+        Los grados con evaluación cualitativa no llevan nota numérica en el boletín (por ejemplo Transición, según
         el SIEE).
       </Typography>
       {consulta.isError && <Alert severity="error">{consulta.error.message}</Alert>}
@@ -36,7 +36,7 @@ export default function Grados() {
             <TableRow>
               <TableCell>Grado</TableCell>
               <TableCell>Nivel</TableCell>
-              <TableCell>Evaluacion cualitativa</TableCell>
+              <TableCell>Evaluación cualitativa</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -49,7 +49,7 @@ export default function Grados() {
                     checked={grado.evaluacionCualitativa}
                     disabled={cambiar.isPending}
                     onChange={() => cambiar.mutate(grado)}
-                    slotProps={{ input: { 'aria-label': `Evaluacion cualitativa de ${grado.nombre}` } }}
+                    slotProps={{ input: { 'aria-label': `Evaluación cualitativa de ${grado.nombre}` } }}
                   />
                 </TableCell>
               </TableRow>

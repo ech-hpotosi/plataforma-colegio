@@ -29,7 +29,7 @@ import { mensajeDeError } from './mensajes';
 
 const esquema = z.object({
   nombre: z.string().trim().min(1, 'Ingrese el nombre de la sede').max(120),
-  codigoDane: z.string().trim().regex(/^[0-9]{0,20}$/, 'El codigo DANE solo lleva numeros'),
+  codigoDane: z.string().trim().regex(/^[0-9]{0,20}$/, 'El código DANE solo lleva números'),
   direccion: z.string().trim().max(200),
   principal: z.boolean(),
 });
@@ -54,8 +54,8 @@ export default function Sedes() {
           <TableHead>
             <TableRow>
               <TableCell>Nombre</TableCell>
-              <TableCell>Codigo DANE</TableCell>
-              <TableCell>Direccion</TableCell>
+              <TableCell>Código DANE</TableCell>
+              <TableCell>Dirección</TableCell>
               <TableCell />
             </TableRow>
           </TableHead>
@@ -142,13 +142,13 @@ function DialogoSede({ sede, alCerrar, alGuardar }: { sede: Sede | null; alCerra
               helperText={errors.nombre?.message}
             />
             <TextField
-              label="Codigo DANE"
+              label="Código DANE"
               {...register('codigoDane')}
               error={!!errors.codigoDane}
               helperText={errors.codigoDane?.message}
             />
             <TextField
-              label="Direccion"
+              label="Dirección"
               {...register('direccion')}
               error={!!errors.direccion}
               helperText={errors.direccion?.message}

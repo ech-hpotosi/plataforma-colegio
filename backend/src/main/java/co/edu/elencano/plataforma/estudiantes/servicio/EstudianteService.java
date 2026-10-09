@@ -166,7 +166,7 @@ public class EstudianteService {
         String codigo = vacioANulo(datos.codigo());
         Long id = estudiante.getId() == null ? 0L : estudiante.getId();
         if (codigo != null && estudianteRepository.existsByCodigoAndIdNot(codigo, id)) {
-            throw new ReglaNegocioException("El codigo " + codigo + " ya esta asignado a otro estudiante");
+            throw new ReglaNegocioException("El código " + codigo + " ya está asignado a otro estudiante");
         }
         estudiante.setCodigo(codigo);
         estudiante.setFechaNacimiento(datos.fechaNacimiento());

@@ -63,7 +63,7 @@ public class MatriculaService {
                 .orElse(null);
         if (matricula != null && matricula.estaActiva()) {
             throw new ReglaNegocioException(estudiante.getPersona().getNombreCompleto()
-                    + " ya esta matriculado en el anio " + anio.getAnio());
+                    + " ya está matriculado en el año " + anio.getAnio());
         }
         if (matricula == null) {
             matricula = new Matricula(estudiante, anio, LocalDate.now());
@@ -94,9 +94,9 @@ public class MatriculaService {
 
     private Matricula obtenerActiva(Long id) {
         Matricula matricula = matriculaRepository.findById(id)
-                .orElseThrow(() -> new RecursoNoEncontradoException("No existe la matricula " + id));
+                .orElseThrow(() -> new RecursoNoEncontradoException("No existe la matrícula " + id));
         if (!matricula.estaActiva()) {
-            throw new ReglaNegocioException("La matricula esta retirada");
+            throw new ReglaNegocioException("La matrícula está retirada");
         }
         return matricula;
     }
@@ -108,7 +108,7 @@ public class MatriculaService {
         }
         Grupo grupo = grupoService.obtener(grupoId);
         if (!grupo.getAnioLectivo().getId().equals(anio.getId())) {
-            throw new ReglaNegocioException("El grupo " + grupo.getNombre() + " no es del anio " + anio.getAnio());
+            throw new ReglaNegocioException("El grupo " + grupo.getNombre() + " no es del año " + anio.getAnio());
         }
         boolean mismoGrupo = actual != null && actual.getId().equals(grupoId);
         if (!mismoGrupo && matriculaRepository.countByGrupoIdAndEstado(grupoId, EstadoMatricula.ACTIVA) >= grupo.getCupo()) {

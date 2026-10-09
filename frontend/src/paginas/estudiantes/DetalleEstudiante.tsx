@@ -32,7 +32,8 @@ import { mensajeDeError } from '../academico/mensajes';
 import DialogoAcudiente from './DialogoAcudiente';
 import DialogoEstudiante from './DialogoEstudiante';
 import DialogoMatricula from './DialogoMatricula';
-import { COLOR_ESTADO } from './ListaEstudiantes';
+import { TONO_ESTADO } from './ListaEstudiantes';
+import Estado from '../../componentes/Estado';
 
 function fechaCorta(iso: string | null) {
   if (!iso) return '';
@@ -94,14 +95,14 @@ export default function DetalleEstudiante() {
 
   return (
     <>
-      <Button component={RouterLink} to="/estudiantes" sx={{ mb: 1 }}>
+      <Button component={RouterLink} to="/estudiantes" size="small" sx={{ mb: 1, ml: -1 }}>
         Volver a estudiantes
       </Button>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2, flexWrap: 'wrap' }}>
         <Typography variant="h5" component="h1">
           {e.nombres} {e.apellidos}
         </Typography>
-        <Chip color={COLOR_ESTADO[e.estado]} label={NOMBRE_ESTADO_ESTUDIANTE[e.estado]} />
+        <Estado tono={TONO_ESTADO[e.estado]} texto={NOMBRE_ESTADO_ESTUDIANTE[e.estado]} />
         <Box sx={{ flexGrow: 1 }} />
         {puedeEditar && (
           <Button variant="outlined" onClick={() => setEditando(true)}>
@@ -122,16 +123,16 @@ export default function DetalleEstudiante() {
           </Typography>
           <Grid container spacing={2}>
             <Dato etiqueta="Documento" valor={`${e.tipoDocumento} ${e.numeroDocumento}`} />
-            <Dato etiqueta="Codigo" valor={e.codigo} />
+            <Dato etiqueta="Código" valor={e.codigo} />
             <Dato etiqueta="Fecha de nacimiento" valor={fechaCorta(e.fechaNacimiento)} />
-            <Dato etiqueta="Genero" valor={NOMBRE_GENERO[e.genero]} />
-            <Dato etiqueta="Telefono" valor={e.telefono} />
+            <Dato etiqueta="Género" valor={NOMBRE_GENERO[e.genero]} />
+            <Dato etiqueta="Teléfono" valor={e.telefono} />
             <Dato etiqueta="Correo" valor={e.correo} />
-            <Dato etiqueta="Direccion" valor={e.direccion} />
+            <Dato etiqueta="Dirección" valor={e.direccion} />
             <Dato etiqueta="EPS" valor={e.eps} />
-            <Dato etiqueta="Grupo sanguineo" valor={e.grupoSanguineo} />
+            <Dato etiqueta="Grupo sanguíneo" valor={e.grupoSanguineo} />
             <Dato etiqueta="Discapacidad" valor={e.condicionDiscapacidad} />
-            <Dato etiqueta="PIAR" valor={e.tienePiar ? 'Si' : 'No'} />
+            <Dato etiqueta="PIAR" valor={e.tienePiar ? 'Sí' : 'No'} />
             <Dato etiqueta="Otras condiciones" valor={e.condicionesEspeciales} />
           </Grid>
         </CardContent>
@@ -154,7 +155,7 @@ export default function DetalleEstudiante() {
                   <TableCell>Nombre</TableCell>
                   <TableCell>Parentesco</TableCell>
                   <TableCell>Documento</TableCell>
-                  <TableCell>Telefono</TableCell>
+                  <TableCell>Teléfono</TableCell>
                   <TableCell />
                 </TableRow>
               </TableHead>
@@ -201,17 +202,17 @@ export default function DetalleEstudiante() {
         <CardContent>
           <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
             <Typography variant="h6" sx={{ flexGrow: 1 }}>
-              Matriculas
+              Matrículas
             </Typography>
             {puedeEditar && <Button onClick={() => setMatricula('nueva')}>Matricular</Button>}
           </Box>
           {matriculas.data?.length === 0 ? (
-            <Typography color="text.secondary">No tiene matriculas</Typography>
+            <Typography color="text.secondary">No tiene matrículas</Typography>
           ) : (
             <Table size="small">
               <TableHead>
                 <TableRow>
-                  <TableCell>Anio</TableCell>
+                  <TableCell>Año</TableCell>
                   <TableCell>Grupo</TableCell>
                   <TableCell>Sede</TableCell>
                   <TableCell>Estado</TableCell>

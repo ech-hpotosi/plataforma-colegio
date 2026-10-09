@@ -3,7 +3,6 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Alert,
   Button,
-  Chip,
   CircularProgress,
   Dialog,
   DialogActions,
@@ -21,13 +20,14 @@ import {
 } from '@mui/material';
 import { justificarFaltas, listarNovedades, NOMBRE_ESTADO_ASISTENCIA, type EstadoAsistencia } from '../../api/asistencia';
 import { mensajeDeError } from '../academico/mensajes';
+import Estado, { type Tono } from '../../componentes/Estado';
 
-const COLOR_ESTADO: Record<EstadoAsistencia, 'default' | 'error' | 'success' | 'warning' | 'info'> = {
-  ASISTIO: 'default',
-  FALTA: 'error',
-  FALTA_JUSTIFICADA: 'success',
-  RETARDO: 'warning',
-  PERMISO: 'info',
+const TONO_ESTADO: Record<EstadoAsistencia, Tono> = {
+  ASISTIO: 'neutro',
+  FALTA: 'negativo',
+  FALTA_JUSTIFICADA: 'positivo',
+  RETARDO: 'alerta',
+  PERMISO: 'informativo',
 };
 
 interface Props {
@@ -87,7 +87,7 @@ export default function DialogoNovedades({ matriculaId, nombre, grupoId, puedeJu
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ my: 1 }}>
             <TextField
               select
-              label="Dia de la falta"
+              label="Día de la falta"
               value={fecha}
               onChange={(e) => setFecha(e.target.value)}
               sx={{ minWidth: 220 }}
@@ -99,7 +99,7 @@ export default function DialogoNovedades({ matriculaId, nombre, grupoId, puedeJu
               ))}
             </TextField>
             <TextField
-              label="Justificacion y soporte presentado"
+              label="Justificación y soporte presentado"
               value={justificacion}
               onChange={(e) => setJustificacion(e.target.value)}
               slotProps={{ htmlInput: { maxLength: 500 } }}
@@ -133,7 +133,7 @@ export default function DialogoNovedades({ matriculaId, nombre, grupoId, puedeJu
                   <TableCell>{n.asignatura}</TableCell>
                   <TableCell align="center">{n.horas}</TableCell>
                   <TableCell>
-                    <Chip size="small" color={COLOR_ESTADO[n.estado]} label={NOMBRE_ESTADO_ASISTENCIA[n.estado]} />
+                    <Estado tono={TONO_ESTADO[n.estado]} texto={NOMBRE_ESTADO_ASISTENCIA[n.estado]} />
                   </TableCell>
                   <TableCell>
                     <Typography variant="body2">{n.justificacion ?? n.observacion ?? ''}</Typography>

@@ -108,7 +108,7 @@ export default function Grupos() {
                     Editar
                   </Button>
                   <Button size="small" onClick={() => setCargaDe(grupo)}>
-                    Carga academica
+                    Carga académica
                   </Button>
                   <Button size="small" onClick={() => setListaDe(grupo)}>
                     Estudiantes
@@ -342,7 +342,7 @@ function DialogoCarga({ grupo, docentes, alCerrar }: { grupo: Grupo; docentes: D
   return (
     <Dialog open onClose={alCerrar} maxWidth="md" fullWidth>
       <DialogTitle>
-        Carga academica de {grupo.grado} {grupo.nombre} ({grupo.sede})
+        Carga académica de {grupo.grado} {grupo.nombre} ({grupo.sede})
       </DialogTitle>
       <DialogContent>
         {error && (
@@ -352,7 +352,7 @@ function DialogoCarga({ grupo, docentes, alCerrar }: { grupo: Grupo; docentes: D
         )}
         {carga.data?.length === 0 && (
           <Typography>
-            El grado {grupo.grado} no tiene plan de estudios en este anio. Configurelo en Plan de estudios.
+            El grado {grupo.grado} no tiene plan de estudios en este año. Configúrelo en Plan de estudios.
           </Typography>
         )}
         {carga.data && carga.data.length > 0 && (
@@ -360,7 +360,7 @@ function DialogoCarga({ grupo, docentes, alCerrar }: { grupo: Grupo; docentes: D
             <TableHead>
               <TableRow>
                 <TableCell>Asignatura</TableCell>
-                <TableCell>Area</TableCell>
+                <TableCell>Área</TableCell>
                 <TableCell>Horas</TableCell>
                 <TableCell>Docente</TableCell>
               </TableRow>

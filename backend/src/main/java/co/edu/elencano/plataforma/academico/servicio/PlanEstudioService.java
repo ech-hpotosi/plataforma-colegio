@@ -50,7 +50,7 @@ public class PlanEstudioService {
         Map<Long, Integer> nuevos = new HashMap<>();
         for (ItemPlanEstudioDto item : items) {
             if (nuevos.put(item.asignaturaId(), item.intensidadHoraria()) != null) {
-                throw new ReglaNegocioException("Una asignatura esta repetida en el plan");
+                throw new ReglaNegocioException("Una asignatura está repetida en el plan");
             }
         }
         for (PlanEstudio actual : planRepository.listar(anioId, gradoId)) {

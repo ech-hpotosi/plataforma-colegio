@@ -5,6 +5,6 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 public record GuardarAsignaturaDto(
-        @NotNull(message = "Seleccione el area") Long areaId,
+        @NotNull(message = "Seleccione el área") Long areaId,
         @NotBlank(message = "Ingrese el nombre de la asignatura") @Size(max = 120) String nombre) {
 }

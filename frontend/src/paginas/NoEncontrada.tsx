@@ -6,7 +6,7 @@ export default function NoEncontrada() {
     <Container maxWidth="sm">
       <Box sx={{ mt: 8, textAlign: 'center' }}>
         <Typography variant="h5" gutterBottom>
-          Pagina no encontrada
+          Página no encontrada
         </Typography>
         <Button component={Link} to="/" variant="contained">
           Volver al inicio

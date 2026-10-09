@@ -5,8 +5,8 @@ export type EstadoAnio = 'PLANEACION' | 'MATRICULA' | 'EN_CURSO' | 'CERRADO';
 export const ESTADOS_ANIO: EstadoAnio[] = ['PLANEACION', 'MATRICULA', 'EN_CURSO', 'CERRADO'];
 
 export const NOMBRE_ESTADO_ANIO: Record<EstadoAnio, string> = {
-  PLANEACION: 'Planeacion',
-  MATRICULA: 'Matricula',
+  PLANEACION: 'Planeación',
+  MATRICULA: 'Matrícula',
   EN_CURSO: 'En curso',
   CERRADO: 'Cerrado',
 };
@@ -15,17 +15,17 @@ export type Nivel = 'PREESCOLAR' | 'BASICA_PRIMARIA' | 'BASICA_SECUNDARIA' | 'ME
 
 export const NOMBRE_NIVEL: Record<Nivel, string> = {
   PREESCOLAR: 'Preescolar',
-  BASICA_PRIMARIA: 'Basica primaria',
-  BASICA_SECUNDARIA: 'Basica secundaria',
+  BASICA_PRIMARIA: 'Básica primaria',
+  BASICA_SECUNDARIA: 'Básica secundaria',
   MEDIA: 'Media',
 };
 
 export type Jornada = 'MANANA' | 'TARDE' | 'UNICA';
 
 export const NOMBRE_JORNADA: Record<Jornada, string> = {
-  MANANA: 'Manana',
+  MANANA: 'Mañana',
   TARDE: 'Tarde',
-  UNICA: 'Unica',
+  UNICA: 'Única',
 };
 
 export interface Sede {

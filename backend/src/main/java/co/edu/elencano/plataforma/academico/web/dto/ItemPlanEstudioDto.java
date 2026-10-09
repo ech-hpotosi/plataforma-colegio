@@ -7,6 +7,6 @@ import jakarta.validation.constraints.NotNull;
 public record ItemPlanEstudioDto(
         @NotNull(message = "Seleccione la asignatura") Long asignaturaId,
         @NotNull(message = "Ingrese la intensidad horaria")
-        @Min(value = 1, message = "Minimo 1 hora") @Max(value = 40, message = "Maximo 40 horas")
+        @Min(value = 1, message = "Mínimo 1 hora") @Max(value = 40, message = "Máximo 40 horas")
         Integer intensidadHoraria) {
 }

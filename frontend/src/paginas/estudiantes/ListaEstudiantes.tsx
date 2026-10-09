@@ -5,7 +5,6 @@ import {
   Alert,
   Box,
   Button,
-  Chip,
   MenuItem,
   Paper,
   Table,
@@ -16,7 +15,6 @@ import {
   TablePagination,
   TableRow,
   TextField,
-  Typography,
 } from '@mui/material';
 import {
   buscarEstudiantes,
@@ -25,12 +23,14 @@ import {
 } from '../../api/estudiantes';
 import { useSesion } from '../../sesion/useSesion';
 import DialogoEstudiante from './DialogoEstudiante';
+import Estado, { type Tono } from '../../componentes/Estado';
+import Encabezado from '../../componentes/Encabezado';
 
-export const COLOR_ESTADO: Record<EstadoEstudiante, 'default' | 'success' | 'warning' | 'info'> = {
-  ASPIRANTE: 'info',
-  ACTIVO: 'success',
-  RETIRADO: 'warning',
-  GRADUADO: 'default',
+export const TONO_ESTADO: Record<EstadoEstudiante, Tono> = {
+  ASPIRANTE: 'informativo',
+  ACTIVO: 'positivo',
+  RETIRADO: 'alerta',
+  GRADUADO: 'neutro',
 };
 
 /** Busqueda de estudiantes. Al hacer clic en uno se abre su ficha. */
@@ -52,13 +52,21 @@ export default function ListaEstudiantes() {
 
   return (
     <>
+      <Encabezado
+        titulo="Estudiantes"
+        descripcion="Fichas de los estudiantes, sus acudientes y matrículas."
+        acciones={
+          puedeEditar && (
+            <Button variant="contained" onClick={() => setCreando(true)}>
+              Nuevo estudiante
+            </Button>
+          )
+        }
+      />
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2, flexWrap: 'wrap' }}>
-        <Typography variant="h5" component="h1" sx={{ flexGrow: 1 }}>
-          Estudiantes
-        </Typography>
         <TextField
           size="small"
-          label="Buscar por nombre, documento o codigo"
+          label="Buscar por nombre, documento o código"
           value={buscar}
           onChange={(e) => {
             setBuscar(e.target.value);
@@ -84,11 +92,6 @@ export default function ListaEstudiantes() {
             </MenuItem>
           ))}
         </TextField>
-        {puedeEditar && (
-          <Button variant="contained" onClick={() => setCreando(true)}>
-            Nuevo estudiante
-          </Button>
-        )}
       </Box>
 
       {consulta.isError && <Alert severity="error">{consulta.error.message}</Alert>}
@@ -99,7 +102,7 @@ export default function ListaEstudiantes() {
             <TableRow>
               <TableCell>Nombre</TableCell>
               <TableCell>Documento</TableCell>
-              <TableCell>Codigo</TableCell>
+              <TableCell>Código</TableCell>
               <TableCell>Estado</TableCell>
             </TableRow>
           </TableHead>
@@ -114,14 +117,14 @@ export default function ListaEstudiantes() {
                 </TableCell>
                 <TableCell>{e.codigo}</TableCell>
                 <TableCell>
-                  <Chip size="small" color={COLOR_ESTADO[e.estado]} label={NOMBRE_ESTADO_ESTUDIANTE[e.estado]} />
+                  <Estado tono={TONO_ESTADO[e.estado]} texto={NOMBRE_ESTADO_ESTUDIANTE[e.estado]} />
                 </TableCell>
               </TableRow>
             ))}
             {consulta.data?.contenido.length === 0 && (
               <TableRow>
                 <TableCell colSpan={4} align="center">
-                  No hay estudiantes que coincidan con la busqueda
+                  No hay estudiantes que coincidan con la búsqueda
                 </TableCell>
               </TableRow>
             )}
@@ -138,7 +141,7 @@ export default function ListaEstudiantes() {
             setTamano(Number(e.target.value));
             setPagina(0);
           }}
-          labelRowsPerPage="Filas por pagina"
+          labelRowsPerPage="Filas por página"
           labelDisplayedRows={({ from, to, count }) => `${from} a ${to} de ${count}`}
         />
       </TableContainer>

@@ -4,8 +4,6 @@ import {
   Alert,
   Box,
   Button,
-  Chip,
-  IconButton,
   Menu,
   MenuItem,
   Paper,
@@ -17,12 +15,13 @@ import {
   TablePagination,
   TableRow,
   TextField,
-  Typography,
 } from '@mui/material';
 import { buscarUsuarios, desbloquearUsuario, type Usuario } from '../../api/usuarios';
 import { NOMBRE_ROL } from '../../tipos';
 import DialogoContrasena from './DialogoContrasena';
 import DialogoUsuario from './DialogoUsuario';
+import Estado from '../../componentes/Estado';
+import Encabezado from '../../componentes/Encabezado';
 
 /** Administracion de usuarios: busqueda, creacion, edicion, cambio de contrasena y desbloqueo. */
 export default function ListaUsuarios() {
@@ -49,10 +48,16 @@ export default function ListaUsuarios() {
 
   return (
     <>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2, flexWrap: 'wrap' }}>
-        <Typography variant="h5" component="h1" sx={{ flexGrow: 1 }}>
-          Usuarios
-        </Typography>
+      <Encabezado
+        titulo="Usuarios"
+        descripcion="Cuentas de acceso, roles y contraseñas."
+        acciones={
+          <Button variant="contained" onClick={() => setEditando('nuevo')}>
+            Nuevo usuario
+          </Button>
+        }
+      />
+      <Box sx={{ mb: 2 }}>
         <TextField
           size="small"
           label="Buscar por nombre, usuario o documento"
@@ -61,11 +66,8 @@ export default function ListaUsuarios() {
             setBuscar(e.target.value);
             setPagina(0);
           }}
-          sx={{ minWidth: 280 }}
+          sx={{ minWidth: { xs: '100%', sm: 380 } }}
         />
-        <Button variant="contained" onClick={() => setEditando('nuevo')}>
-          Nuevo usuario
-        </Button>
       </Box>
 
       {consulta.isError && <Alert severity="error">{consulta.error.message}</Alert>}
@@ -94,24 +96,25 @@ export default function ListaUsuarios() {
                 <TableCell>{usuario.nombreUsuario}</TableCell>
                 <TableCell>{usuario.roles.map((rol) => NOMBRE_ROL[rol]).join(', ')}</TableCell>
                 <TableCell>
-                  {!usuario.activo && <Chip size="small" label="Inactivo" />}
-                  {usuario.bloqueado && <Chip size="small" color="warning" label="Bloqueado" />}
-                  {usuario.activo && !usuario.bloqueado && <Chip size="small" color="success" label="Activo" />}
+                  {!usuario.activo && <Estado tono="neutro" texto="Inactivo" />}
+                  {usuario.activo && usuario.bloqueado && <Estado tono="negativo" texto="Bloqueado" />}
+                  {usuario.activo && !usuario.bloqueado && <Estado tono="positivo" texto="Activo" />}
                 </TableCell>
                 <TableCell align="right">
-                  <IconButton
+                  <Button
+                    size="small"
                     aria-label={`Acciones de ${usuario.nombreUsuario}`}
                     onClick={(e) => setMenu({ ancla: e.currentTarget, usuario })}
                   >
-                    ...
-                  </IconButton>
+                    Opciones
+                  </Button>
                 </TableCell>
               </TableRow>
             ))}
             {consulta.data?.contenido.length === 0 && (
               <TableRow>
                 <TableCell colSpan={6} align="center">
-                  No hay usuarios que coincidan con la busqueda
+                  No hay usuarios que coincidan con la búsqueda
                 </TableCell>
               </TableRow>
             )}
@@ -128,7 +131,7 @@ export default function ListaUsuarios() {
             setTamano(Number(e.target.value));
             setPagina(0);
           }}
-          labelRowsPerPage="Filas por pagina"
+          labelRowsPerPage="Filas por página"
           labelDisplayedRows={({ from, to, count }) => `${from} a ${to} de ${count}`}
         />
       </TableContainer>
@@ -148,7 +151,7 @@ export default function ListaUsuarios() {
             setMenu(null);
           }}
         >
-          Cambiar contrasena
+          Cambiar contraseña
         </MenuItem>
         {menu?.usuario.bloqueado && (
           <MenuItem

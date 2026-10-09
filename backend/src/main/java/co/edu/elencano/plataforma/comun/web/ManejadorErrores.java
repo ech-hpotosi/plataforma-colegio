@@ -55,18 +55,18 @@ public class ManejadorErrores {
     public ResponseEntity<RespuestaError> autenticacion(AuthenticationException ex) {
         String mensaje;
         if (ex instanceof LockedException) {
-            mensaje = "La cuenta esta bloqueada temporalmente por intentos fallidos. Intente mas tarde";
+            mensaje = "La cuenta está bloqueada temporalmente por intentos fallidos. Intente más tarde";
         } else if (ex instanceof DisabledException) {
-            mensaje = "El usuario esta inactivo. Comuniquese con la secretaria del colegio";
+            mensaje = "El usuario está inactivo. Comuníquese con la secretaria del colegio";
         } else {
-            mensaje = "Usuario o contrasena incorrectos";
+            mensaje = "Usuario o contraseña incorrectos";
         }
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(RespuestaError.de(mensaje));
     }
 
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<RespuestaError> accesoDenegado(AccessDeniedException ex) {
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(RespuestaError.de("No tiene permiso para esta accion"));
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(RespuestaError.de("No tiene permiso para esta acción"));
     }
 
     @ExceptionHandler(NoResourceFoundException.class)

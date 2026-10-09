@@ -64,7 +64,7 @@ public class GrupoService {
         Grado grado = gradoService.obtener(datos.gradoId());
         boolean cambiaGrado = !grado.getId().equals(grupo.getGrado().getId());
         if (cambiaGrado && cargaRepository.existsByGrupoId(id)) {
-            throw new ReglaNegocioException("No se puede cambiar el grado porque el grupo ya tiene carga academica");
+            throw new ReglaNegocioException("No se puede cambiar el grado porque el grupo ya tiene carga académica");
         }
         grupo.setSede(sede);
         grupo.setGrado(grado);

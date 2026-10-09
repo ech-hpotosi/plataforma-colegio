@@ -36,7 +36,7 @@ export default function Docentes() {
   return (
     <>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-        Aqui aparecen los usuarios activos con rol Docente. Para agregar un docente, cree su usuario en Usuarios. Un
+        Aquí aparecen los usuarios activos con rol Docente. Para agregar un docente, cree su usuario en Usuarios. Un
         docente sin sedes se puede asignar en cualquier sede.
       </Typography>
       {docentes.isError && <Alert severity="error">{docentes.error.message}</Alert>}
@@ -47,7 +47,7 @@ export default function Docentes() {
               <TableCell>Nombre</TableCell>
               <TableCell>Documento</TableCell>
               <TableCell>Especialidad</TableCell>
-              <TableCell>Escalafon</TableCell>
+              <TableCell>Escalafón</TableCell>
               <TableCell>Sedes</TableCell>
               <TableCell />
             </TableRow>
@@ -145,7 +145,7 @@ function DialogoDocente({
               slotProps={{ htmlInput: { maxLength: 150 } }}
             />
             <TextField
-              label="Escalafon"
+              label="Escalafón"
               value={escalafon}
               onChange={(e) => setEscalafon(e.target.value)}
               slotProps={{ htmlInput: { maxLength: 30 } }}

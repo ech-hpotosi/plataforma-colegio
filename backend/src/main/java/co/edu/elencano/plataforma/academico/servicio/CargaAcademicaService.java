@@ -70,7 +70,7 @@ public class CargaAcademicaService {
             PlanEstudio enPlan = plan.get(item.asignaturaId());
             if (enPlan == null) {
                 throw new ReglaNegocioException("La asignatura " + item.asignaturaId()
-                        + " no esta en el plan de estudios de " + grupo.getGrado().getNombre());
+                        + " no está en el plan de estudios de " + grupo.getGrado().getNombre());
             }
             Docente docente = docenteService.obtenerParaAsignar(item.docenteId());
             if (!docente.trabajaEn(grupo.getSede())) {
@@ -78,7 +78,7 @@ public class CargaAcademicaService {
                         + " no trabaja en la sede " + grupo.getSede().getNombre());
             }
             if (nuevas.put(item.asignaturaId(), docente) != null) {
-                throw new ReglaNegocioException(enPlan.getAsignatura().getNombre() + " esta repetida");
+                throw new ReglaNegocioException(enPlan.getAsignatura().getNombre() + " está repetida");
             }
         }
         for (CargaAcademica actual : cargaRepository.findByGrupoId(grupoId)) {

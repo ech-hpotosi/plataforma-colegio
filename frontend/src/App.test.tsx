@@ -7,10 +7,10 @@ import { renderizarEn, simularApi } from './pruebas/utilidades';
 const admin = { id: 1, nombreUsuario: 'admin', nombreCompleto: 'Administrador Plataforma', roles: ['ADMINISTRADOR'] };
 const docente = { id: 2, nombreUsuario: 'docente', nombreCompleto: 'Ana Docente', roles: ['DOCENTE'] };
 
-describe('Sesion y rutas protegidas', () => {
+describe('Sesión y rutas protegidas', () => {
   afterEach(() => vi.restoreAllMocks());
 
-  it('sin sesion redirige al login', async () => {
+  it('sin sesión redirige al login', async () => {
     simularApi({ 'GET /api/yo': { estado: 401 } });
     renderizarEn('/', <App />);
     expect(await screen.findByRole('button', { name: 'Ingresar' })).toBeInTheDocument();
@@ -28,7 +28,7 @@ describe('Sesion y rutas protegidas', () => {
     renderizarEn('/', <App />);
 
     await userEvent.type(await screen.findByLabelText('Usuario'), 'admin');
-    await userEvent.type(screen.getByLabelText('Contrasena'), 'clave-de-prueba');
+    await userEvent.type(screen.getByLabelText('Contraseña'), 'clave-de-prueba');
     await userEvent.click(screen.getByRole('button', { name: 'Ingresar' }));
 
     expect(await screen.findByText('Bienvenido, Administrador Plataforma')).toBeInTheDocument();
@@ -38,22 +38,22 @@ describe('Sesion y rutas protegidas', () => {
   it('el login fallido muestra el mensaje del servidor', async () => {
     simularApi({
       'GET /api/yo': { estado: 401 },
-      'POST /api/auth/login': { estado: 401, cuerpo: { mensaje: 'Usuario o contrasena incorrectos', errores: {} } },
+      'POST /api/auth/login': { estado: 401, cuerpo: { mensaje: 'Usuario o contraseña incorrectos', errores: {} } },
     });
     renderizarEn('/login', <App />);
 
     await userEvent.type(await screen.findByLabelText('Usuario'), 'admin');
-    await userEvent.type(screen.getByLabelText('Contrasena'), 'mala');
+    await userEvent.type(screen.getByLabelText('Contraseña'), 'mala');
     await userEvent.click(screen.getByRole('button', { name: 'Ingresar' }));
 
-    expect(await screen.findByText('Usuario o contrasena incorrectos')).toBeInTheDocument();
+    expect(await screen.findByText('Usuario o contraseña incorrectos')).toBeInTheDocument();
   });
 
-  it('un docente no ve el menu de usuarios ni puede entrar a esa pagina', async () => {
+  it('un docente no ve el menu de usuarios ni puede entrar a esa página', async () => {
     simularApi({ 'GET /api/yo': { estado: 200, cuerpo: docente } });
     renderizarEn('/usuarios', <App />);
 
-    expect(await screen.findByText('No tiene permiso para ver esta pagina')).toBeInTheDocument();
+    expect(await screen.findByText('No tiene permiso para ver esta página')).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Usuarios' })).not.toBeInTheDocument();
   });
 

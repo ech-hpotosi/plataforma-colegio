@@ -27,15 +27,15 @@ import { NOMBRE_ROL, NOMBRE_TIPO_DOCUMENTO, ROLES, type Rol, type TipoDocumento 
 // Las mismas reglas que valida el backend en CrearUsuarioDto y ActualizarUsuarioDto
 const esquema = z.object({
   tipoDocumento: z.enum(['RC', 'TI', 'CC', 'CE', 'PPT']),
-  numeroDocumento: z.string().trim().regex(/^[0-9A-Za-z]{3,20}$/, 'Solo letras y numeros, entre 3 y 20 caracteres'),
+  numeroDocumento: z.string().trim().regex(/^[0-9A-Za-z]{3,20}$/, 'Solo letras y números, entre 3 y 20 caracteres'),
   nombres: z.string().trim().min(1, 'Ingrese los nombres').max(100),
   apellidos: z.string().trim().min(1, 'Ingrese los apellidos').max(100),
   telefono: z.string().trim().max(20),
-  correo: z.union([z.literal(''), z.email('Correo invalido').max(150)]),
+  correo: z.union([z.literal(''), z.email('Correo inválido').max(150)]),
   nombreUsuario: z
     .string()
     .trim()
-    .regex(/^[a-z0-9._-]{3,50}$/, 'Use minusculas, numeros, punto, guion o guion bajo (3 a 50)'),
+    .regex(/^[a-z0-9._-]{3,50}$/, 'Use minúsculas, números, punto, guion o guion bajo (3 a 50)'),
   contrasena: z.string(),
   activo: z.boolean(),
   roles: z.array(z.enum(ROLES as [Rol, ...Rol[]])).min(1, 'Seleccione al menos un rol'),
@@ -64,7 +64,7 @@ export default function DialogoUsuario({ usuario, alCerrar, alGuardar }: Props) 
       esNuevo
         ? esquema.refine((d) => d.contrasena.length >= 8 && d.contrasena.length <= 72, {
             path: ['contrasena'],
-            message: 'La contrasena debe tener entre 8 y 72 caracteres',
+            message: 'La contraseña debe tener entre 8 y 72 caracteres',
           })
         : esquema,
     ),
@@ -115,7 +115,7 @@ export default function DialogoUsuario({ usuario, alCerrar, alGuardar }: Props) 
           marcarError(campo as keyof Datos, { message: mensaje }),
         );
       } else {
-        setError('No hay conexion con el servidor');
+        setError('No hay conexión con el servidor');
       }
     }
   };
@@ -148,7 +148,7 @@ export default function DialogoUsuario({ usuario, alCerrar, alGuardar }: Props) 
             </Grid>
             <Grid size={{ xs: 12, sm: 7 }}>
               <TextField
-                label="Numero de documento"
+                label="Número de documento"
                 fullWidth
                 disabled={!esNuevo}
                 {...register('numeroDocumento')}
@@ -176,7 +176,7 @@ export default function DialogoUsuario({ usuario, alCerrar, alGuardar }: Props) 
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
-                label="Telefono"
+                label="Teléfono"
                 fullWidth
                 {...register('telefono')}
                 error={!!errors.telefono}
@@ -206,7 +206,7 @@ export default function DialogoUsuario({ usuario, alCerrar, alGuardar }: Props) 
             {esNuevo && (
               <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
-                  label="Contrasena inicial"
+                  label="Contraseña inicial"
                   type="password"
                   fullWidth
                   autoComplete="new-password"

@@ -43,7 +43,7 @@ class AutenticacionTest extends PruebaIntegracion {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonLogin("clave.mala", "otra-clave")))
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.mensaje").value("Usuario o contrasena incorrectos"));
+                .andExpect(jsonPath("$.mensaje").value("Usuario o contraseña incorrectos"));
     }
 
     @Test
@@ -52,7 +52,7 @@ class AutenticacionTest extends PruebaIntegracion {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonLogin("no.existe", "lo-que-sea")))
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.mensaje").value("Usuario o contrasena incorrectos"));
+                .andExpect(jsonPath("$.mensaje").value("Usuario o contraseña incorrectos"));
     }
 
     @Test
@@ -82,7 +82,7 @@ class AutenticacionTest extends PruebaIntegracion {
                         .content(jsonLogin("bloqueo", CONTRASENA)))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.mensaje").value(
-                        "La cuenta esta bloqueada temporalmente por intentos fallidos. Intente mas tarde"));
+                        "La cuenta está bloqueada temporalmente por intentos fallidos. Intente más tarde"));
     }
 
     @Test
@@ -96,7 +96,7 @@ class AutenticacionTest extends PruebaIntegracion {
                         .content(jsonLogin("inactivo", CONTRASENA)))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.mensaje").value(
-                        "El usuario esta inactivo. Comuniquese con la secretaria del colegio"));
+                        "El usuario está inactivo. Comuníquese con la secretaria del colegio"));
     }
 
     @Test

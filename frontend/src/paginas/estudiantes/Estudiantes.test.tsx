@@ -19,7 +19,7 @@ const ficha = {
   codigo: 'E-001',
   fechaNacimiento: '2014-03-15',
   genero: 'FEMENINO',
-  direccion: 'Vereda Santa Lucia',
+  direccion: 'Vereda Santa Lucía',
   eps: 'Emssanar',
   grupoSanguineo: 'O+',
   condicionDiscapacidad: null,
@@ -71,7 +71,7 @@ const pagina = {
 describe('Estudiantes', () => {
   afterEach(() => vi.restoreAllMocks());
 
-  it('la secretaria busca, abre la ficha y ve acudientes y matricula', async () => {
+  it('la secretaria busca, abre la ficha y ve acudientes y matrícula', async () => {
     simularApi({
       'GET /api/yo': { estado: 200, cuerpo: secretaria },
       'GET /api/estudiantes': { estado: 200, cuerpo: pagina },
@@ -83,7 +83,7 @@ describe('Estudiantes', () => {
     await userEvent.click(await screen.findByText('Jojoa Botina Valentina'));
 
     expect(await screen.findByRole('heading', { name: 'Valentina Jojoa Botina' })).toBeInTheDocument();
-    expect(screen.getByText('Vereda Santa Lucia')).toBeInTheDocument();
+    expect(screen.getByText('Vereda Santa Lucía')).toBeInTheDocument();
     const filaMadre = screen.getByText(/Rosa Botina/).closest('tr')!;
     expect(within(filaMadre).getByText('Madre')).toBeInTheDocument();
     expect(within(filaMadre).getByText('Principal')).toBeInTheDocument();
@@ -108,11 +108,11 @@ describe('Estudiantes', () => {
     simularApi({ 'GET /api/yo': { estado: 200, cuerpo: docente } });
     renderizarEn('/estudiantes', <App />);
 
-    expect(await screen.findByText('No tiene permiso para ver esta pagina')).toBeInTheDocument();
+    expect(await screen.findByText('No tiene permiso para ver esta página')).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Estudiantes' })).not.toBeInTheDocument();
   });
 
-  it('el formulario de nuevo estudiante pide genero y fecha de nacimiento', async () => {
+  it('el formulario de nuevo estudiante pide género y fecha de nacimiento', async () => {
     simularApi({
       'GET /api/yo': { estado: 200, cuerpo: secretaria },
       'GET /api/estudiantes': { estado: 200, cuerpo: { ...pagina, contenido: [], totalElementos: 0 } },
@@ -120,12 +120,12 @@ describe('Estudiantes', () => {
     renderizarEn('/estudiantes', <App />);
 
     await userEvent.click(await screen.findByRole('button', { name: 'Nuevo estudiante' }));
-    await userEvent.type(screen.getByLabelText('Numero de documento'), '1085999999');
+    await userEvent.type(screen.getByLabelText('Número de documento'), '1085999999');
     await userEvent.type(screen.getByLabelText('Nombres'), 'Juan');
     await userEvent.type(screen.getByLabelText('Apellidos'), 'Chicunque');
     await userEvent.click(screen.getByRole('button', { name: 'Guardar' }));
 
-    expect(await screen.findByText('Seleccione el genero')).toBeInTheDocument();
+    expect(await screen.findByText('Seleccione el género')).toBeInTheDocument();
     expect(screen.getByText('Ingrese la fecha de nacimiento')).toBeInTheDocument();
   });
 });

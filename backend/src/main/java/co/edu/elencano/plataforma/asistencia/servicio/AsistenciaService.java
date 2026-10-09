@@ -144,14 +144,14 @@ public class AsistenciaService {
         CargaAcademica carga = cargaQueToma(cargaId, usuario);
         AnioLectivo anio = carga.getGrupo().getAnioLectivo();
         if (anio.estaCerrado()) {
-            throw new ReglaNegocioException("El anio lectivo " + anio.getAnio() + " esta cerrado y no admite cambios");
+            throw new ReglaNegocioException("El año lectivo " + anio.getAnio() + " está cerrado y no admite cambios");
         }
         if (fecha.isAfter(LocalDate.now())) {
             throw new ReglaNegocioException("No se puede tomar asistencia de una fecha futura");
         }
         Periodo periodo = periodoDe(anio, fecha);
         if (periodo.isCerrado()) {
-            throw new ReglaNegocioException("El periodo " + periodo.getNumero() + " esta cerrado");
+            throw new ReglaNegocioException("El periodo " + periodo.getNumero() + " está cerrado");
         }
         Map<Long, Matricula> delGrupo = matriculaRepository.listarActivasDeGrupo(carga.getGrupo().getId()).stream()
                 .collect(Collectors.toMap(Matricula::getId, Function.identity()));
@@ -162,14 +162,14 @@ public class AsistenciaService {
         for (ItemAsistenciaDto item : datos.estudiantes()) {
             Matricula matricula = delGrupo.get(item.matriculaId());
             if (matricula == null) {
-                throw new ReglaNegocioException("La matricula " + item.matriculaId() + " no esta activa en el grupo");
+                throw new ReglaNegocioException("La matrícula " + item.matriculaId() + " no está activa en el grupo");
             }
             DetalleAsistencia detalle = registro.detalleDe(matricula.getId())
                     .orElseGet(() -> registro.agregarDetalle(matricula));
             if (item.estado() == EstadoAsistencia.FALTA_JUSTIFICADA
                     && detalle.getEstado() != EstadoAsistencia.FALTA_JUSTIFICADA) {
                 throw new ReglaNegocioException("La falta de " + matricula.getEstudiante().getPersona().getNombreCompleto()
-                        + " se marca como FALTA; la justificacion la registra el director de grupo o secretaria");
+                        + " se marca como FALTA; la justificación la registra el director de grupo o secretaria");
             }
             detalle.marcar(item.estado(), vacioANulo(item.observacion()));
         }
@@ -249,7 +249,7 @@ public class AsistenciaService {
         Matricula matricula = obtenerMatricula(matriculaId);
         verificarAccesoMatricula(matricula, usuario, JUSTIFICAN);
         if (matricula.getAnioLectivo().estaCerrado()) {
-            throw new ReglaNegocioException("El anio lectivo esta cerrado y no admite cambios");
+            throw new ReglaNegocioException("El año lectivo está cerrado y no admite cambios");
         }
         List<DetalleAsistencia> faltas = detalleRepository.listarFaltasSinJustificar(matriculaId, fecha);
         if (faltas.isEmpty()) {
@@ -257,11 +257,11 @@ public class AsistenciaService {
         }
         LocalDate limite = fechaLimite(fecha);
         if (LocalDate.now().isAfter(limite) && !tieneAlguno(usuario, TOMAN_CUALQUIER_CLASE)) {
-            throw new ReglaNegocioException("El plazo para justificar vencio el " + limite
-                    + ". Solo coordinacion puede justificarla");
+            throw new ReglaNegocioException("El plazo para justificar venció el " + limite
+                    + ". Solo coordinación puede justificarla");
         }
         if (faltas.stream().anyMatch(d -> d.getRegistro().getPeriodo().isCerrado())) {
-            throw new ReglaNegocioException("El periodo de esa fecha esta cerrado");
+            throw new ReglaNegocioException("El periodo de esa fecha está cerrado");
         }
         LocalDateTime ahora = LocalDateTime.now();
         faltas.forEach(d -> d.justificar(justificacion.trim(), usuarioRepository.getReferenceById(usuario.getId()), ahora));
@@ -283,7 +283,7 @@ public class AsistenciaService {
 
     private CargaAcademica cargaQueToma(Long cargaId, UsuarioAutenticado usuario) {
         CargaAcademica carga = cargaRepository.findById(cargaId)
-                .orElseThrow(() -> new RecursoNoEncontradoException("No existe la carga academica " + cargaId));
+                .orElseThrow(() -> new RecursoNoEncontradoException("No existe la carga académica " + cargaId));
         if (!tieneAlguno(usuario, TOMAN_CUALQUIER_CLASE)
                 && !carga.getDocente().getId().equals(usuario.getPersonaId())) {
             throw new AccessDeniedException("La carga no es del docente");
@@ -296,18 +296,18 @@ public class AsistenciaService {
                 .filter(p -> !fecha.isBefore(p.getFechaInicio()) && !fecha.isAfter(p.getFechaFin()))
                 .findFirst()
                 .orElseThrow(() -> new ReglaNegocioException("La fecha " + fecha
-                        + " no esta dentro de ningun periodo del anio " + anio.getAnio()));
+                        + " no está dentro de ningún periodo del año " + anio.getAnio()));
     }
 
     private Matricula obtenerMatricula(Long id) {
         return matriculaRepository.findById(id)
-                .orElseThrow(() -> new RecursoNoEncontradoException("No existe la matricula " + id));
+                .orElseThrow(() -> new RecursoNoEncontradoException("No existe la matrícula " + id));
     }
 
     private void verificarAccesoMatricula(Matricula matricula, UsuarioAutenticado usuario, Set<Rol> roles) {
         if (matricula.getGrupo() == null) {
             if (!tieneAlguno(usuario, roles)) {
-                throw new AccessDeniedException("Sin acceso a la matricula");
+                throw new AccessDeniedException("Sin acceso a la matrícula");
             }
             return;
         }

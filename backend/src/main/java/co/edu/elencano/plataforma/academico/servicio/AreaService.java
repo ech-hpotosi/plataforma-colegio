@@ -68,12 +68,12 @@ public class AreaService {
 
     private Area obtenerArea(Long id) {
         return areaRepository.findById(id)
-                .orElseThrow(() -> new RecursoNoEncontradoException("No existe el area " + id));
+                .orElseThrow(() -> new RecursoNoEncontradoException("No existe el área " + id));
     }
 
     private void validarNombreArea(String nombre, Long id) {
         if (areaRepository.existsByNombreIgnoreCaseAndIdNot(nombre, id)) {
-            throw new ReglaNegocioException("Ya existe un area llamada " + nombre);
+            throw new ReglaNegocioException("Ya existe un área llamada " + nombre);
         }
     }
 

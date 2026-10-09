@@ -40,7 +40,7 @@ public class AnioLectivoService {
     @Transactional(readOnly = true)
     public AnioLectivo obtener(Long id) {
         return anioRepository.findById(id)
-                .orElseThrow(() -> new RecursoNoEncontradoException("No existe el anio lectivo " + id));
+                .orElseThrow(() -> new RecursoNoEncontradoException("No existe el año lectivo " + id));
     }
 
     /** Obtiene el anio y verifica que no este cerrado, para operaciones que lo modifican. */
@@ -48,7 +48,7 @@ public class AnioLectivoService {
     public AnioLectivo obtenerAbierto(Long id) {
         AnioLectivo anio = obtener(id);
         if (anio.estaCerrado()) {
-            throw new ReglaNegocioException("El anio lectivo " + anio.getAnio() + " esta cerrado y no admite cambios");
+            throw new ReglaNegocioException("El año lectivo " + anio.getAnio() + " está cerrado y no admite cambios");
         }
         return anio;
     }
@@ -56,7 +56,7 @@ public class AnioLectivoService {
     @Transactional
     public AnioLectivo crear(GuardarAnioLectivoDto datos) {
         if (anioRepository.existsByAnio(datos.anio())) {
-            throw new ReglaNegocioException("El anio lectivo " + datos.anio() + " ya existe");
+            throw new ReglaNegocioException("El año lectivo " + datos.anio() + " ya existe");
         }
         validarFechas(datos);
         AnioLectivo anio = new AnioLectivo(datos.anio(), datos.fechaInicio(), datos.fechaFin());
@@ -81,10 +81,10 @@ public class AnioLectivoService {
     public AnioLectivo cambiarEstado(Long id, EstadoAnio nuevo) {
         AnioLectivo anio = obtener(id);
         if (nuevo.ordinal() <= anio.getEstado().ordinal()) {
-            throw new ReglaNegocioException("El estado solo puede avanzar: el anio esta en " + anio.getEstado());
+            throw new ReglaNegocioException("El estado solo puede avanzar: el año está en " + anio.getEstado());
         }
         if (nuevo == EstadoAnio.EN_CURSO && anioRepository.existsByEstadoAndIdNot(EstadoAnio.EN_CURSO, id)) {
-            throw new ReglaNegocioException("Ya hay otro anio lectivo en curso. Cierrelo primero");
+            throw new ReglaNegocioException("Ya hay otro año lectivo en curso. Ciérrelo primero");
         }
         anio.setEstado(nuevo);
         return anio;
@@ -92,7 +92,7 @@ public class AnioLectivoService {
 
     private static void validarFechas(GuardarAnioLectivoDto datos) {
         if (!datos.fechaFin().isAfter(datos.fechaInicio())) {
-            throw new ReglaNegocioException("La fecha de fin del anio debe ser posterior a la de inicio");
+            throw new ReglaNegocioException("La fecha de fin del año debe ser posterior a la de inicio");
         }
         BigDecimal suma = BigDecimal.ZERO;
         LocalDate finAnterior = null;
@@ -100,13 +100,13 @@ public class AnioLectivoService {
             DatosPeriodoDto periodo = datos.periodos().get(i);
             String nombre = "El periodo " + (i + 1);
             if (!periodo.fechaFin().isAfter(periodo.fechaInicio())) {
-                throw new ReglaNegocioException(nombre + " debe terminar despues de empezar");
+                throw new ReglaNegocioException(nombre + " debe terminar después de empezar");
             }
             if (periodo.fechaInicio().isBefore(datos.fechaInicio()) || periodo.fechaFin().isAfter(datos.fechaFin())) {
-                throw new ReglaNegocioException(nombre + " debe estar dentro de las fechas del anio");
+                throw new ReglaNegocioException(nombre + " debe estar dentro de las fechas del año");
             }
             if (finAnterior != null && !periodo.fechaInicio().isAfter(finAnterior)) {
-                throw new ReglaNegocioException(nombre + " debe empezar despues de que termine el anterior");
+                throw new ReglaNegocioException(nombre + " debe empezar después de que termine el anterior");
             }
             finAnterior = periodo.fechaFin();
             suma = suma.add(periodo.porcentaje());
