@@ -18,7 +18,15 @@ jobs:
           distribution: temurin
           java-version: '21'
           cache: maven
-      # Las pruebas usan Testcontainers; el runner de GitHub ya trae Docker
+      # Las pruebas usan Testcontainers; el runner de GitHub ya trae Docker.
+      # La imagen se descarga antes y con reintentos, porque Testcontainers se rinde a los 2 minutos
+      - name: Descargar imagen de PostgreSQL
+        run: |
+          for intento in 1 2 3 4; do
+            docker pull -q postgres:16-alpine && exit 0
+            sleep $((intento * 15))
+          done
+          exit 1
       - name: Compilar y probar
         run: ./mvnw -B verify
       # Si falla, deja el resumen de cada prueba fallida como anotacion del job
