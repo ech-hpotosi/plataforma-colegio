@@ -63,12 +63,20 @@ function MenuLateral({ alNavegar }: { alNavegar?: () => void }) {
       </Box>
 
       <Box component="nav" aria-label="Menú principal" sx={{ flexGrow: 1, px: 1.5 }}>
-        {grupos.map((grupo) => (
-          <Box key={grupo.titulo} sx={{ mb: 2 }}>
+        {grupos.map((grupo, i) => (
+          // Cada seccion separada por una linea; el titulo en mayusculas pequenas y color del escudo
+          <Box key={grupo.titulo} sx={{ py: 1.5, borderTop: i === 0 ? 'none' : `1px solid ${COLORES.linea}` }}>
             <Typography
-              variant="caption"
               component="div"
-              sx={{ px: 1.5, mb: 0.5, color: 'text.secondary', fontWeight: 600, letterSpacing: '0.04em' }}
+              sx={{
+                px: 1.5,
+                mb: 0.75,
+                color: COLORES.laguna,
+                fontSize: '0.72rem',
+                fontWeight: 700,
+                letterSpacing: '0.1em',
+                textTransform: 'uppercase',
+              }}
             >
               {grupo.titulo}
             </Typography>
@@ -87,7 +95,7 @@ function MenuLateral({ alNavegar }: { alNavegar?: () => void }) {
                   borderLeft: '3px solid transparent',
                   color: 'text.primary',
                   textDecoration: 'none',
-                  fontWeight: 500,
+                  fontWeight: 400,
                   '&:hover': { bgcolor: COLORES.encabezado },
                   '&.active': {
                     bgcolor: '#eef2f6',
