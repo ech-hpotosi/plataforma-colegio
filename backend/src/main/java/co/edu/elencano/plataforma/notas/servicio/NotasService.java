@@ -169,7 +169,7 @@ public class NotasService {
         Periodo periodo = periodoDe(carga, periodoId);
         verificarEditable(periodo);
         ActividadEvaluativa actividad = new ActividadEvaluativa(carga, periodo);
-        actividad.actualizar(datos.dimension(), datos.nombre().trim(), datos.fecha());
+        actividad.actualizar(datos.dimension(), datos.nombre().trim(), datos.fecha(), datos.pesoOUno());
         actividadRepository.save(actividad);
         return planilla(cargaId, periodoId, usuario);
     }
@@ -177,7 +177,7 @@ public class NotasService {
     @Transactional
     public PlanillaNotasDto modificarActividad(Long actividadId, ActividadEntradaDto datos, UsuarioAutenticado usuario) {
         ActividadEvaluativa actividad = actividadQueRegistra(actividadId, usuario);
-        actividad.actualizar(datos.dimension(), datos.nombre().trim(), datos.fecha());
+        actividad.actualizar(datos.dimension(), datos.nombre().trim(), datos.fecha(), datos.pesoOUno());
         return planilla(actividad.getCarga().getId(), actividad.getPeriodo().getId(), usuario);
     }
 
@@ -262,14 +262,14 @@ public class NotasService {
                 .toList();
 
         // matricula -> carga -> periodo -> dimension -> notas
-        Map<Long, Map<Long, Map<Long, Map<Dimension, List<BigDecimal>>>>> arbol = new HashMap<>();
+        Map<Long, Map<Long, Map<Long, Map<Dimension, List<NotaPonderada>>>>> arbol = new HashMap<>();
         for (NotaActividad n : notaRepository.listarDeGrupo(grupoId)) {
             ActividadEvaluativa a = n.getActividad();
             arbol.computeIfAbsent(n.getMatriculaId(), k -> new HashMap<>())
                     .computeIfAbsent(a.getCarga().getId(), k -> new HashMap<>())
                     .computeIfAbsent(a.getPeriodo().getId(), k -> new EnumMap<>(Dimension.class))
                     .computeIfAbsent(a.getDimension(), k -> new ArrayList<>())
-                    .add(n.getValor());
+                    .add(ponderada(n));
         }
 
         List<ConsolidadoNotasDto.Estudiante> estudiantes = matriculaRepository.listarActivasDeGrupo(grupoId).stream()
@@ -277,7 +277,7 @@ public class NotasService {
                     Persona p = m.getEstudiante().getPersona();
                     List<ConsolidadoNotasDto.Nota> notas = new ArrayList<>();
                     for (CargaAcademica c : cargas) {
-                        Map<Long, Map<Dimension, List<BigDecimal>>> porPeriodo =
+                        Map<Long, Map<Dimension, List<NotaPonderada>>> porPeriodo =
                                 arbol.getOrDefault(m.getId(), Map.of()).getOrDefault(c.getId(), Map.of());
                         notas.add(notaAsignatura(c.getId(), porPeriodo, periodos, periodoId, config));
                     }
@@ -294,7 +294,7 @@ public class NotasService {
     }
 
     /** Nota de una asignatura en un periodo, o acumulada del anio si periodoId es nulo. */
-    private ConsolidadoNotasDto.Nota notaAsignatura(Long cargaId, Map<Long, Map<Dimension, List<BigDecimal>>> porPeriodo,
+    private ConsolidadoNotasDto.Nota notaAsignatura(Long cargaId, Map<Long, Map<Dimension, List<NotaPonderada>>> porPeriodo,
                                                     List<Periodo> periodos, Long periodoId,
                                                     ConfiguracionEvaluacion config) {
         BigDecimal nota;
@@ -321,10 +321,14 @@ public class NotasService {
 
     // ---------- Apoyo ----------
 
-    private static Map<Dimension, List<BigDecimal>> porDimension(List<NotaActividad> notas) {
-        Map<Dimension, List<BigDecimal>> mapa = new EnumMap<>(Dimension.class);
-        notas.forEach(n -> mapa.computeIfAbsent(n.getActividad().getDimension(), k -> new ArrayList<>()).add(n.getValor()));
+    private static Map<Dimension, List<NotaPonderada>> porDimension(List<NotaActividad> notas) {
+        Map<Dimension, List<NotaPonderada>> mapa = new EnumMap<>(Dimension.class);
+        notas.forEach(n -> mapa.computeIfAbsent(n.getActividad().getDimension(), k -> new ArrayList<>()).add(ponderada(n)));
         return mapa;
+    }
+
+    private static NotaPonderada ponderada(NotaActividad n) {
+        return new NotaPonderada(n.getValor(), BigDecimal.valueOf(n.getActividad().getPeso()));
     }
 
     private CargaAcademica cargaQueRegistra(Long cargaId, UsuarioAutenticado usuario) {

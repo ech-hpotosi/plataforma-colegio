@@ -25,13 +25,18 @@ class CalculoNotasTest {
         return new BigDecimal(valor);
     }
 
+    /** Nota de una actividad de peso 1. */
+    private static NotaPonderada a(String valor) {
+        return new NotaPonderada(n(valor), BigDecimal.ONE);
+    }
+
     @Test
     void laNotaDelPeriodoPonderaLasTresDimensiones() {
         // Saber (3.5 + 4.0) / 2 = 3.8 (3.75 redondeado); Hacer 4.0; Ser 5.0
         NotaPeriodo nota = CalculoNotas.notaPeriodo(Map.of(
-                Dimension.SABER, List.of(n("3.5"), n("4.0")),
-                Dimension.HACER, List.of(n("4.0")),
-                Dimension.SER, List.of(n("5.0"))), config);
+                Dimension.SABER, List.of(a("3.5"), a("4.0")),
+                Dimension.HACER, List.of(a("4.0")),
+                Dimension.SER, List.of(a("5.0"))), config);
         assertThat(nota.promedios().get(Dimension.SABER)).isEqualByComparingTo("3.8");
         // 3.8 * 40 + 4.0 * 40 + 5.0 * 20 = 412 / 100 = 4.1
         assertThat(nota.nota()).isEqualByComparingTo("4.1");
@@ -42,8 +47,8 @@ class CalculoNotasTest {
     @Test
     void siFaltaUnaDimensionLaNotaEsParcial() {
         NotaPeriodo nota = CalculoNotas.notaPeriodo(Map.of(
-                Dimension.SABER, List.of(n("2.0")),
-                Dimension.SER, List.of(n("4.0"))), config);
+                Dimension.SABER, List.of(a("2.0")),
+                Dimension.SER, List.of(a("4.0"))), config);
         // Solo Saber (40) y Ser (20): (2.0 * 40 + 4.0 * 20) / 60 = 2.7 (2.666...)
         assertThat(nota.nota()).isEqualByComparingTo("2.7");
         assertThat(nota.completa()).isFalse();
@@ -58,6 +63,14 @@ class CalculoNotasTest {
         assertThat(config.desempenoDe(n("4.0"))).isEqualTo(Desempeno.ALTO);
         assertThat(config.desempenoDe(n("4.5"))).isEqualTo(Desempeno.ALTO);
         assertThat(config.desempenoDe(n("4.6"))).isEqualTo(Desempeno.SUPERIOR);
+    }
+
+    @Test
+    void unaActividadConPesoDosValeElDoble() {
+        // Taller 3.0 (peso 1) y evaluacion 4.5 (peso 2): (3.0 + 9.0) / 3 = 4.0
+        NotaPeriodo nota = CalculoNotas.notaPeriodo(Map.of(
+                Dimension.SABER, List.of(a("3.0"), new NotaPonderada(n("4.5"), BigDecimal.valueOf(2)))), config);
+        assertThat(nota.promedios().get(Dimension.SABER)).isEqualByComparingTo("4.0");
     }
 
     @Test

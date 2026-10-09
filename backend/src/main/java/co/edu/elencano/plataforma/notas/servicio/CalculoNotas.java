@@ -2,7 +2,6 @@ package co.edu.elencano.plataforma.notas.servicio;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.Collection;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -12,8 +11,9 @@ import co.edu.elencano.plataforma.notas.entidad.Dimension;
 
 /**
  * Calculos de notas, sin acceso a base de datos:
- * - Promedio de cada dimension: promedio simple de las notas que tiene el estudiante en sus actividades.
- *   Una actividad sin nota no cuenta; si el docente quiere que pese, registra la nota minima.
+ * - Promedio de cada dimension: promedio de las notas que tiene el estudiante, ponderado por el peso de cada
+ *   actividad (1 normal, 2 el doble). Una actividad sin nota no cuenta; si el docente quiere que pese,
+ *   registra la nota minima.
  * - Nota del periodo: promedio ponderado de las dimensiones con nota, con los pesos de la configuracion.
  *   Si falta alguna dimension con peso, la nota queda como parcial (completa = false).
  * - Nota del anio: promedio ponderado de los periodos con nota, segun el porcentaje de cada periodo.
@@ -30,21 +30,13 @@ public final class CalculoNotas {
     public record NotaPonderada(BigDecimal valor, BigDecimal peso) {
     }
 
-    public static BigDecimal promedio(Collection<BigDecimal> valores) {
-        if (valores.isEmpty()) {
-            return null;
-        }
-        BigDecimal suma = valores.stream().reduce(BigDecimal.ZERO, BigDecimal::add);
-        return suma.divide(BigDecimal.valueOf(valores.size()), 1, RoundingMode.HALF_UP);
-    }
-
-    public static NotaPeriodo notaPeriodo(Map<Dimension, ? extends Collection<BigDecimal>> notasPorDimension,
+    public static NotaPeriodo notaPeriodo(Map<Dimension, ? extends List<NotaPonderada>> notasPorDimension,
                                           ConfiguracionEvaluacion config) {
         Map<Dimension, BigDecimal> promedios = new EnumMap<>(Dimension.class);
         boolean completa = true;
         for (Dimension d : Dimension.values()) {
-            Collection<BigDecimal> notas = notasPorDimension.get(d);
-            BigDecimal p = notas == null ? null : promedio(notas);
+            List<NotaPonderada> notas = notasPorDimension.get(d);
+            BigDecimal p = notas == null ? null : ponderado(notas);
             if (p != null) {
                 promedios.put(d, p);
             } else if (config.pesoDe(d) > 0) {

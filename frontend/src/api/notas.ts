@@ -54,6 +54,8 @@ export interface Actividad {
   dimension: Dimension;
   nombre: string;
   fecha: string | null;
+  /** 1 es normal, 2 vale el doble, hasta 5. */
+  peso: number;
 }
 
 export interface FilaPlanilla {
@@ -86,6 +88,7 @@ export interface DatosActividad {
   dimension: Dimension;
   nombre: string;
   fecha: string | null;
+  peso: number;
 }
 
 export interface NotaConsolidado {

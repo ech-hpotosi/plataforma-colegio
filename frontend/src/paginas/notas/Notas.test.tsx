@@ -47,7 +47,7 @@ const planilla = {
   periodo: 1,
   editable: true,
   configuracion,
-  actividades: [{ id: 21, dimension: 'SABER', nombre: 'Taller 1', fecha: null }],
+  actividades: [{ id: 21, dimension: 'SABER', nombre: 'Taller 1', fecha: null, peso: 1 }],
   estudiantes: [
     {
       matriculaId: 30,

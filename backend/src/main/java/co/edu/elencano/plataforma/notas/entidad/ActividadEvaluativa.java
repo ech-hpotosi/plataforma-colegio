@@ -41,6 +41,10 @@ public class ActividadEvaluativa {
 
     private LocalDate fecha;
 
+    /** Peso dentro de su dimension: 1 es normal, 2 vale el doble. */
+    @Column(nullable = false)
+    private int peso = 1;
+
     protected ActividadEvaluativa() {
     }
 
@@ -49,10 +53,11 @@ public class ActividadEvaluativa {
         this.periodo = periodo;
     }
 
-    public void actualizar(Dimension dimension, String nombre, LocalDate fecha) {
+    public void actualizar(Dimension dimension, String nombre, LocalDate fecha, int peso) {
         this.dimension = dimension;
         this.nombre = nombre;
         this.fecha = fecha;
+        this.peso = peso;
     }
 
     public Long getId() {
@@ -77,5 +82,9 @@ public class ActividadEvaluativa {
 
     public LocalDate getFecha() {
         return fecha;
+    }
+
+    public int getPeso() {
+        return peso;
     }
 }

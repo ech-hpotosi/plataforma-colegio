@@ -36,6 +36,7 @@ export default function DialogoActividad({ cargaId, periodoId, actividad, alCerr
   const [dimension, setDimension] = useState<Dimension>(actividad?.dimension ?? 'SABER');
   const [nombre, setNombre] = useState(actividad?.nombre ?? '');
   const [fecha, setFecha] = useState(actividad?.fecha ?? '');
+  const [peso, setPeso] = useState(actividad?.peso ?? 1);
   const [confirmarBorrado, setConfirmarBorrado] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [guardando, setGuardando] = useState(false);
@@ -57,7 +58,7 @@ export default function DialogoActividad({ cargaId, periodoId, actividad, alCerr
       setError('Escriba el nombre de la actividad');
       return;
     }
-    const datos = { dimension, nombre: nombre.trim(), fecha: fecha || null };
+    const datos = { dimension, nombre: nombre.trim(), fecha: fecha || null, peso };
     ejecutar(() => (actividad ? modificarActividad(actividad.id, datos) : crearActividad(cargaId, periodoId, datos)));
   };
 
@@ -91,6 +92,19 @@ export default function DialogoActividad({ cargaId, periodoId, actividad, alCerr
               slotProps={{ htmlInput: { maxLength: 120 } }}
               autoFocus
             />
+            <TextField
+              select
+              label="Peso"
+              value={peso}
+              onChange={(e) => setPeso(Number(e.target.value))}
+              helperText="Cuánto vale frente a las otras actividades de la misma dimensión."
+            >
+              {[1, 2, 3, 4, 5].map((n) => (
+                <MenuItem key={n} value={n}>
+                  {n === 1 ? '1 (normal)' : n === 2 ? '2 (vale el doble)' : `${n} (vale ${n} veces)`}
+                </MenuItem>
+              ))}
+            </TextField>
             <TextField
               label="Fecha (opcional)"
               type="date"

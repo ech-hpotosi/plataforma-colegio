@@ -149,6 +149,17 @@ class NotasTest extends PruebaIntegracion {
                 .andExpect(jsonPath("$.estudiantes[1].desempeno").value("BAJO"))
                 .andExpect(jsonPath("$.estudiantes[1].completa").value(false));
 
+        // Con la evaluacion de peso 3: Saber (4.0 * 3 + 3.0) / 4 = 3.8 y la nota sube a 4.1
+        enviar(put("/api/notas/actividades/" + evaluacion), docente,
+                "{\"dimension\": \"SABER\", \"nombre\": \"Evaluación célula\", \"peso\": 3}")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.actividades[0].peso").value(3))
+                .andExpect(jsonPath("$.estudiantes[0].saber").value(3.8))
+                .andExpect(jsonPath("$.estudiantes[0].notaPeriodo").value(4.1));
+        enviar(put("/api/notas/actividades/" + evaluacion), docente,
+                "{\"dimension\": \"SABER\", \"nombre\": \"Evaluación célula\", \"peso\": 6}")
+                .andExpect(status().isBadRequest());
+
         // Fuera de escala, mas de una decimal, o de otro docente
         enviar(put(planilla), docente, "{\"notas\": [%s]}".formatted(nota(taller, e.bruno(), "5.5")))
                 .andExpect(status().isConflict());

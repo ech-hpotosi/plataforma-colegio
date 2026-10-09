@@ -241,6 +241,11 @@ export default function PlanillaNotas() {
                           ) : (
                             a.nombre
                           )}
+                          {a.peso > 1 && (
+                            <Typography variant="caption" display="block" color="text.secondary">
+                              Vale x{a.peso}
+                            </Typography>
+                          )}
                         </TableCell>
                       )),
                       <TableCell
