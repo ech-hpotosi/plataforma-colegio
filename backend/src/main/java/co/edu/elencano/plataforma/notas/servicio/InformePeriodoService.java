@@ -3,6 +3,7 @@ package co.edu.elencano.plataforma.notas.servicio;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -14,7 +15,9 @@ import org.springframework.util.StringUtils;
 import co.edu.elencano.plataforma.academico.entidad.CargaAcademica;
 import co.edu.elencano.plataforma.academico.entidad.Periodo;
 import co.edu.elencano.plataforma.academico.repositorio.CargaAcademicaRepository;
+import co.edu.elencano.plataforma.comun.excepcion.RecursoNoEncontradoException;
 import co.edu.elencano.plataforma.comun.excepcion.ReglaNegocioException;
+import co.edu.elencano.plataforma.matricula.entidad.Matricula;
 import co.edu.elencano.plataforma.matricula.repositorio.MatriculaRepository;
 import co.edu.elencano.plataforma.notas.entidad.Desempeno;
 import co.edu.elencano.plataforma.notas.entidad.DescriptorDesempeno;
@@ -55,8 +58,15 @@ public class InformePeriodoService {
         this.usuarioRepository = usuarioRepository;
     }
 
+    /** Largo maximo de la observacion en grados con nota; en Transicion el informe descriptivo admite 1500. */
+    static final int MAXIMO_OBSERVACION = 500;
+
     @Transactional
     public InformePeriodoDto informe(Long cargaId, Long periodoId, UsuarioAutenticado usuario) {
+        CargaAcademica carga = notasService.cargaDelDocente(cargaId, usuario);
+        if (carga.getGrupo().getGrado().isEvaluacionCualitativa()) {
+            return informeDescriptivo(carga, periodoDe(carga, periodoId));
+        }
         // La planilla verifica el permiso sobre la clase y trae la nota definitiva de cada estudiante
         PlanillaNotasDto planilla = notasService.planilla(cargaId, periodoId, usuario);
         Map<Desempeno, String> descriptores = new EnumMap<>(Desempeno.class);
@@ -70,11 +80,84 @@ public class InformePeriodoService {
                     return new InformePeriodoDto.Fila(f.matriculaId(), f.nombres(), f.apellidos(), f.notaDefinitiva(),
                             f.desempeno(), f.completa(), i == null ? null : i.getComportamiento(),
                             i == null ? null : i.getObservacion());
-                }).toList());
+                }).toList(), false);
+    }
+
+    /** Transicion: por cada estudiante, el informe descriptivo de la dimension en el periodo. */
+    private InformePeriodoDto informeDescriptivo(CargaAcademica carga, Periodo periodo) {
+        Map<Long, InformeEstudiante> informes = informesPorMatricula(carga.getId(), periodo.getId());
+        return new InformePeriodoDto(carga.getId(), carga.getGrupo().getGrado().getNombre() + " "
+                + carga.getGrupo().getNombre(), carga.getAsignatura().getNombre(), periodo.getId(), periodo.getNumero(),
+                editable(periodo), notasService.obtenerConfiguracion(periodo.getAnioLectivo().getId()), Map.of(),
+                matriculaRepository.listarActivasDeGrupo(carga.getGrupo().getId()).stream().map(m -> {
+                    InformeEstudiante i = informes.get(m.getId());
+                    return new InformePeriodoDto.Fila(m.getId(), m.getEstudiante().getPersona().getNombres(),
+                            m.getEstudiante().getPersona().getApellidos(), null, null, false, null,
+                            i == null ? null : i.getObservacion());
+                }).toList(), true);
+    }
+
+    private InformePeriodoDto guardarDescriptivo(CargaAcademica carga, Periodo periodo, GuardarInformeDto datos,
+                                                UsuarioAutenticado usuario) {
+        if (!editable(periodo)) {
+            throw new ReglaNegocioException("El periodo " + periodo.getNumero()
+                    + " está cerrado; el informe ya no se puede cambiar");
+        }
+        Map<Long, Matricula> delGrupo = matriculaRepository.listarActivasDeGrupo(carga.getGrupo().getId()).stream()
+                .collect(Collectors.toMap(Matricula::getId, Function.identity()));
+        Map<Long, InformeEstudiante> informes = informesPorMatricula(carga.getId(), periodo.getId());
+        LocalDateTime ahora = LocalDateTime.now();
+        for (GuardarInformeDto.Estudiante item : datos.estudiantes() == null ? List.<GuardarInformeDto.Estudiante>of()
+                : datos.estudiantes()) {
+            Matricula matricula = delGrupo.get(item.matriculaId());
+            if (matricula == null) {
+                throw new ReglaNegocioException("La matrícula " + item.matriculaId() + " no está activa en el grupo");
+            }
+            if (item.comportamiento() != null) {
+                throw new ReglaNegocioException(carga.getGrupo().getGrado().getNombre()
+                        + " se evalúa de forma cualitativa: el informe no lleva valoración numérica");
+            }
+            String texto = StringUtils.hasText(item.observacion()) ? item.observacion().trim() : null;
+            InformeEstudiante actual = informes.get(item.matriculaId());
+            if (texto == null) {
+                if (actual != null) {
+                    informeRepository.delete(actual);
+                }
+                continue;
+            }
+            InformeEstudiante informe = actual != null ? actual : new InformeEstudiante(carga, periodo, matricula);
+            informe.registrar(null, texto, usuarioRepository.getReferenceById(usuario.getId()), ahora);
+            informeRepository.save(informe);
+        }
+        informeRepository.flush();
+        return informeDescriptivo(carga, periodo);
+    }
+
+    /** Observaciones o informes descriptivos de una matricula, por "cargaId-periodoId". Sin verificar acceso. */
+    @Transactional(readOnly = true)
+    public Map<String, String> observacionesDeMatricula(Long matriculaId) {
+        return informeRepository.findByMatriculaId(matriculaId).stream()
+                .filter(i -> i.getObservacion() != null)
+                .collect(Collectors.toMap(i -> i.getCargaId() + "-" + i.getPeriodoId(), InformeEstudiante::getObservacion));
+    }
+
+    private static Periodo periodoDe(CargaAcademica carga, Long periodoId) {
+        return carga.getGrupo().getAnioLectivo().getPeriodos().stream()
+                .filter(p -> p.getId().equals(periodoId))
+                .findFirst()
+                .orElseThrow(() -> new RecursoNoEncontradoException("El periodo " + periodoId + " no es del año de la clase"));
+    }
+
+    private static boolean editable(Periodo periodo) {
+        return !periodo.isCerrado() && !periodo.getAnioLectivo().estaCerrado();
     }
 
     @Transactional
     public InformePeriodoDto guardar(Long cargaId, Long periodoId, GuardarInformeDto datos, UsuarioAutenticado usuario) {
+        CargaAcademica cargaDocente = notasService.cargaDelDocente(cargaId, usuario);
+        if (cargaDocente.getGrupo().getGrado().isEvaluacionCualitativa()) {
+            return guardarDescriptivo(cargaDocente, periodoDe(cargaDocente, periodoId), datos, usuario);
+        }
         PlanillaNotasDto planilla = notasService.planilla(cargaId, periodoId, usuario);
         if (!planilla.editable()) {
             throw new ReglaNegocioException("El periodo " + planilla.periodo()
@@ -123,6 +206,10 @@ public class InformePeriodoService {
                             + " con una sola decimal");
                 }
                 String observacion = StringUtils.hasText(item.observacion()) ? item.observacion().trim() : null;
+                if (observacion != null && observacion.length() > MAXIMO_OBSERVACION) {
+                    throw new ReglaNegocioException("La observación de " + fila.nombres() + " " + fila.apellidos()
+                            + " pasa de " + MAXIMO_OBSERVACION + " caracteres");
+                }
                 InformeEstudiante actual = informes.get(item.matriculaId());
                 if (comportamiento == null && observacion == null) {
                     if (actual != null) {

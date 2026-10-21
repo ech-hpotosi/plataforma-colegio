@@ -114,6 +114,8 @@ export interface InformePeriodo {
   /** Concepto descriptivo de cada desempeno; falta la clave si no se ha escrito. */
   descriptores: Partial<Record<Desempeno, string>>;
   estudiantes: FilaInforme[];
+  /** Transicion: solo el informe descriptivo por estudiante, sin notas, descriptores ni comportamiento. */
+  cualitativo: boolean;
 }
 
 export interface FilaInforme {

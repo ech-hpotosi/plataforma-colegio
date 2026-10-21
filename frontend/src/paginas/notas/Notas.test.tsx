@@ -206,6 +206,42 @@ describe('Notas', () => {
     });
   }, 15000);
 
+  it('en Transición el docente escribe el informe descriptivo de cada estudiante, sin notas', async () => {
+    const transicion = [{ ...cargas[0], cargaId: 8, grupo: 'Transición 01', asignatura: 'Dimensión comunicativa', cualitativa: true }];
+    const informe = {
+      cargaId: 8,
+      grupo: 'Transición 01',
+      asignatura: 'Dimensión comunicativa',
+      periodoId: 11,
+      periodo: 1,
+      editable: true,
+      configuracion,
+      descriptores: {},
+      cualitativo: true,
+      estudiantes: [
+        { matriculaId: 40, nombres: 'Sara', apellidos: 'Jamioy', notaDefinitiva: null, desempeno: null, completa: false, comportamiento: null, observacion: null },
+      ],
+    };
+    const fetch = simularApi({
+      'GET /api/yo': { estado: 200, cuerpo: docente },
+      'GET /api/notas/cargas': { estado: 200, cuerpo: transicion },
+      'GET /api/notas/cargas/8/periodos/11/informe': { estado: 200, cuerpo: informe },
+      'PUT /api/notas/cargas/8/periodos/11/informe': { estado: 200, cuerpo: informe },
+    });
+    renderizarEn('/notas/informe', <App />);
+
+    await userEvent.type(await screen.findByLabelText('Informe de Sara Jamioy'), 'Reconoce las vocales.');
+    expect(screen.queryByText('Concepto descriptivo por desempeño')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Comportamiento de Sara Jamioy')).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Guardar informe' }));
+    expect(await screen.findByText('Informe guardado')).toBeInTheDocument();
+
+    const envio = fetch.mock.calls.find(([, opciones]) => opciones?.method === 'PUT');
+    expect(JSON.parse(String(envio?.[1]?.body))).toEqual({
+      estudiantes: [{ matriculaId: 40, comportamiento: null, observacion: 'Reconoce las vocales.' }],
+    });
+  }, 15000);
+
   it('una nota fuera de la escala no se envía', async () => {
     const fetch = simularApi({
       'GET /api/yo': { estado: 200, cuerpo: docente },

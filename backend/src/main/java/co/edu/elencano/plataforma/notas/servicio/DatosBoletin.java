@@ -8,10 +8,12 @@ import co.edu.elencano.plataforma.notas.entidad.Desempeno;
 
 /**
  * Lo que lleva el boletin de un grupo en un periodo segun el SIEE (art. 14), ya calculado.
- * El PDF solo lo dibuja.
+ * El PDF solo lo dibuja. En un grado cualitativo (Transicion) no hay escala ni notas: cada asignatura (dimension)
+ * lleva en observacion el informe descriptivo del docente.
  */
 public record DatosBoletin(int anio, int periodo, LocalDate fecha, String sede, String grupo, String jornada,
-                           String director, String coordinador, Escala escala, List<Estudiante> estudiantes) {
+                           String director, String coordinador, Escala escala, List<Estudiante> estudiantes,
+                           boolean cualitativo) {
 
     /** Limites de la escala para explicar los desempenos al pie del boletin. */
     public record Escala(BigDecimal minima, BigDecimal maxima, BigDecimal aprobatoria, BigDecimal limiteAlto,

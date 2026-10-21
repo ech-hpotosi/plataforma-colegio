@@ -218,7 +218,7 @@ export default function PlanillaNotas() {
       {cargaId === '' && <Alert severity="info">Seleccione la clase para ver la planilla.</Alert>}
       {carga?.cualitativa && (
         <Alert severity="info">
-          {carga.grupo.split(' ')[0]} se evalúa de forma cualitativa, sin notas numéricas (SIEE art. 4.3.1).
+          {carga.grupo.split(' ')[0]} se evalúa de forma cualitativa, sin notas numéricas (SIEE art. 4.3.1). El informe de cada dimensión se escribe en Informe del periodo.
         </Alert>
       )}
       {mensaje && <Alert severity={mensaje.tipo}>{mensaje.texto}</Alert>}

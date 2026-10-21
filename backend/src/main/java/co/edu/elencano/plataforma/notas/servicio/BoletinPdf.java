@@ -36,6 +36,9 @@ public class BoletinPdf {
     private static final String INSTITUCION = "Institución Educativa Municipal El Encano";
     private static final String LEGAL = "Decreto 0338 de agosto 26 de 2003 de la Alcaldía Municipal de Pasto. "
             + "NIT 800 060022-0. DANE 452001002528. Corregimiento de El Encano, Municipio de Pasto.";
+    private static final String PREESCOLAR = "En el nivel preescolar no se reprueban grados ni actividades. La "
+            + "evaluación es cualitativa y se expresa en informes descriptivos (Decreto 2247 de 1997, art. 10, y SIEE "
+            + "4.3.1). Las faltas se cuentan en horas.";
     private static final Map<Desempeno, String> NOMBRE = Map.of(Desempeno.BAJO, "Bajo", Desempeno.BASICO, "Básico",
             Desempeno.ALTO, "Alto", Desempeno.SUPERIOR, "Superior");
     private static final DateTimeFormatter FECHA = DateTimeFormatter.ofPattern("d 'de' MMMM 'de' yyyy",
@@ -86,9 +89,14 @@ public class BoletinPdf {
     private void pagina(Document documento, DatosBoletin datos, DatosBoletin.Estudiante e) {
         documento.add(encabezado(datos));
         documento.add(identificacion(datos, e));
-        documento.add(asignaturas(e));
-        documento.add(comportamiento(e));
-        documento.add(escala(datos.escala()));
+        if (datos.cualitativo()) {
+            documento.add(dimensiones(e));
+            documento.add(new Paragraph(PREESCOLAR, PEQUENA));
+        } else {
+            documento.add(asignaturas(e));
+            documento.add(comportamiento(e));
+            documento.add(escala(datos.escala()));
+        }
         documento.add(firmas(datos));
         Paragraph legal = new Paragraph(LEGAL, PEQUENA);
         legal.setAlignment(Element.ALIGN_CENTER);
@@ -115,7 +123,8 @@ public class BoletinPdf {
         PdfPCell centro = sinBorde(new PdfPCell());
         centro.setVerticalAlignment(Element.ALIGN_MIDDLE);
         centro.addElement(new Paragraph(INSTITUCION, TITULO));
-        centro.addElement(new Paragraph("Boletín de aprendizaje y convivencia", SUBTITULO));
+        centro.addElement(new Paragraph(datos.cualitativo() ? "Informe descriptivo de desarrollo"
+                : "Boletín de aprendizaje y convivencia", SUBTITULO));
         centro.addElement(new Paragraph("Estudio, trabajo y ciencia", PEQUENA));
         tabla.addCell(centro);
 
@@ -202,6 +211,41 @@ public class BoletinPdf {
             tabla.addCell(nota);
         }
         tabla.setSpacingAfter(10);
+        return tabla;
+    }
+
+    /** Transicion: cada dimension con el informe descriptivo del docente y las faltas, sin notas. */
+    private PdfPTable dimensiones(DatosBoletin.Estudiante e) {
+        PdfPTable tabla = new PdfPTable(new float[] {7.4f, 1.1f, 1.1f});
+        tabla.setWidthPercentage(100);
+        tabla.setHeaderRows(1);
+        for (String titulo : new String[] {"Dimensión e informe del periodo", "Faltas just.", "Faltas sin just."}) {
+            PdfPCell celda = new PdfPCell(new Phrase(titulo, COLUMNA));
+            celda.setBackgroundColor(ENCABEZADO);
+            celda.setBorderColor(LINEA);
+            celda.setPadding(4);
+            celda.setHorizontalAlignment(titulo.startsWith("Dimensión") ? Element.ALIGN_LEFT : Element.ALIGN_CENTER);
+            tabla.addCell(celda);
+        }
+        for (DatosBoletin.Asignatura a : e.asignaturas()) {
+            PdfPCell detalle = celda(Element.ALIGN_LEFT);
+            detalle.addElement(new Phrase(a.nombre(), NEGRITA));
+            if (a.docente() != null) {
+                detalle.addElement(new Phrase("Docente: " + a.docente(), PEQUENA));
+            }
+            Paragraph informe = new Paragraph(a.observacion() == null ? "Sin informe registrado en el periodo."
+                    : a.observacion(), NORMAL);
+            informe.setSpacingBefore(2);
+            detalle.addElement(informe);
+            tabla.addCell(detalle);
+            PdfPCell justificadas = texto(String.valueOf(a.faltasJustificadas()), NORMAL);
+            justificadas.setBorderWidthBottom(0.5f);
+            tabla.addCell(justificadas);
+            PdfPCell sinJustificar = texto(String.valueOf(a.faltasSinJustificar()), NORMAL);
+            sinJustificar.setBorderWidthBottom(0.5f);
+            tabla.addCell(sinJustificar);
+        }
+        tabla.setSpacingAfter(8);
         return tabla;
     }
 

@@ -22,7 +22,6 @@ import co.edu.elencano.plataforma.academico.servicio.GrupoService;
 import co.edu.elencano.plataforma.asistencia.entidad.EstadoAsistencia;
 import co.edu.elencano.plataforma.asistencia.repositorio.DetalleAsistenciaRepository;
 import co.edu.elencano.plataforma.comun.excepcion.RecursoNoEncontradoException;
-import co.edu.elencano.plataforma.comun.excepcion.ReglaNegocioException;
 import co.edu.elencano.plataforma.matricula.entidad.Matricula;
 import co.edu.elencano.plataforma.matricula.repositorio.MatriculaRepository;
 import co.edu.elencano.plataforma.notas.entidad.Desempeno;
@@ -81,16 +80,15 @@ public class BoletinService {
     /** Igual que el anterior pero sin verificar el acceso; lo usa la consulta de las familias, que verifica el suyo. */
     @Transactional
     public DatosBoletin datos(Long grupoId, Long periodoId, Long matriculaId) {
-        ConsolidadoNotasDto consolidado = notasService.calcularConsolidado(grupoId, periodoId);
         Grupo grupo = grupoService.obtener(grupoId);
-        if (grupo.getGrado().isEvaluacionCualitativa()) {
-            throw new ReglaNegocioException(grupo.getGrado().getNombre()
-                    + " se evalúa de forma cualitativa; su boletín descriptivo todavía no está disponible");
-        }
         Periodo periodo = grupo.getAnioLectivo().getPeriodos().stream()
                 .filter(p -> p.getId().equals(periodoId))
                 .findFirst()
                 .orElseThrow(() -> new RecursoNoEncontradoException("El periodo " + periodoId + " no es del año del grupo"));
+        if (grupo.getGrado().isEvaluacionCualitativa()) {
+            return datosDescriptivos(grupo, periodo, matriculaId);
+        }
+        ConsolidadoNotasDto consolidado = notasService.calcularConsolidado(grupoId, periodoId);
 
         Map<Long, CargaAcademica> cargas = new HashMap<>();
         cargaRepository.findByGrupoId(grupoId).forEach(c -> cargas.put(c.getId(), c));
@@ -103,15 +101,7 @@ public class BoletinService {
         Map<String, InformeEstudiante> informes = new HashMap<>();
         informeRepository.findByCargaGrupoIdAndPeriodoId(grupoId, periodoId)
                 .forEach(i -> informes.put(i.getCargaId() + "-" + i.getMatriculaId(), i));
-        Map<String, long[]> faltas = new HashMap<>();
-        detalleRepository.contarDePeriodo(grupoId, periodoId).forEach(f -> {
-            long[] horas = faltas.computeIfAbsent(f.cargaId() + "-" + f.matriculaId(), k -> new long[2]);
-            if (f.estado() == EstadoAsistencia.FALTA) {
-                horas[1] += f.horas();
-            } else if (f.estado().esInasistencia()) {
-                horas[0] += f.horas();
-            }
-        });
+        Map<String, long[]> faltas = faltasDelPeriodo(grupoId, periodoId);
         Map<Long, Matricula> matriculas = new HashMap<>();
         matriculaRepository.listarActivasDeGrupo(grupoId).forEach(m -> matriculas.put(m.getId(), m));
         ConfiguracionEvaluacionDto config = consolidado.configuracion();
@@ -154,14 +144,78 @@ public class BoletinService {
             throw new RecursoNoEncontradoException("La matrícula " + matriculaId + " no está activa en el grupo");
         }
 
-        List<Usuario> coordinadores = usuarioRepository.listarActivosConRol(Rol.COORDINADOR_ACADEMICO);
         return new DatosBoletin(grupo.getAnioLectivo().getAnio(), periodo.getNumero(), LocalDate.now(),
                 grupo.getSede().getNombre(), consolidado.grupo(), nombreJornada(grupo.getJornada()),
-                grupo.getDirector() == null ? null : grupo.getDirector().getPersona().getNombreCompleto(),
-                coordinadores.size() == 1 ? coordinadores.getFirst().getPersona().getNombreCompleto() : null,
+                director(grupo), coordinador(),
                 new DatosBoletin.Escala(config.notaMinima(), config.notaMaxima(), config.notaAprobatoria(),
                         config.limiteAlto(), config.limiteSuperior()),
-                estudiantes);
+                estudiantes, false);
+    }
+
+    /**
+     * Transicion (SIEE 4.3.1 y Decreto 2247 de 1997, art. 10): sin notas, cada dimension lleva el informe descriptivo
+     * que escribio el docente en el periodo, con las faltas.
+     */
+    private DatosBoletin datosDescriptivos(Grupo grupo, Periodo periodo, Long matriculaId) {
+        List<CargaAcademica> cargas = cargaRepository.findByGrupoId(grupo.getId()).stream()
+                .sorted(Comparator.comparing((CargaAcademica c) -> c.getAsignatura().getArea().getNombre())
+                        .thenComparing(c -> c.getAsignatura().getNombre()))
+                .toList();
+        Map<Long, Integer> intensidades = new HashMap<>();
+        planRepository.listar(grupo.getAnioLectivo().getId(), grupo.getGrado().getId())
+                .forEach(p -> intensidades.put(p.getAsignatura().getId(), p.getIntensidadHoraria()));
+        Map<String, String> informes = new HashMap<>();
+        informeRepository.findByCargaGrupoIdAndPeriodoId(grupo.getId(), periodo.getId())
+                .forEach(i -> informes.put(i.getCargaId() + "-" + i.getMatriculaId(), i.getObservacion()));
+        Map<String, long[]> faltas = faltasDelPeriodo(grupo.getId(), periodo.getId());
+
+        List<DatosBoletin.Estudiante> estudiantes = new ArrayList<>();
+        for (Matricula m : matriculaRepository.listarActivasDeGrupo(grupo.getId())) {
+            if (matriculaId != null && !matriculaId.equals(m.getId())) {
+                continue;
+            }
+            List<DatosBoletin.Asignatura> dimensiones = cargas.stream().map(c -> {
+                long[] horas = faltas.getOrDefault(c.getId() + "-" + m.getId(), new long[2]);
+                return new DatosBoletin.Asignatura(c.getAsignatura().getArea().getNombre(), c.getAsignatura().getNombre(),
+                        c.getDocente() == null ? null : c.getDocente().getPersona().getNombreCompleto(),
+                        intensidades.get(c.getAsignatura().getId()), null, null, false, null,
+                        informes.get(c.getId() + "-" + m.getId()), horas[0], horas[1]);
+            }).toList();
+            estudiantes.add(new DatosBoletin.Estudiante(
+                    m.getEstudiante().getPersona().getApellidos() + " " + m.getEstudiante().getPersona().getNombres(),
+                    m.getEstudiante().getCodigo(), m.getEstudiante().getPersona().getTipoDocumento() + " "
+                            + m.getEstudiante().getPersona().getNumeroDocumento(),
+                    dimensiones, null, null, 0));
+        }
+        if (matriculaId != null && estudiantes.isEmpty()) {
+            throw new RecursoNoEncontradoException("La matrícula " + matriculaId + " no está activa en el grupo");
+        }
+        return new DatosBoletin(grupo.getAnioLectivo().getAnio(), periodo.getNumero(), LocalDate.now(),
+                grupo.getSede().getNombre(), grupo.getGrado().getNombre() + " " + grupo.getNombre(),
+                nombreJornada(grupo.getJornada()), director(grupo), coordinador(), null, estudiantes, true);
+    }
+
+    /** Horas por clase y matricula en el periodo: [justificadas, sin justificar]. */
+    private Map<String, long[]> faltasDelPeriodo(Long grupoId, Long periodoId) {
+        Map<String, long[]> faltas = new HashMap<>();
+        detalleRepository.contarDePeriodo(grupoId, periodoId).forEach(f -> {
+            long[] horas = faltas.computeIfAbsent(f.cargaId() + "-" + f.matriculaId(), k -> new long[2]);
+            if (f.estado() == EstadoAsistencia.FALTA) {
+                horas[1] += f.horas();
+            } else if (f.estado().esInasistencia()) {
+                horas[0] += f.horas();
+            }
+        });
+        return faltas;
+    }
+
+    private static String director(Grupo grupo) {
+        return grupo.getDirector() == null ? null : grupo.getDirector().getPersona().getNombreCompleto();
+    }
+
+    private String coordinador() {
+        List<Usuario> coordinadores = usuarioRepository.listarActivosConRol(Rol.COORDINADOR_ACADEMICO);
+        return coordinadores.size() == 1 ? coordinadores.getFirst().getPersona().getNombreCompleto() : null;
     }
 
     private static Desempeno desempenoDe(BigDecimal valor, ConfiguracionEvaluacionDto config) {

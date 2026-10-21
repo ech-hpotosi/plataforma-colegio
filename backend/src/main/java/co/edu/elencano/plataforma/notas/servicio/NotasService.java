@@ -551,13 +551,20 @@ public class NotasService {
         }
     }
 
-    private CargaAcademica cargaQueRegistra(Long cargaId, UsuarioAutenticado usuario) {
+    /** Carga del docente (o cualquiera para quien registra en todas las clases), incluida la de Transicion. */
+    @Transactional(readOnly = true)
+    public CargaAcademica cargaDelDocente(Long cargaId, UsuarioAutenticado usuario) {
         CargaAcademica carga = cargaRepository.findById(cargaId)
                 .orElseThrow(() -> new RecursoNoEncontradoException("No existe la carga académica " + cargaId));
         if (!tieneAlguno(usuario, REGISTRAN_CUALQUIER_CLASE)
                 && !carga.getDocente().getId().equals(usuario.getPersonaId())) {
             throw new AccessDeniedException("La carga no es del docente");
         }
+        return carga;
+    }
+
+    private CargaAcademica cargaQueRegistra(Long cargaId, UsuarioAutenticado usuario) {
+        CargaAcademica carga = cargaDelDocente(cargaId, usuario);
         if (carga.getGrupo().getGrado().isEvaluacionCualitativa()) {
             throw new ReglaNegocioException(carga.getGrupo().getGrado().getNombre()
                     + " se evalúa de forma cualitativa, sin notas numéricas (SIEE art. 4.3.1)");

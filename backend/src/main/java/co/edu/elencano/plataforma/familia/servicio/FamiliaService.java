@@ -27,6 +27,7 @@ import co.edu.elencano.plataforma.matricula.repositorio.MatriculaRepository;
 import co.edu.elencano.plataforma.notas.servicio.BoletinPdf;
 import co.edu.elencano.plataforma.notas.servicio.BoletinService;
 import co.edu.elencano.plataforma.notas.servicio.DatosBoletin;
+import co.edu.elencano.plataforma.notas.servicio.InformePeriodoService;
 import co.edu.elencano.plataforma.notas.servicio.NotasService;
 import co.edu.elencano.plataforma.notas.web.dto.ConsolidadoNotasDto;
 import co.edu.elencano.plataforma.usuarios.entidad.Rol;
@@ -46,16 +47,18 @@ public class FamiliaService {
     private final BoletinService boletinService;
     private final BoletinPdf boletinPdf;
     private final AsistenciaService asistenciaService;
+    private final InformePeriodoService informeService;
 
     public FamiliaService(EstudianteService estudianteService, MatriculaRepository matriculaRepository,
                           NotasService notasService, BoletinService boletinService, BoletinPdf boletinPdf,
-                          AsistenciaService asistenciaService) {
+                          AsistenciaService asistenciaService, InformePeriodoService informeService) {
         this.estudianteService = estudianteService;
         this.matriculaRepository = matriculaRepository;
         this.notasService = notasService;
         this.boletinService = boletinService;
         this.boletinPdf = boletinPdf;
         this.asistenciaService = asistenciaService;
+        this.informeService = informeService;
     }
 
     /** Boletin listo para descargar, con el nombre del archivo. */
@@ -84,7 +87,7 @@ public class FamiliaService {
             // Matriculado pero todavia sin grupo: no hay asignaturas ni notas
             return new ResumenFamiliaDto(estudiante.getId(), nombre, matricula.getId(),
                     matricula.getAnioLectivo().getAnio(), null, null, null, null, List.of(), List.of(), novedades,
-                    false);
+                    false, false);
         }
 
         ConsolidadoNotasDto anual = notasService.calcularConsolidado(grupo.getId(), null);
@@ -108,13 +111,18 @@ public class FamiliaService {
             }
         }
 
+        // En Transicion el informe descriptivo se muestra cuando el periodo cierra, como el boletin impreso
+        boolean cualitativo = grupo.getGrado().isEvaluacionCualitativa();
+        Map<String, String> informes = cualitativo ? informeService.observacionesDeMatricula(matricula.getId()) : Map.of();
+
         List<ResumenFamiliaDto.Asignatura> asignaturas = new ArrayList<>();
         for (ConsolidadoNotasDto.Asignatura a : anual.asignaturas()) {
             List<ResumenFamiliaDto.NotaPeriodo> notas = anual.periodos().stream()
                     .map(p -> {
                         ConsolidadoNotasDto.Nota n = porPeriodo.get(p.id()).get(a.cargaId());
+                        String informe = p.cerrado() ? informes.get(a.cargaId() + "-" + p.id()) : null;
                         return new ResumenFamiliaDto.NotaPeriodo(p.id(), n == null ? null : n.nota(),
-                                n == null ? null : n.desempeno(), n != null && n.completa());
+                                n == null ? null : n.desempeno(), n != null && n.completa(), informe);
                     })
                     .toList();
             ConsolidadoNotasDto.Nota definitiva = definitivas.get(a.cargaId());
@@ -126,8 +134,7 @@ public class FamiliaService {
         return new ResumenFamiliaDto(estudiante.getId(), nombre, matricula.getId(), anual.configuracion().anio(),
                 anual.grupo(), grupo.getSede().getNombre(),
                 grupo.getDirector() == null ? null : grupo.getDirector().getPersona().getNombreCompleto(),
-                anual.configuracion(), anual.periodos(), asignaturas, novedades,
-                !grupo.getGrado().isEvaluacionCualitativa());
+                anual.configuracion(), anual.periodos(), asignaturas, novedades, true, cualitativo);
     }
 
     /** Boletin de un periodo cerrado del anio de la matricula, como el que se entrega impreso. */

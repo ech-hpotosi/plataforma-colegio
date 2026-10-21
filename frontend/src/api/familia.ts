@@ -23,6 +23,8 @@ export interface NotaPeriodoFamilia {
   nota: number | null;
   desempeno: Desempeno | null;
   completa: boolean;
+  /** Informe descriptivo del periodo (solo Transicion y periodos cerrados). */
+  informe: string | null;
 }
 
 export interface AsignaturaFamilia {
@@ -50,6 +52,8 @@ export interface ResumenFamilia {
   asignaturas: AsignaturaFamilia[];
   novedades: NovedadAsistencia[];
   boletinDisponible: boolean;
+  /** Grado evaluado con informes descriptivos en lugar de notas (Transicion). */
+  cualitativo: boolean;
 }
 
 export const listarEstudiantesFamilia = () => llamarApi<EstudianteFamilia[]>('/familia/estudiantes');

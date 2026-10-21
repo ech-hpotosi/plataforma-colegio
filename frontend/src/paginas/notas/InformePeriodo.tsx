@@ -41,12 +41,14 @@ import EstadoDesempeno from './Desempeno';
 const ORDEN: Desempeno[] = ['SUPERIOR', 'ALTO', 'BASICO', 'BAJO'];
 const MAXIMO_DESCRIPTOR = 600;
 const MAXIMO_OBSERVACION = 500;
+const MAXIMO_INFORME_DESCRIPTIVO = 1500;
 
 const formato = (valor: number | null) => (valor === null ? '' : valor.toFixed(1));
 
 /**
  * Informe del periodo de una clase para el boletin (SIEE art. 14): el concepto descriptivo de cada desempeno
- * y, por estudiante, la valoracion del comportamiento y una observacion para la familia.
+ * y, por estudiante, la valoracion del comportamiento y una observacion para la familia. En Transicion (evaluacion
+ * cualitativa) es solo el informe descriptivo de cada estudiante en la dimension.
  */
 export default function InformePeriodo() {
   const queryClient = useQueryClient();
@@ -66,7 +68,7 @@ export default function InformePeriodo() {
   const informe = useQuery({
     queryKey: ['notas-informe', cargaId, periodoId],
     queryFn: () => obtenerInforme(Number(cargaId), Number(periodoId)),
-    enabled: cargaId !== '' && periodoId !== '' && carga !== undefined && !carga.cualitativa,
+    enabled: cargaId !== '' && periodoId !== '' && carga !== undefined,
   });
 
   useEffect(() => {
@@ -92,6 +94,7 @@ export default function InformePeriodo() {
 
   const datos = informe.data;
   const editable = !!datos?.editable;
+  const cualitativo = !!datos?.cualitativo;
   const descriptor = (d: Desempeno) => descriptores[d] ?? datos?.descriptores[d] ?? '';
   const comportamiento = (m: number, actual: number | null) => comportamientos[m] ?? formato(actual);
   const observacion = (m: number, actual: string | null) => observaciones[m] ?? actual ?? '';
@@ -104,6 +107,11 @@ export default function InformePeriodo() {
     if (!datos) return;
     const estudiantes: NonNullable<DatosInforme['estudiantes']> = [];
     for (const e of datos.estudiantes.filter((f) => cambiosEstudiantes.has(f.matriculaId))) {
+      if (cualitativo) {
+        const texto = observacion(e.matriculaId, e.observacion).trim();
+        estudiantes.push({ matriculaId: e.matriculaId, comportamiento: null, observacion: texto || null });
+        continue;
+      }
       const valor = leerNota(comportamiento(e.matriculaId, e.comportamiento), datos.configuracion);
       if (valor === undefined) {
         setMensaje({
@@ -118,7 +126,10 @@ export default function InformePeriodo() {
     setGuardando(true);
     setMensaje(null);
     try {
-      const nuevo = await guardarInforme(Number(cargaId), Number(periodoId), { descriptores, estudiantes });
+      const nuevo = await guardarInforme(Number(cargaId), Number(periodoId), {
+        descriptores: cualitativo ? undefined : descriptores,
+        estudiantes,
+      });
       queryClient.setQueryData<Informe>(['notas-informe', cargaId, periodoId], nuevo);
       setDescriptores({});
       setComportamientos({});
@@ -150,6 +161,28 @@ export default function InformePeriodo() {
           },
         }}
         sx={{ width: 64, '& .MuiInputBase-input': { py: 0.75 } }}
+      />
+    );
+  };
+
+  const campoInformeDescriptivo = (e: FilaInforme) => {
+    const texto = observacion(e.matriculaId, e.observacion);
+    return (
+      <TextField
+        value={texto}
+        onChange={(ev) => setObservaciones({ ...observaciones, [e.matriculaId]: ev.target.value })}
+        disabled={!editable}
+        fullWidth
+        multiline
+        minRows={3}
+        placeholder="Avances, dificultades y recomendaciones para la familia"
+        helperText={`${texto.length} de ${MAXIMO_INFORME_DESCRIPTIVO} caracteres`}
+        slotProps={{
+          htmlInput: {
+            'aria-label': `Informe de ${e.nombres} ${e.apellidos}`,
+            maxLength: MAXIMO_INFORME_DESCRIPTIVO,
+          },
+        }}
       />
     );
   };
@@ -186,7 +219,7 @@ export default function InformePeriodo() {
             </MenuItem>
           ))}
         </TextField>
-        {carga && !carga.cualitativa && (
+        {carga && (
           <TextField
             select
             label="Periodo"
@@ -210,16 +243,36 @@ export default function InformePeriodo() {
       </Stack>
 
       {cargaId === '' && <Alert severity="info">Seleccione la clase para ver el informe del periodo.</Alert>}
-      {carga?.cualitativa && (
-        <Alert severity="info">
-          {carga.grupo.split(' ')[0]} se evalúa de forma cualitativa; su informe descriptivo se agregará con el boletín.
-        </Alert>
-      )}
       {mensaje && <Alert severity={mensaje.tipo}>{mensaje.texto}</Alert>}
       {informe.isFetching && !datos && <CircularProgress />}
       {informe.isError && <Alert severity="error">{mensajeDeError(informe.error)}</Alert>}
 
-      {datos && (
+      {datos && cualitativo && (
+        <>
+          <Typography variant="body2" color="text.secondary">
+            {datos.grupo.split(' ')[0]} se evalúa de forma cualitativa: el boletín del periodo {datos.periodo} muestra, en
+            cada dimensión, el informe que usted escriba para cada estudiante, sin notas ni comportamiento.
+            {!editable && ' El periodo está cerrado: el informe solo se consulta.'}
+            {pendientes > 0 && ` Tiene ${pendientes} ${pendientes === 1 ? 'cambio' : 'cambios'} sin guardar.`}
+          </Typography>
+          {datos.estudiantes.length === 0 ? (
+            <Alert severity="info">El grupo no tiene estudiantes matriculados.</Alert>
+          ) : (
+            <Paper>
+              {datos.estudiantes.map((e, fila) => (
+                <Box key={e.matriculaId} sx={{ p: 2, borderTop: fila === 0 ? 'none' : `1px solid ${COLORES.linea}` }}>
+                  <Typography sx={{ fontWeight: 600, mb: 1 }}>
+                    {fila + 1}. {e.apellidos} {e.nombres}
+                  </Typography>
+                  {campoInformeDescriptivo(e)}
+                </Box>
+              ))}
+            </Paper>
+          )}
+        </>
+      )}
+
+      {datos && !cualitativo && (
         <>
           <Typography variant="body2" color="text.secondary">
             Esto es lo que su clase aporta al boletín del periodo {datos.periodo}.

@@ -179,9 +179,14 @@ function Resumen({ datos }: { datos: ResumenFamilia }) {
         <>
           <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 2, flexWrap: 'wrap', mb: 1 }}>
             <Typography variant="h6" component="h2">
-              Notas
+              {datos.cualitativo ? 'Informe de desarrollo' : 'Notas'}
             </Typography>
-            {abierto && (
+            {datos.cualitativo ? (
+              <Typography variant="body2" color="text.secondary">
+                En Transición no hay notas: cada dimensión tiene un informe descriptivo que aparece cuando el colegio
+                cierra el periodo.
+              </Typography>
+            ) : abierto && (
               <Typography variant="body2" color="text.secondary">
                 Las notas de un periodo que no ha cerrado son parciales y pueden cambiar.
               </Typography>
@@ -195,14 +200,18 @@ function Resumen({ datos }: { datos: ResumenFamilia }) {
             <Box
               sx={{
                 display: 'grid',
-                gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
+                gridTemplateColumns: { xs: '1fr', md: datos.cualitativo ? '1fr' : '1fr 1fr' },
                 gap: 1.5,
                 mb: 3,
               }}
             >
-              {datos.asignaturas.map((a) => (
-                <TarjetaAsignatura key={a.nombre} asignatura={a} datos={datos} />
-              ))}
+              {datos.asignaturas.map((a) =>
+                datos.cualitativo ? (
+                  <TarjetaDimension key={a.nombre} asignatura={a} datos={datos} />
+                ) : (
+                  <TarjetaAsignatura key={a.nombre} asignatura={a} datos={datos} />
+                ),
+              )}
             </Box>
           )}
         </>
@@ -262,12 +271,53 @@ function Resumen({ datos }: { datos: ResumenFamilia }) {
   );
 }
 
-function TarjetaAsignatura({ asignatura: a, datos }: { asignatura: AsignaturaFamilia; datos: ResumenFamilia }) {
-  const faltas = [
+function faltasDe(a: AsignaturaFamilia) {
+  return [
     a.faltasSinJustificar > 0 && `${a.faltasSinJustificar} h sin justificar`,
     a.faltasJustificadas > 0 && `${a.faltasJustificadas} h justificadas`,
     a.retardos > 0 && `${a.retardos} h con retardo`,
   ].filter(Boolean);
+}
+
+function LineaFaltas({ asignatura: a }: { asignatura: AsignaturaFamilia }) {
+  const faltas = faltasDe(a);
+  if (faltas.length === 0) return null;
+  return (
+    <Typography variant="body2" sx={{ mt: 1, color: a.faltasSinJustificar > 0 ? 'error.main' : 'text.secondary' }}>
+      Faltas: {faltas.join(', ')}
+    </Typography>
+  );
+}
+
+/** Transicion: el informe descriptivo de cada periodo cerrado, en lugar de notas. */
+function TarjetaDimension({ asignatura: a, datos }: { asignatura: AsignaturaFamilia; datos: ResumenFamilia }) {
+  return (
+    <Paper sx={{ px: 2, py: 1.5 }}>
+      <Typography sx={{ fontWeight: 600 }}>{a.nombre}</Typography>
+      {a.docente && (
+        <Typography variant="body2" color="text.secondary">
+          {a.docente}
+        </Typography>
+      )}
+      {datos.periodos.map((p, i) => {
+        const informe = a.periodos[i]?.informe;
+        return (
+          <Box key={p.id} sx={{ mt: 1.25, pt: 1.25, borderTop: `1px solid ${COLORES.linea}` }}>
+            <Typography variant="caption" color="text.secondary">
+              Periodo {p.numero}
+            </Typography>
+            <Typography variant="body2" color={informe ? 'text.primary' : 'text.secondary'} sx={{ whiteSpace: 'pre-line' }}>
+              {informe ?? (p.cerrado ? 'Sin informe registrado en el periodo.' : 'Disponible cuando cierre el periodo.')}
+            </Typography>
+          </Box>
+        );
+      })}
+      <LineaFaltas asignatura={a} />
+    </Paper>
+  );
+}
+
+function TarjetaAsignatura({ asignatura: a, datos }: { asignatura: AsignaturaFamilia; datos: ResumenFamilia }) {
   return (
     <Paper sx={{ px: 2, py: 1.5 }}>
       <Typography sx={{ fontWeight: 600 }}>{a.nombre}</Typography>
@@ -324,11 +374,7 @@ function TarjetaAsignatura({ asignatura: a, datos }: { asignatura: AsignaturaFam
           )}
         </Box>
       </Box>
-      {faltas.length > 0 && (
-        <Typography variant="body2" sx={{ mt: 1, color: a.faltasSinJustificar > 0 ? 'error.main' : 'text.secondary' }}>
-          Faltas: {faltas.join(', ')}
-        </Typography>
-      )}
+      <LineaFaltas asignatura={a} />
     </Paper>
   );
 }

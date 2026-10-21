@@ -9,10 +9,11 @@ import co.edu.elencano.plataforma.notas.entidad.Desempeno;
 /**
  * Lo que una clase aporta al boletin del periodo: el concepto descriptivo de cada desempeno y, por estudiante,
  * su nota definitiva con el desempeno, la valoracion del comportamiento y la observacion.
+ * En un grado cualitativo (Transicion) no hay notas ni descriptores: la observacion es el informe descriptivo.
  */
 public record InformePeriodoDto(Long cargaId, String grupo, String asignatura, Long periodoId, int periodo,
                                 boolean editable, ConfiguracionEvaluacionDto configuracion,
-                                Map<Desempeno, String> descriptores, List<Fila> estudiantes) {
+                                Map<Desempeno, String> descriptores, List<Fila> estudiantes, boolean cualitativo) {
 
     public record Fila(Long matriculaId, String nombres, String apellidos, BigDecimal notaDefinitiva,
                        Desempeno desempeno, boolean completa, BigDecimal comportamiento, String observacion) {

@@ -13,6 +13,9 @@ public interface InformeEstudianteRepository extends JpaRepository<InformeEstudi
     @Query("select x from InformeEstudiante x where x.carga.id = :cargaId and x.periodo.id = :periodoId")
     List<InformeEstudiante> findByCargaIdAndPeriodoId(@Param("cargaId") Long cargaId, @Param("periodoId") Long periodoId);
 
+    @Query("select x from InformeEstudiante x where x.matricula.id = :matriculaId")
+    List<InformeEstudiante> findByMatriculaId(@Param("matriculaId") Long matriculaId);
+
     @Query("select x from InformeEstudiante x where x.carga.grupo.id = :grupoId and x.periodo.id = :periodoId")
     List<InformeEstudiante> findByCargaGrupoIdAndPeriodoId(@Param("grupoId") Long grupoId, @Param("periodoId") Long periodoId);
 }

@@ -17,6 +17,6 @@ public record GuardarInformeDto(Map<Desempeno, @Size(max = 600) String> descript
                                 List<@Valid Estudiante> estudiantes) {
 
     public record Estudiante(@NotNull Long matriculaId, BigDecimal comportamiento,
-                             @Size(max = 500) String observacion) {
+                             @Size(max = 1500) String observacion) {
     }
 }

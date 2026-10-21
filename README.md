@@ -223,8 +223,12 @@ Segun el SIEE (art. 4.2 y 7), cada actividad evalua una dimension: Saber, Hacer 
   grupo (un estudiante por pagina) o el de un estudiante. Trae identificacion, por asignatura la intensidad horaria,
   la nota definitiva (con * si faltan notas), el desempeno, el concepto, la observacion y las faltas justificadas y
   sin justificar en horas; la valoracion del comportamiento (promedio), la escala y las firmas. El nombre de
-  coordinacion solo aparece si hay un unico coordinador academico activo. Aun no hay boletin para Transicion.
+  coordinacion solo aparece si hay un unico coordinador academico activo.
   Se genera con OpenPDF; el escudo esta en `backend/src/main/resources/boletin/escudo.png`.
+- Transicion (grados con evaluacion cualitativa, SIEE 4.3.1 y Decreto 2247 de 1997): no hay planilla ni
+  comportamiento. En el informe del periodo el docente escribe, por dimension y estudiante, un informe descriptivo de
+  hasta 1500 caracteres. El boletin sale como "Informe descriptivo de desarrollo": cada dimension con su informe y las
+  faltas, sin notas ni escala. La familia ve esos informes en la consulta cuando el periodo se cierra.
 
 Endpoints bajo `/api/notas`: `configuracion/{anioId}`, `cargas`, `cargas/{id}/periodos/{periodoId}` (GET y PUT),
 `cargas/{id}/periodos/{periodoId}/informe` (GET y PUT),

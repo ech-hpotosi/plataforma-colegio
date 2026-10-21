@@ -44,7 +44,7 @@ public class InformeEstudiante {
     @Column(precision = 2, scale = 1)
     private BigDecimal comportamiento;
 
-    @Column(length = 500)
+    @Column(length = 1500)
     private String observacion;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
@@ -77,6 +77,11 @@ public class InformeEstudiante {
     /** Id de la carga sin cargarla. */
     public Long getCargaId() {
         return carga.getId();
+    }
+
+    /** Id del periodo sin cargarlo. */
+    public Long getPeriodoId() {
+        return periodo.getId();
     }
 
     /** Id de la matricula sin cargarla. */
