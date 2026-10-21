@@ -139,4 +139,24 @@ describe('Consulta de la familia', () => {
 
     expect(await screen.findByText('Todavía no tiene estudiantes para consultar')).toBeInTheDocument();
   });
+
+  it('cualquier usuario cambia su propia contraseña desde el menú', async () => {
+    const fetch = simularApi({
+      'GET /api/yo': { estado: 200, cuerpo: acudiente },
+      'GET /api/familia/estudiantes': { estado: 200, cuerpo: [] },
+      'PUT /api/yo/contrasena': { estado: 204 },
+    });
+    const usuario = userEvent.setup();
+    renderizarEn('/familia', <App />);
+
+    await usuario.click((await screen.findAllByRole('button', { name: 'Cambiar contraseña' }))[0]);
+    await usuario.type(screen.getByLabelText('Contraseña actual'), 'clave-rosa-1');
+    await usuario.type(screen.getByLabelText('Contraseña nueva'), 'clave-rosa-2');
+    await usuario.type(screen.getByLabelText('Repita la contraseña nueva'), 'clave-rosa-2');
+    await usuario.click(screen.getByRole('button', { name: 'Guardar' }));
+    expect(await screen.findByText(/Contraseña actualizada/)).toBeInTheDocument();
+
+    const envio = fetch.mock.calls.find(([, opciones]) => opciones?.method === 'PUT');
+    expect(JSON.parse(String(envio?.[1]?.body))).toEqual({ actual: 'clave-rosa-1', nueva: 'clave-rosa-2' });
+  });
 });

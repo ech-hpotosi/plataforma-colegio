@@ -3,6 +3,7 @@ package co.edu.elencano.plataforma.usuarios;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -109,5 +110,27 @@ class AutenticacionTest extends PruebaIntegracion {
 
         mockMvc.perform(get("/api/yo").session(sesion))
                 .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void cadaUsuarioCambiaSuPropiaContrasenaConfirmandoLaActual() throws Exception {
+        crearUsuario("cambia.clave", Rol.ACUDIENTE);
+        MockHttpSession sesion = iniciarSesion("cambia.clave", CONTRASENA);
+
+        mockMvc.perform(put("/api/yo/contrasena").with(tokenCsrf()).session(sesion)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"actual\": \"otra-clave-000\", \"nueva\": \"clave-nueva-456\"}"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.mensaje").value("La contraseña actual no es correcta"));
+        mockMvc.perform(put("/api/yo/contrasena").with(tokenCsrf()).session(sesion)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"actual\": \"%s\", \"nueva\": \"corta\"}".formatted(CONTRASENA)))
+                .andExpect(status().isBadRequest());
+        mockMvc.perform(put("/api/yo/contrasena").with(tokenCsrf()).session(sesion)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"actual\": \"%s\", \"nueva\": \"clave-nueva-456\"}".formatted(CONTRASENA)))
+                .andExpect(status().isNoContent());
+
+        iniciarSesion("cambia.clave", "clave-nueva-456");
     }
 }

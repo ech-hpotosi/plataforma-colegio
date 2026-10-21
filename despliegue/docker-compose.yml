@@ -1,6 +1,6 @@
 # Servidor del colegio: base de datos, backend y Caddy (web + HTTPS).
 # Uso: copiar .env.ejemplo a .env, completarlo y ejecutar "docker compose up -d --build" en esta carpeta.
-name: plataforma-colegio
+name: plataforma-servidor
 
 services:
   postgres:

@@ -46,7 +46,7 @@ public class SeguridadConfig {
                         .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
                         // Acudientes y estudiantes (cuentas que se crean desde el registro publico) solo
                         // llegan a lo suyo; cada controlador limita ademas a los datos propios
-                        .requestMatchers("/api/yo", "/api/matricula-en-linea/**", "/api/solicitudes-matricula/**",
+                        .requestMatchers("/api/yo", "/api/yo/**", "/api/matricula-en-linea/**", "/api/solicitudes-matricula/**",
                                 "/api/tipos-documento-matricula/**", "/api/familia/**").authenticated()
                         // El resto de la API es para funcionarios del colegio
                         .anyRequest().hasAnyRole("ADMINISTRADOR", "RECTOR", "COORDINADOR_ACADEMICO", "SECRETARIA",

@@ -87,7 +87,7 @@ export default function PlanEstudio() {
             setGradoId(Number(e.target.value));
             setMensaje(null);
           }}
-          sx={{ minWidth: 180 }}
+          sx={{ minWidth: 240 }}
         >
           {grados.data?.map((g) => (
             <MenuItem key={g.id} value={g.id}>

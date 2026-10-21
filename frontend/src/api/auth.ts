@@ -19,6 +19,11 @@ export function cerrarSesion(): Promise<void> {
   return llamarApi<void>('/auth/logout', { method: 'POST' });
 }
 
+/** Cada usuario cambia su propia contrasena confirmando la actual. */
+export function cambiarMiContrasena(actual: string, nueva: string): Promise<void> {
+  return llamarApi<void>('/yo/contrasena', { method: 'PUT', body: JSON.stringify({ actual, nueva }) });
+}
+
 /** Devuelve el usuario con sesion abierta, o null si no hay sesion. */
 export async function consultarUsuarioActual(): Promise<UsuarioActual | null> {
   try {

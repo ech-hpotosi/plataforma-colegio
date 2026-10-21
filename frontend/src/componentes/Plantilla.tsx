@@ -3,6 +3,7 @@ import { Box, Button, Drawer, Typography } from '@mui/material';
 import { NavLink, Outlet, useLocation } from 'react-router';
 import escudo from '../assets/escudo.png';
 import { useSesion } from '../sesion/useSesion';
+import DialogoMiContrasena from './DialogoMiContrasena';
 import { COLORES } from '../tema';
 import { NOMBRE_ROL, type Rol } from '../tipos';
 
@@ -65,6 +66,7 @@ const MENU: GrupoMenu[] = [
 
 function MenuLateral({ alNavegar }: { alNavegar?: () => void }) {
   const { usuario, tieneAlgunRol, salir } = useSesion();
+  const [cambiandoContrasena, setCambiandoContrasena] = useState(false);
   const grupos = MENU.map((g) => ({
     ...g,
     opciones: g.opciones.filter((o) => !o.roles || tieneAlgunRol(o.roles)),
@@ -141,9 +143,15 @@ function MenuLateral({ alNavegar }: { alNavegar?: () => void }) {
         <Typography variant="caption" color="text.secondary" component="div" sx={{ mb: 1 }}>
           {usuario?.roles.map((r) => NOMBRE_ROL[r]).join(', ')}
         </Typography>
-        <Button variant="outlined" size="small" onClick={salir}>
-          Cerrar sesión
-        </Button>
+        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+          <Button variant="outlined" size="small" onClick={salir}>
+            Cerrar sesión
+          </Button>
+          <Button size="small" onClick={() => setCambiandoContrasena(true)}>
+            Cambiar contraseña
+          </Button>
+        </Box>
+        {cambiandoContrasena && <DialogoMiContrasena alCerrar={() => setCambiandoContrasena(false)} />}
       </Box>
     </Box>
   );

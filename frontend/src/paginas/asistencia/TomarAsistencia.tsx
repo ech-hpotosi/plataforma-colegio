@@ -124,7 +124,7 @@ export default function TomarAsistencia() {
             setCargaId(Number(e.target.value));
             setMensaje(null);
           }}
-          sx={{ minWidth: 280 }}
+          sx={{ minWidth: 320 }}
         >
           {cargas.data.map((c) => (
             <MenuItem key={c.cargaId} value={c.cargaId}>

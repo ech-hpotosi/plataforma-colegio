@@ -58,6 +58,8 @@ El esquema de la base de datos se versiona con Flyway en `backend/src/main/resou
 
 - `POST /api/auth/login` abre la sesion (cookie HttpOnly) y `POST /api/auth/logout` la cierra.
 - `GET /api/yo` devuelve el usuario con sesion y sus roles.
+- `PUT /api/yo/contrasena` (`actual`, `nueva`): cada usuario cambia su propia contrasena ("Cambiar contraseña" en el
+  menu lateral).
 - Todas las peticiones POST, PUT y DELETE llevan el token CSRF de la cookie `XSRF-TOKEN`
   en el encabezado `X-XSRF-TOKEN`; el cliente de `frontend/src/api/cliente.ts` lo hace solo.
 - Tras 5 intentos fallidos la cuenta se bloquea 15 minutos. Un administrador puede desbloquearla

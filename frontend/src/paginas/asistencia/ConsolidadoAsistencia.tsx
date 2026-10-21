@@ -57,7 +57,7 @@ export default function ConsolidadoAsistencia() {
         label="Grupo"
         value={grupoId}
         onChange={(e) => setGrupoId(Number(e.target.value))}
-        sx={{ maxWidth: 360 }}
+        sx={{ minWidth: 240, alignSelf: 'flex-start' }}
       >
         {grupos.data.map((g) => (
           <MenuItem key={g.grupoId} value={g.grupoId}>

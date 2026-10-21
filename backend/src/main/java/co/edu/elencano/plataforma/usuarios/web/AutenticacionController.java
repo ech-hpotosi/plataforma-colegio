@@ -8,6 +8,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -18,6 +19,7 @@ import co.edu.elencano.plataforma.usuarios.seguridad.LimiteRegistros;
 import co.edu.elencano.plataforma.usuarios.seguridad.UsuarioAutenticado;
 import co.edu.elencano.plataforma.usuarios.servicio.AutenticacionService;
 import co.edu.elencano.plataforma.usuarios.servicio.UsuarioService;
+import co.edu.elencano.plataforma.usuarios.web.dto.CambiarMiContrasenaDto;
 import co.edu.elencano.plataforma.usuarios.web.dto.LoginDto;
 import co.edu.elencano.plataforma.usuarios.web.dto.RegistroAcudienteDto;
 import co.edu.elencano.plataforma.usuarios.web.dto.UsuarioActualDto;
@@ -84,5 +86,13 @@ public class AutenticacionController {
     @GetMapping("/yo")
     public UsuarioActualDto yo(@AuthenticationPrincipal UsuarioAutenticado usuario) {
         return UsuarioActualDto.de(usuario);
+    }
+
+    /** Cualquier usuario (funcionario, acudiente o estudiante) cambia su propia contrasena. */
+    @PutMapping("/yo/contrasena")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void cambiarMiContrasena(@AuthenticationPrincipal UsuarioAutenticado usuario,
+                                    @Valid @RequestBody CambiarMiContrasenaDto datos) {
+        usuarioService.cambiarMiContrasena(usuario.getId(), datos.actual(), datos.nueva());
     }
 }

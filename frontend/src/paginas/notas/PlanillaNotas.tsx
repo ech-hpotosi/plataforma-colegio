@@ -176,7 +176,7 @@ export default function PlanillaNotas() {
           label="Clase"
           value={carga ? cargaId : ''}
           onChange={(e) => setCargaId(Number(e.target.value))}
-          sx={{ minWidth: 280 }}
+          sx={{ minWidth: 320 }}
         >
           {cargas.data.map((c) => (
             <MenuItem key={c.cargaId} value={c.cargaId}>

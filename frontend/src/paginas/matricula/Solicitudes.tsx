@@ -75,7 +75,7 @@ export default function Solicitudes() {
             setEstado(e.target.value as EstadoSolicitud | '');
             setPagina(0);
           }}
-          sx={{ minWidth: 180 }}
+          sx={{ minWidth: 200 }}
         >
           <MenuItem value="">Todas</MenuItem>
           {(['ENVIADA', 'CON_OBSERVACIONES', 'APROBADA', 'RECHAZADA'] as EstadoSolicitud[]).map((e) => (
@@ -92,7 +92,7 @@ export default function Solicitudes() {
             setBuscar(e.target.value);
             setPagina(0);
           }}
-          sx={{ minWidth: 260 }}
+          sx={{ minWidth: 320 }}
         />
       </Box>
 

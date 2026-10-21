@@ -83,7 +83,7 @@ Luego abrir `https://<dominio>` en el navegador.
 ## 5. Primer ingreso
 
 1. Ingresar con `ADMIN_USUARIO` y `ADMIN_CONTRASENA`.
-2. En Usuarios, cambiar la contrasena del administrador por una nueva.
+2. Con "Cambiar contraseña" (abajo en el menu lateral), poner una contrasena nueva para el administrador.
 3. Borrar el valor de `ADMIN_CONTRASENA` en `.env` (dejar `ADMIN_CONTRASENA=`). El administrador inicial solo se
    crea cuando la base de datos no tiene usuarios, asi que despues de este primer arranque ya no se usa.
 4. Configurar en este orden: sedes, ano lectivo y periodos, grados (evaluacion cualitativa de Transicion), areas y

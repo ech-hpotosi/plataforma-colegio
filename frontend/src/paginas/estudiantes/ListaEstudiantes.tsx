@@ -77,7 +77,7 @@ export default function ListaEstudiantes() {
             setBuscar(e.target.value);
             setPagina(0);
           }}
-          sx={{ minWidth: 280 }}
+          sx={{ minWidth: 320 }}
         />
         <TextField
           select
@@ -88,7 +88,7 @@ export default function ListaEstudiantes() {
             setEstado(e.target.value as EstadoEstudiante | '');
             setPagina(0);
           }}
-          sx={{ minWidth: 150 }}
+          sx={{ minWidth: 200 }}
         >
           <MenuItem value="">Todos</MenuItem>
           {Object.entries(NOMBRE_ESTADO_ESTUDIANTE).map(([valor, nombre]) => (

@@ -100,6 +100,13 @@ export const tema = createTheme({
         },
       },
     },
+    // Un solo tamano de campo en toda la plataforma (filtros, formularios y dialogos)
+    MuiTextField: {
+      defaultProps: { size: 'small' },
+    },
+    MuiFormControl: {
+      defaultProps: { size: 'small' },
+    },
     MuiOutlinedInput: {
       styleOverrides: { root: { backgroundColor: '#fff' } },
     },

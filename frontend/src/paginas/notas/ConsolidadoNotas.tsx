@@ -77,7 +77,7 @@ export default function ConsolidadoNotas() {
             setGrupoId(Number(e.target.value));
             setPeriodoId('');
           }}
-          sx={{ minWidth: 280 }}
+          sx={{ minWidth: 240 }}
         >
           {grupos.data.map((g) => (
             <MenuItem key={g.grupoId} value={g.grupoId}>

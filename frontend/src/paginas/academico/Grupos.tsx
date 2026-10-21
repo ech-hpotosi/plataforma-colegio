@@ -66,7 +66,7 @@ export default function Grupos() {
           label="Sede"
           value={sedeId ?? 0}
           onChange={(e) => setSedeId(Number(e.target.value) || null)}
-          sx={{ minWidth: 200 }}
+          sx={{ minWidth: 240 }}
         >
           <MenuItem value={0}>Todas las sedes</MenuItem>
           {sedes.data?.map((s) => (

@@ -110,7 +110,7 @@ function Estudiante({ estudiante }: { estudiante: EstudianteFamilia }) {
           label="Año lectivo"
           value={matriculaId}
           onChange={(e) => setMatriculaId(Number(e.target.value))}
-          sx={{ mb: 2, minWidth: 160 }}
+          sx={{ mb: 2, minWidth: 200 }}
         >
           {estudiante.matriculas.map((m) => (
             <MenuItem key={m.id} value={m.id}>

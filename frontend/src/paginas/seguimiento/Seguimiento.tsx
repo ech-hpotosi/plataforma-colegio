@@ -86,7 +86,7 @@ export default function Seguimiento() {
             value={periodo}
             onChange={(e) => setPeriodo(e.target.value === '' ? '' : Number(e.target.value))}
             slotProps={{ select: { displayEmpty: true }, inputLabel: { shrink: true } }}
-            sx={{ minWidth: 160 }}
+            sx={{ minWidth: 200 }}
           >
             <MenuItem value="">En curso</MenuItem>
             {PERIODOS.map((n) => (
@@ -101,7 +101,7 @@ export default function Seguimiento() {
             value={sede}
             onChange={(e) => setSede(e.target.value)}
             slotProps={{ select: { displayEmpty: true }, inputLabel: { shrink: true } }}
-            sx={{ minWidth: 220 }}
+            sx={{ minWidth: 240 }}
           >
             <MenuItem value="">Todas las sedes</MenuItem>
             {sedes.map((s) => (
@@ -116,7 +116,7 @@ export default function Seguimiento() {
             value={docente}
             onChange={(e) => setDocente(e.target.value)}
             slotProps={{ select: { displayEmpty: true }, inputLabel: { shrink: true } }}
-            sx={{ minWidth: 220 }}
+            sx={{ minWidth: 240 }}
           >
             <MenuItem value="">Todos los docentes</MenuItem>
             {docentes.map((d) => (

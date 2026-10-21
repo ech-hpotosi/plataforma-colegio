@@ -139,6 +139,16 @@ public class UsuarioService {
         usuario.desbloquear();
     }
 
+    /** Cada usuario cambia su propia contrasena confirmando la actual. */
+    @Transactional
+    public void cambiarMiContrasena(Long id, String actual, String nueva) {
+        Usuario usuario = obtener(id);
+        if (!passwordEncoder.matches(actual, usuario.getContrasenaHash())) {
+            throw new ReglaNegocioException("La contraseña actual no es correcta");
+        }
+        usuario.setContrasenaHash(passwordEncoder.encode(nueva));
+    }
+
     @Transactional
     public Usuario desbloquear(Long id) {
         Usuario usuario = obtener(id);

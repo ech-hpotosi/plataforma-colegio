@@ -27,7 +27,7 @@ export default function SelectorAnio({ valor, alCambiar }: Props) {
       label="Año lectivo"
       value={anios.some((a) => a.id === valor) ? valor : ''}
       onChange={(e) => alCambiar(Number(e.target.value))}
-      sx={{ minWidth: 180 }}
+      sx={{ minWidth: 200 }}
       helperText={consulta.isSuccess && anios.length === 0 ? 'Primero cree un año lectivo' : undefined}
     >
       {anios.map((a) => (
