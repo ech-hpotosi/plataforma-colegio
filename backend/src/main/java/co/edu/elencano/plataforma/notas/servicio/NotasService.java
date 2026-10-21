@@ -390,11 +390,27 @@ public class NotasService {
 
     @Transactional
     public ConsolidadoNotasDto consolidado(Long grupoId, Long periodoId, UsuarioAutenticado usuario) {
+        verificarAccesoConsolidado(grupoId, usuario);
+        return calcularConsolidado(grupoId, periodoId);
+    }
+
+    /** El consolidado y los boletines del grupo los ven los directivos, la secretaria y el director del grupo. */
+    @Transactional(readOnly = true)
+    public void verificarAccesoConsolidado(Long grupoId, UsuarioAutenticado usuario) {
         Grupo grupo = grupoService.obtener(grupoId);
         boolean esDirector = grupo.getDirector() != null && grupo.getDirector().getId().equals(usuario.getPersonaId());
         if (!esDirector && !tieneAlguno(usuario, VEN_TODOS_LOS_GRUPOS)) {
             throw new AccessDeniedException("Sin acceso al grupo");
         }
+    }
+
+    /**
+     * Notas definitivas de los estudiantes activos del grupo, del periodo o del anio si periodoId es nulo.
+     * No verifica el acceso: quien llama debe hacerlo (el consolidado o la consulta de las familias).
+     */
+    @Transactional
+    public ConsolidadoNotasDto calcularConsolidado(Long grupoId, Long periodoId) {
+        Grupo grupo = grupoService.obtener(grupoId);
         List<Periodo> periodos = grupo.getAnioLectivo().getPeriodos().stream()
                 .sorted(Comparator.comparingInt(Periodo::getNumero))
                 .toList();

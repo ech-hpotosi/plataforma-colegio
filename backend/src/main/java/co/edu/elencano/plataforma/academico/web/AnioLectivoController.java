@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import co.edu.elencano.plataforma.academico.servicio.AnioLectivoService;
 import co.edu.elencano.plataforma.academico.web.dto.AnioLectivoDto;
 import co.edu.elencano.plataforma.academico.web.dto.CambiarEstadoAnioDto;
+import co.edu.elencano.plataforma.academico.web.dto.CierrePeriodoDto;
 import co.edu.elencano.plataforma.academico.web.dto.GuardarAnioLectivoDto;
 import jakarta.validation.Valid;
 
@@ -56,5 +57,12 @@ public class AnioLectivoController {
     @GestionAcademica
     public AnioLectivoDto cambiarEstado(@PathVariable Long id, @Valid @RequestBody CambiarEstadoAnioDto datos) {
         return AnioLectivoDto.de(anioService.cambiarEstado(id, datos.estado()));
+    }
+
+    @PutMapping("/{id}/periodos/{periodoId}/cierre")
+    @GestionAcademica
+    public AnioLectivoDto cerrarPeriodo(@PathVariable Long id, @PathVariable Long periodoId,
+                                        @Valid @RequestBody CierrePeriodoDto datos) {
+        return AnioLectivoDto.de(anioService.cerrarPeriodo(id, periodoId, datos.cerrado()));
     }
 }

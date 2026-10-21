@@ -26,6 +26,7 @@ import co.edu.elencano.plataforma.comun.excepcion.ReglaNegocioException;
 import co.edu.elencano.plataforma.usuarios.entidad.Persona;
 import co.edu.elencano.plataforma.usuarios.entidad.TipoDocumento;
 import co.edu.elencano.plataforma.usuarios.repositorio.PersonaRepository;
+import co.edu.elencano.plataforma.usuarios.repositorio.UsuarioRepository;
 
 /**
  * Ficha de estudiantes y sus acudientes. Si la persona ya existe (mismo documento) se reutiliza,
@@ -37,12 +38,14 @@ public class EstudianteService {
     private final EstudianteRepository estudianteRepository;
     private final AcudienteRepository acudienteRepository;
     private final PersonaRepository personaRepository;
+    private final UsuarioRepository usuarioRepository;
 
     public EstudianteService(EstudianteRepository estudianteRepository, AcudienteRepository acudienteRepository,
-                             PersonaRepository personaRepository) {
+                             PersonaRepository personaRepository, UsuarioRepository usuarioRepository) {
         this.estudianteRepository = estudianteRepository;
         this.acudienteRepository = acudienteRepository;
         this.personaRepository = personaRepository;
+        this.usuarioRepository = usuarioRepository;
     }
 
     @Transactional(readOnly = true)
@@ -143,6 +146,11 @@ public class EstudianteService {
     }
 
     @Transactional(readOnly = true)
+    public Optional<Estudiante> buscarPorId(Long id) {
+        return estudianteRepository.findById(id);
+    }
+
+    @Transactional(readOnly = true)
     public Optional<Estudiante> buscarPorNumeroDocumento(String numero) {
         List<Estudiante> encontrados = estudianteRepository.buscarPorNumeroDocumento(numero);
         return encontrados.size() == 1 ? Optional.of(encontrados.getFirst()) : Optional.empty();
@@ -160,6 +168,28 @@ public class EstudianteService {
             estudiante.marcarPrincipal(vinculo);
         }
         return EstudianteDto.de(estudiante);
+    }
+
+    /**
+     * Da o quita al acudiente el permiso de ver notas y asistencia con su cuenta. Para darlo el acudiente ya debe
+     * haber creado la cuenta con su documento; secretaria lo activa cuando el acudiente lo pide en persona.
+     */
+    @Transactional
+    public EstudianteDto cambiarAccesoConsulta(Long estudianteId, Long acudienteId, boolean acceso) {
+        Estudiante estudiante = obtener(estudianteId);
+        EstudianteAcudiente vinculo = obtenerVinculo(estudiante, acudienteId);
+        if (acceso && !usuarioRepository.existsByPersonaId(acudienteId)) {
+            throw new ReglaNegocioException(vinculo.getAcudiente().getPersona().getNombreCompleto()
+                    + " todavía no tiene cuenta. Debe crearla con su número de documento en la página de registro");
+        }
+        vinculo.setAccesoConsulta(acceso);
+        return EstudianteDto.de(estudiante);
+    }
+
+    /** Estudiantes que esa persona puede consultar como acudiente. */
+    @Transactional(readOnly = true)
+    public List<EstudianteAcudiente> vinculosConAcceso(Long personaId) {
+        return estudianteRepository.listarConAccesoDe(personaId);
     }
 
     /** Quita el vinculo. Si era el principal, el siguiente acudiente pasa a ser el principal. */

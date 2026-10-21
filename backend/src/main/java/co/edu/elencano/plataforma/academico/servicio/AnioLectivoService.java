@@ -90,6 +90,21 @@ public class AnioLectivoService {
         return anio;
     }
 
+    /**
+     * Cierra o reabre un periodo. Cerrado, los docentes ya no cambian notas ni asistencia de ese periodo y las
+     * familias pueden descargar el boletin. Se reabre para corregir algo antes de cerrar el anio.
+     */
+    @Transactional
+    public AnioLectivo cerrarPeriodo(Long anioId, Long periodoId, boolean cerrado) {
+        AnioLectivo anio = obtenerAbierto(anioId);
+        Periodo periodo = anio.getPeriodos().stream()
+                .filter(p -> p.getId().equals(periodoId))
+                .findFirst()
+                .orElseThrow(() -> new RecursoNoEncontradoException("El periodo " + periodoId + " no es de este año"));
+        periodo.setCerrado(cerrado);
+        return anio;
+    }
+
     private static void validarFechas(GuardarAnioLectivoDto datos) {
         if (!datos.fechaFin().isAfter(datos.fechaInicio())) {
             throw new ReglaNegocioException("La fecha de fin del año debe ser posterior a la de inicio");

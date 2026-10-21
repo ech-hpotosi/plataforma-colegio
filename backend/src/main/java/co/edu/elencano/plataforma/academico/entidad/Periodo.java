@@ -88,4 +88,8 @@ public class Periodo {
     public boolean isCerrado() {
         return cerrado;
     }
+
+    public void setCerrado(boolean cerrado) {
+        this.cerrado = cerrado;
+    }
 }

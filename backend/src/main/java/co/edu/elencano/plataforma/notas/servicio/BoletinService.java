@@ -74,8 +74,14 @@ public class BoletinService {
     /** Boletines del grupo en el periodo; con matriculaId, solo el de ese estudiante. */
     @Transactional
     public DatosBoletin datos(Long grupoId, Long periodoId, Long matriculaId, UsuarioAutenticado usuario) {
-        // El consolidado verifica el acceso al grupo y trae las notas definitivas del periodo
-        ConsolidadoNotasDto consolidado = notasService.consolidado(grupoId, periodoId, usuario);
+        notasService.verificarAccesoConsolidado(grupoId, usuario);
+        return datos(grupoId, periodoId, matriculaId);
+    }
+
+    /** Igual que el anterior pero sin verificar el acceso; lo usa la consulta de las familias, que verifica el suyo. */
+    @Transactional
+    public DatosBoletin datos(Long grupoId, Long periodoId, Long matriculaId) {
+        ConsolidadoNotasDto consolidado = notasService.calcularConsolidado(grupoId, periodoId);
         Grupo grupo = grupoService.obtener(grupoId);
         if (grupo.getGrado().isEvaluacionCualitativa()) {
             throw new ReglaNegocioException(grupo.getGrado().getNombre()

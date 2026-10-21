@@ -10,10 +10,19 @@ import org.springframework.data.repository.query.Param;
 
 import co.edu.elencano.plataforma.estudiantes.entidad.EstadoEstudiante;
 import co.edu.elencano.plataforma.estudiantes.entidad.Estudiante;
+import co.edu.elencano.plataforma.estudiantes.entidad.EstudianteAcudiente;
 
 public interface EstudianteRepository extends JpaRepository<Estudiante, Long> {
 
     boolean existsByCodigoAndIdNot(String codigo, Long id);
+
+    /** Vinculos en los que esa persona es acudiente con permiso para consultar notas y asistencia. */
+    @Query("""
+            select v from EstudianteAcudiente v join fetch v.estudiante e join fetch e.persona
+            where v.acudiente.id = :personaId and v.accesoConsulta = true
+            order by e.persona.apellidos, e.persona.nombres
+            """)
+    List<EstudianteAcudiente> listarConAccesoDe(@Param("personaId") Long personaId);
 
     /** Estudiantes con ese numero de documento, sin importar el tipo (pudo pasar de registro civil a TI). */
     @Query("select e from Estudiante e where e.persona.numeroDocumento = :numero")

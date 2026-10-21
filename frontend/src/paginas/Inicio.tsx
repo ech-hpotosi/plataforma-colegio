@@ -107,17 +107,30 @@ export default function Inicio() {
   const hoy = FECHA_LARGA.format(new Date());
 
   const contenido = () => {
-    if (!veAsistencia && tieneAlgunRol(['ACUDIENTE'])) {
+    if (!veAsistencia && tieneAlgunRol(['ACUDIENTE', 'ESTUDIANTE'])) {
       return (
-        <Paper sx={{ px: 2.5, py: 2 }}>
-          <Typography sx={{ fontWeight: 600 }}>Matrícula en línea</Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
-            Haga aquí la matrícula de sus hijos o acudidos y revise en qué va cada solicitud.
-          </Typography>
-          <Button variant="contained" component={RouterLink} to="/matricula-en-linea">
-            Ir a la matrícula en línea
-          </Button>
-        </Paper>
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2 }}>
+          <Paper sx={{ px: 2.5, py: 2 }}>
+            <Typography sx={{ fontWeight: 600 }}>Notas y asistencia</Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+              Consulte las notas de cada periodo, las faltas y los boletines.
+            </Typography>
+            <Button variant="contained" component={RouterLink} to="/familia">
+              Ver notas y asistencia
+            </Button>
+          </Paper>
+          {tieneAlgunRol(['ACUDIENTE']) && (
+            <Paper sx={{ px: 2.5, py: 2 }}>
+              <Typography sx={{ fontWeight: 600 }}>Matrícula en línea</Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+                Haga aquí la matrícula de sus hijos o acudidos y revise en qué va cada solicitud.
+              </Typography>
+              <Button variant="outlined" component={RouterLink} to="/matricula-en-linea">
+                Ir a la matrícula en línea
+              </Button>
+            </Paper>
+          )}
+        </Box>
       );
     }
     if (!veAsistencia) {

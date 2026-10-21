@@ -13,6 +13,7 @@ import Asistencia from './paginas/asistencia/Asistencia';
 import ConsolidadoAsistencia from './paginas/asistencia/ConsolidadoAsistencia';
 import TomarAsistencia from './paginas/asistencia/TomarAsistencia';
 import DetalleEstudiante from './paginas/estudiantes/DetalleEstudiante';
+import ConsultaFamilia from './paginas/familia/ConsultaFamilia';
 import ImportarEstudiantes from './paginas/estudiantes/ImportarEstudiantes';
 import ListaEstudiantes from './paginas/estudiantes/ListaEstudiantes';
 import Inicio from './paginas/Inicio';
@@ -63,6 +64,9 @@ export default function App() {
             <Route path="/matricula-en-linea" element={<MatriculaEnLinea />} />
             <Route path="/matricula-en-linea/nueva" element={<NuevaSolicitud />} />
             <Route path="/matricula-en-linea/:id" element={<SolicitudAcudiente />} />
+          </Route>
+          <Route element={<RutaProtegida roles={['ACUDIENTE', 'ESTUDIANTE']} />}>
+            <Route path="/familia" element={<ConsultaFamilia />} />
           </Route>
           <Route
             element={

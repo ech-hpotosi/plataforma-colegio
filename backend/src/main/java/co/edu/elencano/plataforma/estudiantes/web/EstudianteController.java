@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import co.edu.elencano.plataforma.estudiantes.entidad.EstadoEstudiante;
 import co.edu.elencano.plataforma.estudiantes.servicio.EstudianteService;
+import co.edu.elencano.plataforma.estudiantes.web.dto.AccesoConsultaDto;
 import co.edu.elencano.plataforma.estudiantes.web.dto.AcudienteDto;
 import co.edu.elencano.plataforma.estudiantes.web.dto.EstudianteDto;
 import co.edu.elencano.plataforma.estudiantes.web.dto.EstudianteResumenDto;
@@ -70,6 +71,13 @@ public class EstudianteController {
     public EstudianteDto actualizarAcudiente(@PathVariable Long id, @PathVariable Long acudienteId,
                                              @Valid @RequestBody GuardarAcudienteDto datos) {
         return estudianteService.actualizarAcudiente(id, acudienteId, datos);
+    }
+
+    @PutMapping("/api/estudiantes/{id}/acudientes/{acudienteId}/acceso-consulta")
+    @GestionEstudiantes
+    public EstudianteDto cambiarAccesoConsulta(@PathVariable Long id, @PathVariable Long acudienteId,
+                                               @Valid @RequestBody AccesoConsultaDto datos) {
+        return estudianteService.cambiarAccesoConsulta(id, acudienteId, datos.acceso());
     }
 
     @DeleteMapping("/api/estudiantes/{id}/acudientes/{acudienteId}")

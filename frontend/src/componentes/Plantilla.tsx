@@ -24,7 +24,10 @@ const MENU: GrupoMenu[] = [
   { titulo: 'General', opciones: [{ texto: 'Inicio', ruta: '/' }] },
   {
     titulo: 'Familia',
-    opciones: [{ texto: 'Matrícula en línea', ruta: '/matricula-en-linea', roles: ['ACUDIENTE'] }],
+    opciones: [
+      { texto: 'Notas y asistencia', ruta: '/familia', roles: ['ACUDIENTE', 'ESTUDIANTE'] },
+      { texto: 'Matrícula en línea', ruta: '/matricula-en-linea', roles: ['ACUDIENTE'] },
+    ],
   },
   {
     titulo: 'Académico',

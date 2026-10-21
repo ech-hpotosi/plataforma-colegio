@@ -151,6 +151,9 @@ export const actualizarAnio = (id: number, datos: DatosAnio) =>
   llamarApi<AnioLectivo>(`/anios/${id}`, json('PUT', datos));
 export const cambiarEstadoAnio = (id: number, estado: EstadoAnio) =>
   llamarApi<AnioLectivo>(`/anios/${id}/estado`, json('PUT', { estado }));
+/** Cerrado, el periodo ya no admite cambios de notas ni asistencia y las familias descargan el boletin. */
+export const cerrarPeriodo = (anioId: number, periodoId: number, cerrado: boolean) =>
+  llamarApi<AnioLectivo>(`/anios/${anioId}/periodos/${periodoId}/cierre`, json('PUT', { cerrado }));
 
 export const listarGrados = () => llamarApi<Grado[]>('/grados');
 export const actualizarGrado = (id: number, evaluacionCualitativa: boolean) =>

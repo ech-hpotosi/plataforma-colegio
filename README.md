@@ -142,6 +142,29 @@ mismo archivo despues de corregirlo no duplica estudiantes, matriculas ni acudie
 Endpoints: `POST /api/importacion-estudiantes?anioId=&confirmar=` (multipart, campo `archivo`) y
 `GET /api/importacion-estudiantes/plantilla`.
 
+## Consulta de familias
+
+Los acudientes (y los estudiantes que tengan cuenta) entran a "Notas y asistencia" y ven, por cada estudiante a cargo:
+la nota de cada asignatura por periodo y la acumulada del anio con su desempeno, las faltas y retardos con su fecha, y
+los boletines en PDF de los periodos cerrados. Las notas de un periodo abierto se marcan como parciales.
+
+Quien puede consultar:
+
+- El acudiente que hizo la matricula en linea queda con acceso al aprobarse la solicitud.
+- Para los demas (por ejemplo los importados desde Excel), el acudiente crea su cuenta en `/registro` con su numero
+  de documento y secretaria activa el acceso en la ficha del estudiante ("Consulta en linea > Dar acceso"). Debe
+  hacerse cuando el acudiente lo pide en persona con su documento, porque cualquiera podria registrarse con un numero
+  ajeno. Sin cuenta creada no se puede dar el acceso.
+- Un estudiante con cuenta (rol ESTUDIANTE, misma persona de la ficha) se consulta a si mismo.
+
+Cierre de periodos: en "Estructura academica > Anios", con el anio en curso, coordinacion o administracion cierran
+cada periodo. Cerrado, los docentes ya no cambian notas ni asistencia de ese periodo y las familias pueden descargar
+el boletin. Se puede reabrir mientras el anio no este cerrado.
+
+Endpoints: `GET /api/familia/estudiantes`, `GET /api/familia/estudiantes/{id}/resumen?matriculaId=`,
+`GET /api/familia/estudiantes/{id}/boletin?matriculaId=&periodoId=`,
+`PUT /api/estudiantes/{id}/acudientes/{acudienteId}/acceso-consulta` y `PUT /api/anios/{id}/periodos/{periodoId}/cierre`.
+
 ## Asistencia
 
 Pantalla "Asistencia" con dos pestanas:

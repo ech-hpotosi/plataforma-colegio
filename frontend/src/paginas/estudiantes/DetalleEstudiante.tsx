@@ -17,6 +17,7 @@ import {
   Typography,
 } from '@mui/material';
 import {
+  cambiarAccesoConsulta,
   desvincularAcudiente,
   listarMatriculas,
   NOMBRE_ESTADO_ESTUDIANTE,
@@ -74,6 +75,14 @@ export default function DetalleEstudiante() {
 
   const quitarAcudiente = useMutation({
     mutationFn: (acudienteId: number) => desvincularAcudiente(id, acudienteId),
+    onMutate: () => setError(null),
+    onError: (e) => setError(mensajeDeError(e)),
+    onSuccess: (datos) => queryClient.setQueryData(['estudiante', id], datos),
+  });
+
+  const acceso = useMutation({
+    mutationFn: ({ acudienteId, valor }: { acudienteId: number; valor: boolean }) =>
+      cambiarAccesoConsulta(id, acudienteId, valor),
     onMutate: () => setError(null),
     onError: (e) => setError(mensajeDeError(e)),
     onSuccess: (datos) => queryClient.setQueryData(['estudiante', id], datos),
@@ -156,6 +165,7 @@ export default function DetalleEstudiante() {
                   <TableCell>Parentesco</TableCell>
                   <TableCell>Documento</TableCell>
                   <TableCell>Teléfono</TableCell>
+                  <TableCell>Consulta en línea</TableCell>
                   <TableCell />
                 </TableRow>
               </TableHead>
@@ -170,9 +180,29 @@ export default function DetalleEstudiante() {
                       {a.tipoDocumento} {a.numeroDocumento}
                     </TableCell>
                     <TableCell>{a.telefono}</TableCell>
+                    <TableCell sx={{ whiteSpace: 'nowrap' }}>
+                      <Estado
+                        tono={a.accesoConsulta ? 'positivo' : 'neutro'}
+                        texto={a.accesoConsulta ? 'Activa' : 'Sin acceso'}
+                      />
+                    </TableCell>
                     <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>
                       {puedeEditar && (
                         <>
+                          <Button
+                            size="small"
+                            disabled={acceso.isPending}
+                            onClick={() => {
+                              const texto = a.accesoConsulta
+                                ? `Quitar a ${a.nombres} ${a.apellidos} el acceso a notas y asistencia?`
+                                : `Dar a ${a.nombres} ${a.apellidos} acceso a notas y asistencia? Hágalo solo si lo pidió en persona con su documento.`;
+                              if (window.confirm(texto)) {
+                                acceso.mutate({ acudienteId: a.id, valor: !a.accesoConsulta });
+                              }
+                            }}
+                          >
+                            {a.accesoConsulta ? 'Quitar acceso' : 'Dar acceso'}
+                          </Button>
                           <Button size="small" onClick={() => setAcudiente(a)}>
                             Editar
                           </Button>

@@ -25,6 +25,7 @@ import {
 import {
   actualizarAnio,
   cambiarEstadoAnio,
+  cerrarPeriodo,
   crearAnio,
   ESTADOS_ANIO,
   listarAnios,
@@ -75,6 +76,14 @@ export default function AniosLectivos() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['anios'] }),
   });
 
+  const cierre = useMutation({
+    mutationFn: ({ anio, periodo, cerrado }: { anio: number; periodo: number; cerrado: boolean }) =>
+      cerrarPeriodo(anio, periodo, cerrado),
+    onMutate: () => setError(null),
+    onError: (e) => setError(mensajeDeError(e)),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['anios'] }),
+  });
+
   return (
     <>
       <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
@@ -110,8 +119,26 @@ export default function AniosLectivos() {
                   </TableCell>
                   <TableCell>
                     {anio.periodos.map((p) => (
-                      <Typography key={p.id} variant="body2">
+                      <Typography key={p.id} variant="body2" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         P{p.numero}: {fechaCorta(p.fechaInicio)} a {fechaCorta(p.fechaFin)} ({p.porcentaje}%)
+                        {p.cerrado && <Estado tono="neutro" texto="Cerrado" />}
+                        {(anio.estado === 'EN_CURSO' || (p.cerrado && anio.estado !== 'CERRADO')) && (
+                          <Button
+                            size="small"
+                            sx={{ minWidth: 0, py: 0 }}
+                            disabled={cierre.isPending}
+                            onClick={() => {
+                              const texto = p.cerrado
+                                ? `Reabrir el periodo ${p.numero}? Los docentes podrán volver a cambiar notas y asistencia.`
+                                : `Cerrar el periodo ${p.numero}? Los docentes ya no podrán cambiar sus notas ni la asistencia y las familias podrán descargar el boletín.`;
+                              if (window.confirm(texto)) {
+                                cierre.mutate({ anio: anio.id, periodo: p.id, cerrado: !p.cerrado });
+                              }
+                            }}
+                          >
+                            {p.cerrado ? 'Reabrir' : 'Cerrar'}
+                          </Button>
+                        )}
                       </Typography>
                     ))}
                   </TableCell>

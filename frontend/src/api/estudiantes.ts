@@ -159,6 +159,9 @@ export const vincularAcudiente = (estudianteId: number, datos: DatosAcudiente) =
   llamarApi<Estudiante>(`/estudiantes/${estudianteId}/acudientes`, json('POST', datos));
 export const actualizarAcudiente = (estudianteId: number, acudienteId: number, datos: DatosAcudiente) =>
   llamarApi<Estudiante>(`/estudiantes/${estudianteId}/acudientes/${acudienteId}`, json('PUT', datos));
+/** Permiso del acudiente para ver notas y asistencia con su cuenta. */
+export const cambiarAccesoConsulta = (estudianteId: number, acudienteId: number, acceso: boolean) =>
+  llamarApi<Estudiante>(`/estudiantes/${estudianteId}/acudientes/${acudienteId}/acceso-consulta`, json('PUT', { acceso }));
 export const desvincularAcudiente = (estudianteId: number, acudienteId: number) =>
   llamarApi<Estudiante>(`/estudiantes/${estudianteId}/acudientes/${acudienteId}`, { method: 'DELETE' });
 export const buscarPersonaPorDocumento = (tipo: TipoDocumento, numero: string) =>

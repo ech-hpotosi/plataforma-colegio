@@ -324,6 +324,12 @@ public class AsistenciaService {
     public List<NovedadAsistenciaDto> novedades(Long matriculaId, UsuarioAutenticado usuario) {
         Matricula matricula = obtenerMatricula(matriculaId);
         verificarAccesoMatricula(matricula, usuario, VEN_TODOS_LOS_GRUPOS);
+        return novedadesDeMatricula(matriculaId);
+    }
+
+    /** Faltas, permisos y retardos de la matricula, sin verificar el acceso (lo hace quien llama). */
+    @Transactional(readOnly = true)
+    public List<NovedadAsistenciaDto> novedadesDeMatricula(Long matriculaId) {
         return detalleRepository.listarNovedadesDeMatricula(matriculaId).stream()
                 .map(d -> new NovedadAsistenciaDto(d.getId(), d.getRegistro().getFecha(),
                         d.getRegistro().getCarga().getAsignatura().getNombre(), d.getRegistro().getHoras(),
