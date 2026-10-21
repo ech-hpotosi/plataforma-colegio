@@ -60,3 +60,15 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npm run build
+
+  # Comprueba que las imagenes de despliegue (despliegue/docker-compose.yml) se construyen
+  imagenes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Construir imagenes de despliegue
+        working-directory: despliegue
+        env:
+          DOMINIO: localhost
+          DB_CONTRASENA: solo-para-construir
+        run: docker compose build

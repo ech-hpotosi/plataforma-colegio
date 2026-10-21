@@ -8,11 +8,14 @@ estudiantes, matricula en linea, asistencia, notas segun el SIEE y boletines.
 ```
 backend/    API REST en Java 21 con Spring Boot 3 (Maven)
 frontend/   Aplicacion web en React 18 con TypeScript (Vite, MUI)
+despliegue/  Instalacion en el servidor del colegio (Docker, Caddy con HTTPS, respaldos)
 docker-compose.yml   PostgreSQL 16 para desarrollo
 ```
 
+Para instalar la plataforma en un servidor seguir [despliegue/DESPLIEGUE.md](despliegue/DESPLIEGUE.md).
+
 El backend es un monolito modular. Cada modulo es un paquete dentro de `co.edu.elencano.plataforma`:
-`usuarios`, `academico`, `estudiantes`, `matricula`, `asistencia`, `notas` y `comun`.
+`usuarios`, `academico`, `estudiantes`, `matricula`, `asistencia`, `notas`, `familia` y `comun`.
 El esquema de la base de datos se versiona con Flyway en `backend/src/main/resources/db/migration`.
 
 ## Requisitos

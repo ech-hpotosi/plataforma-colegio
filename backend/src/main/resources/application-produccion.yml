@@ -1,0 +1,16 @@
+# Perfil para el servidor del colegio (SPRING_PROFILES_ACTIVE=produccion), detras de Caddy con HTTPS.
+server:
+  # Caddy envia X-Forwarded-For y X-Forwarded-Proto: asi la aplicacion ve la IP real de quien se conecta
+  # (limite de registros por hora) y marca las cookies de sesion como seguras
+  forward-headers-strategy: native
+  servlet:
+    session:
+      cookie:
+        secure: true
+
+# La documentacion de la API no se publica en el servidor
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false

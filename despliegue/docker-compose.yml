@@ -1,0 +1,57 @@
+# Servidor del colegio: base de datos, backend y Caddy (web + HTTPS).
+# Uso: copiar .env.ejemplo a .env, completarlo y ejecutar "docker compose up -d --build" en esta carpeta.
+name: plataforma-colegio
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: plataforma
+      POSTGRES_USER: plataforma
+      POSTGRES_PASSWORD: ${DB_CONTRASENA:?Falta DB_CONTRASENA en .env}
+      TZ: America/Bogota
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U plataforma -d plataforma"]
+      interval: 10s
+      retries: 10
+
+  backend:
+    build: ../backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/plataforma
+      DB_USUARIO: plataforma
+      DB_CONTRASENA: ${DB_CONTRASENA}
+      ADMIN_USUARIO: ${ADMIN_USUARIO:-admin}
+      ADMIN_CONTRASENA: ${ADMIN_CONTRASENA:-}
+      TZ: America/Bogota
+    volumes:
+      - archivos:/datos/archivos
+
+  web:
+    build: ../frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      DOMINIO: ${DOMINIO:?Falta DOMINIO en .env}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-datos:/data
+      - caddy-config:/config
+
+volumes:
+  postgres:
+  archivos:
+  caddy-datos:
+  caddy-config:
