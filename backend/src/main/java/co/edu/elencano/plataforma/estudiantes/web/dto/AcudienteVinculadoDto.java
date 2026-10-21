@@ -5,15 +5,20 @@ import co.edu.elencano.plataforma.estudiantes.entidad.Parentesco;
 import co.edu.elencano.plataforma.usuarios.entidad.Persona;
 import co.edu.elencano.plataforma.usuarios.entidad.TipoDocumento;
 
-/** Acudiente de un estudiante con el parentesco. El id es el de la persona del acudiente. */
+/**
+ * Acudiente de un estudiante con el parentesco. El id es el de la persona del acudiente.
+ * accesoConsulta indica si puede ver notas y asistencia con su cuenta.
+ */
 public record AcudienteVinculadoDto(Long id, TipoDocumento tipoDocumento, String numeroDocumento, String nombres,
                                     String apellidos, String telefono, String correo, String ocupacion,
-                                    Parentesco parentesco, boolean principal) {
+                                    Parentesco parentesco, boolean principal,
+                                    boolean accesoConsulta) {
 
     public static AcudienteVinculadoDto de(EstudianteAcudiente vinculo) {
         Persona persona = vinculo.getAcudiente().getPersona();
         return new AcudienteVinculadoDto(persona.getId(), persona.getTipoDocumento(), persona.getNumeroDocumento(),
                 persona.getNombres(), persona.getApellidos(), persona.getTelefono(), persona.getCorreo(),
-                vinculo.getAcudiente().getOcupacion(), vinculo.getParentesco(), vinculo.isPrincipal());
+                vinculo.getAcudiente().getOcupacion(), vinculo.getParentesco(), vinculo.isPrincipal(),
+                vinculo.isAccesoConsulta());
     }
 }

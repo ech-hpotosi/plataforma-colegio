@@ -1,5 +1,6 @@
 package co.edu.elencano.plataforma.estudiantes.servicio;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
@@ -13,6 +14,7 @@ import co.edu.elencano.plataforma.estudiantes.entidad.Acudiente;
 import co.edu.elencano.plataforma.estudiantes.entidad.EstadoEstudiante;
 import co.edu.elencano.plataforma.estudiantes.entidad.Estudiante;
 import co.edu.elencano.plataforma.estudiantes.entidad.EstudianteAcudiente;
+import co.edu.elencano.plataforma.estudiantes.entidad.Parentesco;
 import co.edu.elencano.plataforma.estudiantes.repositorio.AcudienteRepository;
 import co.edu.elencano.plataforma.estudiantes.repositorio.EstudianteRepository;
 import co.edu.elencano.plataforma.estudiantes.web.dto.AcudienteDto;
@@ -117,6 +119,33 @@ public class EstudianteService {
             estudiante.marcarPrincipal(vinculo);
         }
         return EstudianteDto.de(estudiante);
+    }
+
+    /**
+     * Vinculo creado al aprobar una matricula en linea: la persona que hizo la solicitud queda como acudiente
+     * con acceso a consultar notas y asistencia. Si ya era acudiente, se conserva el vinculo y se da el acceso.
+     */
+    @Transactional
+    public void vincularSolicitante(Estudiante estudiante, Persona persona, Parentesco parentesco) {
+        if (persona.getId().equals(estudiante.getId())) {
+            throw new ReglaNegocioException("El estudiante no puede ser su propio acudiente");
+        }
+        EstudianteAcudiente vinculo = estudiante.vinculoCon(persona.getId());
+        if (vinculo == null) {
+            Acudiente acudiente = acudienteRepository.findById(persona.getId())
+                    .orElseGet(() -> acudienteRepository.save(new Acudiente(persona)));
+            vinculo = estudiante.vincular(acudiente, parentesco);
+            if (estudiante.getAcudientes().size() == 1) {
+                estudiante.marcarPrincipal(vinculo);
+            }
+        }
+        vinculo.setAccesoConsulta(true);
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<Estudiante> buscarPorNumeroDocumento(String numero) {
+        List<Estudiante> encontrados = estudianteRepository.buscarPorNumeroDocumento(numero);
+        return encontrados.size() == 1 ? Optional.of(encontrados.getFirst()) : Optional.empty();
     }
 
     @Transactional

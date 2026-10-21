@@ -47,6 +47,8 @@ export interface AcudienteVinculado {
   ocupacion: string | null;
   parentesco: Parentesco;
   principal: boolean;
+  /** Si puede ver notas y asistencia del estudiante con su cuenta. */
+  accesoConsulta: boolean;
 }
 
 export interface Estudiante {

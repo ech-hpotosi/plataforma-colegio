@@ -1,5 +1,7 @@
 package co.edu.elencano.plataforma.usuarios.servicio;
 
+import java.util.Set;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -17,6 +19,7 @@ import co.edu.elencano.plataforma.usuarios.repositorio.PersonaRepository;
 import co.edu.elencano.plataforma.usuarios.repositorio.UsuarioRepository;
 import co.edu.elencano.plataforma.usuarios.web.dto.ActualizarUsuarioDto;
 import co.edu.elencano.plataforma.usuarios.web.dto.CrearUsuarioDto;
+import co.edu.elencano.plataforma.usuarios.web.dto.RegistroAcudienteDto;
 
 /** Administracion de usuarios: crear, editar, activar o desactivar, cambiar contrasena y desbloquear. */
 @Service
@@ -75,6 +78,37 @@ public class UsuarioService {
 
         Usuario usuario = new Usuario(persona, datos.nombreUsuario(), passwordEncoder.encode(datos.contrasena()));
         usuario.setRoles(datos.roles());
+        return usuarioRepository.save(usuario);
+    }
+
+    /**
+     * Cuenta de acudiente creada por el mismo acudiente desde la pagina publica de registro.
+     * El usuario es el numero de documento. Si la persona ya estaba registrada (por ejemplo como acudiente
+     * de un estudiante) se reutiliza sin cambiar sus nombres; ver notas o datos de estudiantes requiere
+     * ademas que la secretaria apruebe una solicitud de matricula suya o le de acceso en la ficha.
+     */
+    @Transactional
+    public Usuario registrarAcudiente(RegistroAcudienteDto datos) {
+        String documento = datos.numeroDocumento().trim();
+        Persona persona = personaRepository.findByTipoDocumentoAndNumeroDocumento(datos.tipoDocumento(), documento)
+                .orElse(null);
+        boolean tieneCuenta = persona != null && usuarioRepository.existsByPersonaId(persona.getId());
+        if (tieneCuenta || usuarioRepository.existsByNombreUsuario(documento)) {
+            throw new ReglaNegocioException("Ya existe una cuenta con el documento " + documento
+                    + ". Inicie sesión o pida a la secretaría que restablezca la contraseña");
+        }
+        if (persona == null) {
+            persona = new Persona(datos.tipoDocumento(), documento, datos.nombres().trim(), datos.apellidos().trim());
+        }
+        if (persona.getTelefono() == null) {
+            persona.setTelefono(vacioANulo(datos.telefono()));
+        }
+        if (persona.getCorreo() == null) {
+            persona.setCorreo(vacioANulo(datos.correo()));
+        }
+        personaRepository.save(persona);
+        Usuario usuario = new Usuario(persona, documento, passwordEncoder.encode(datos.contrasena()));
+        usuario.setRoles(Set.of(Rol.ACUDIENTE));
         return usuarioRepository.save(usuario);
     }
 

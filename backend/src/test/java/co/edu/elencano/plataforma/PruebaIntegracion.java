@@ -27,7 +27,9 @@ import co.edu.elencano.plataforma.usuarios.web.dto.CrearUsuarioDto;
  * Todas las clases que heredan comparten el mismo contexto y la misma base de datos,
  * por eso cada prueba crea usuarios con nombres propios.
  */
-@SpringBootTest(properties = "plataforma.admin-inicial.contrasena=clave-de-prueba")
+@SpringBootTest(properties = {"plataforma.admin-inicial.contrasena=clave-de-prueba",
+        "plataforma.archivos.directorio=${java.io.tmpdir}/plataforma-pruebas/archivos",
+        "plataforma.seguridad.registros-por-hora=1000"})
 @AutoConfigureMockMvc
 @Import(TestcontainersConfiguration.class)
 public abstract class PruebaIntegracion {

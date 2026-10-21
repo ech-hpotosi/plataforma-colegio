@@ -108,10 +108,10 @@ describe('Inicio', () => {
     expect(screen.getByRole('link', { name: 'Ver seguimiento' })).toHaveAttribute('href', '/seguimiento');
   });
 
-  it('un perfil sin asistencia no consulta pendientes', async () => {
+  it('el acudiente ve el acceso a la matrícula en línea y no consulta pendientes', async () => {
     const fetch = simularApi({ 'GET /api/yo': { estado: 200, cuerpo: acudiente } });
     renderizarEn('/', <App />);
-    expect(await screen.findByText('Por ahora no hay información disponible para su perfil.')).toBeInTheDocument();
+    expect(await screen.findByRole('link', { name: 'Ir a la matrícula en línea' })).toBeInTheDocument();
     expect(fetch.mock.calls.some(([url]) => String(url).includes('pendientes'))).toBe(false);
   });
 });

@@ -107,6 +107,19 @@ export default function Inicio() {
   const hoy = FECHA_LARGA.format(new Date());
 
   const contenido = () => {
+    if (!veAsistencia && tieneAlgunRol(['ACUDIENTE'])) {
+      return (
+        <Paper sx={{ px: 2.5, py: 2 }}>
+          <Typography sx={{ fontWeight: 600 }}>Matrícula en línea</Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+            Haga aquí la matrícula de sus hijos o acudidos y revise en qué va cada solicitud.
+          </Typography>
+          <Button variant="contained" component={RouterLink} to="/matricula-en-linea">
+            Ir a la matrícula en línea
+          </Button>
+        </Paper>
+      );
+    }
     if (!veAsistencia) {
       return <Alert severity="info">Por ahora no hay información disponible para su perfil.</Alert>;
     }

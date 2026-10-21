@@ -23,7 +23,8 @@ import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
  * Configuracion de seguridad de la API.
  * Sesion en cookie HttpOnly (la maneja el contenedor) y token CSRF en la cookie XSRF-TOKEN,
  * que el frontend lee y devuelve en el encabezado X-XSRF-TOKEN.
- * Los permisos por rol se declaran en cada controlador con @PreAuthorize.
+ * Los permisos por rol se declaran en cada controlador con @PreAuthorize. Por defecto la API es solo para
+ * funcionarios; las rutas para acudientes y estudiantes se listan aqui de forma explicita.
  */
 @Configuration
 @EnableMethodSecurity
@@ -41,9 +42,15 @@ public class SeguridadConfig {
                 .authorizeHttpRequests(auth -> auth
                         // /error debe ser publico para que un 403 o 400 no se convierta en 401 al mostrar el error
                         .requestMatchers("/api/salud", "/actuator/health", "/error").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/auth/login", "/api/auth/registro").permitAll()
                         .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
-                        .anyRequest().authenticated())
+                        // Acudientes y estudiantes (cuentas que se crean desde el registro publico) solo
+                        // llegan a lo suyo; cada controlador limita ademas a los datos propios
+                        .requestMatchers("/api/yo", "/api/matricula-en-linea/**", "/api/solicitudes-matricula/**",
+                                "/api/tipos-documento-matricula/**", "/api/familia/**").authenticated()
+                        // El resto de la API es para funcionarios del colegio
+                        .anyRequest().hasAnyRole("ADMINISTRADOR", "RECTOR", "COORDINADOR_ACADEMICO", "SECRETARIA",
+                                "DOCENTE"))
                 // Una API REST responde 401 en lugar de redirigir a una pagina de login
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
                 .logout(logout -> logout

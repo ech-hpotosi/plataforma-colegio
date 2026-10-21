@@ -3,8 +3,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useQueryClient } from '@tanstack/react-query';
-import { Navigate, useLocation, useNavigate } from 'react-router';
-import { Alert, Box, Button, Container, Paper, TextField, Typography } from '@mui/material';
+import { Navigate, Link as RouterLink, useLocation, useNavigate } from 'react-router';
+import { Alert, Box, Button, Container, Link, Paper, TextField, Typography } from '@mui/material';
 import { iniciarSesion } from '../api/auth';
 import { ErrorApi } from '../api/cliente';
 import escudo from '../assets/escudo.png';
@@ -89,6 +89,18 @@ export default function Login() {
             Ingresar
           </Button>
         </Box>
+      </Paper>
+      <Paper variant="outlined" sx={{ mt: 2, mb: 4, p: 2.5, bgcolor: 'transparent' }}>
+        <Typography variant="body2" sx={{ fontWeight: 600 }}>
+          ¿Es padre, madre o acudiente?
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          Para hacer la matrícula en línea,{' '}
+          <Link component={RouterLink} to="/registro">
+            cree su cuenta
+          </Link>
+          . Si ya la tiene, ingrese con su número de documento.
+        </Typography>
       </Paper>
     </Container>
   );

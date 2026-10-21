@@ -39,6 +39,10 @@ public class EstudianteAcudiente {
     @Column(nullable = false)
     private boolean principal;
 
+    /** Si el acudiente puede ver notas y asistencia del estudiante con su cuenta. */
+    @Column(name = "acceso_consulta", nullable = false)
+    private boolean accesoConsulta;
+
     protected EstudianteAcudiente() {
     }
 
@@ -70,6 +74,14 @@ public class EstudianteAcudiente {
 
     void setPrincipal(boolean principal) {
         this.principal = principal;
+    }
+
+    public boolean isAccesoConsulta() {
+        return accesoConsulta;
+    }
+
+    public void setAccesoConsulta(boolean accesoConsulta) {
+        this.accesoConsulta = accesoConsulta;
     }
 
     @Embeddable

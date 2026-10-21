@@ -16,6 +16,8 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import co.edu.elencano.plataforma.comun.excepcion.RecursoNoEncontradoException;
@@ -67,6 +69,17 @@ public class ManejadorErrores {
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<RespuestaError> accesoDenegado(AccessDeniedException ex) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(RespuestaError.de("No tiene permiso para esta acción"));
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<RespuestaError> archivoGrande(MaxUploadSizeExceededException ex) {
+        return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE)
+                .body(RespuestaError.de("El archivo supera el tamaño máximo de 5 MB"));
+    }
+
+    @ExceptionHandler(MissingServletRequestPartException.class)
+    public ResponseEntity<RespuestaError> faltaArchivo(MissingServletRequestPartException ex) {
+        return ResponseEntity.badRequest().body(RespuestaError.de("Seleccione un archivo"));
     }
 
     @ExceptionHandler(NoResourceFoundException.class)

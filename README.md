@@ -94,6 +94,32 @@ Endpoints: `/api/estudiantes`, `/api/estudiantes/{id}/acudientes`, `/api/persona
 `/api/estudiantes/{id}/matriculas`, `/api/matriculas`, `/api/matriculas/{id}/grupo`, `/api/matriculas/{id}/retirar`
 y `/api/grupos/{id}/estudiantes`.
 
+## Matricula en linea
+
+1. El acudiente crea su cuenta en `/registro` (enlace en la pantalla de ingreso). Su usuario es su numero de documento
+   y queda con el rol ACUDIENTE. El registro publico tiene un limite de cuentas por hora desde una misma conexion.
+2. Solo hay matricula en linea cuando un anio lectivo esta en estado "Matricula" (Estructura academica, Anios).
+3. En "Matricula en linea" el acudiente diligencia los datos del estudiante, sube los documentos (PDF, JPG o PNG de
+   hasta 5 MB; el tipo se reconoce por el contenido, no por el nombre) y la envia autorizando el tratamiento de datos.
+4. La secretaria (o el administrador) la revisa en "Solicitudes de matricula": abre cada archivo, lo aprueba o lo
+   rechaza con una observacion, y luego aprueba, devuelve con observaciones o rechaza la solicitud.
+5. Al aprobar se crea la ficha del estudiante (o se actualiza la del antiguo, buscado por numero de documento aunque
+   haya cambiado de registro civil a TI), el solicitante queda como acudiente con acceso a consultar notas y asistencia,
+   y se registra la matricula del anio con el grupo elegido o sin grupo.
+
+Los documentos que se piden se configuran en "Solicitudes de matricula > Documentos que se piden"; los que ya no se
+piden se desactivan. Los archivos se guardan en la carpeta `ARCHIVOS_DIRECTORIO`, fuera de la base de datos y fuera de
+lo que publica el servidor web: solo salen por la API al acudiente que hizo la solicitud o a los funcionarios.
+
+Seguridad: por defecto la API es solo para funcionarios (administrador, rector, coordinador, secretaria y docente).
+Las cuentas de acudiente o estudiante solo llegan a `/api/yo`, a la matricula en linea y a `/api/familia`.
+
+Endpoints: `POST /api/auth/registro`, `/api/matricula-en-linea/oferta`, `/api/tipos-documento-matricula`,
+`/api/solicitudes-matricula` (listado de secretaria), `/api/solicitudes-matricula/mias`,
+`/api/solicitudes-matricula/{id}` (GET y PUT), `.../documentos/{tipoId}` (POST multipart y DELETE),
+`.../archivos/{documentoId}`, `.../archivos/{documentoId}/revision`, `.../enviar`, `.../devolver`, `.../rechazar`
+y `.../aprobar`.
+
 ## Asistencia
 
 Pantalla "Asistencia" con dos pestanas:
@@ -204,6 +230,8 @@ GitHub Actions ejecuta las mismas pruebas en cada push y pull request.
 | `DB_CONTRASENA` | `plataforma` | Contrasena de la base de datos |
 | `ADMIN_USUARIO` | `admin` | Nombre del primer administrador |
 | `ADMIN_CONTRASENA` | (vacio) | Si esta vacio no se crea el primer administrador |
+| `ARCHIVOS_DIRECTORIO` | `./datos/archivos` | Carpeta privada de los documentos de matricula; incluirla en las copias de seguridad |
+| `plataforma.seguridad.registros-por-hora` | `10` | Cuentas de acudiente que se pueden crear por hora desde una misma conexion |
 | `plataforma.seguridad.maximo-intentos` | `5` | Intentos fallidos antes de bloquear la cuenta |
 | `plataforma.seguridad.minutos-bloqueo` | `15` | Minutos que dura el bloqueo |
 | `plataforma.asistencia.porcentaje-maximo-inasistencia` | `15` | Inasistencia injustificada maxima por asignatura |

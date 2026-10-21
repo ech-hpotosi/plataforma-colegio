@@ -1,5 +1,7 @@
 package co.edu.elencano.plataforma.estudiantes.repositorio;
 
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -12,6 +14,10 @@ import co.edu.elencano.plataforma.estudiantes.entidad.Estudiante;
 public interface EstudianteRepository extends JpaRepository<Estudiante, Long> {
 
     boolean existsByCodigoAndIdNot(String codigo, Long id);
+
+    /** Estudiantes con ese numero de documento, sin importar el tipo (pudo pasar de registro civil a TI). */
+    @Query("select e from Estudiante e where e.persona.numeroDocumento = :numero")
+    List<Estudiante> buscarPorNumeroDocumento(@Param("numero") String numero);
 
     /** Busca por nombres, apellidos, documento o codigo. Texto vacio y estado nulo devuelven todos. */
     @Query(value = """

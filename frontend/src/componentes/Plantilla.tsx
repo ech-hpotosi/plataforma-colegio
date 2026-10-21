@@ -23,11 +23,20 @@ const ANCHO_MENU = 248;
 const MENU: GrupoMenu[] = [
   { titulo: 'General', opciones: [{ texto: 'Inicio', ruta: '/' }] },
   {
+    titulo: 'Familia',
+    opciones: [{ texto: 'Matrícula en línea', ruta: '/matricula-en-linea', roles: ['ACUDIENTE'] }],
+  },
+  {
     titulo: 'Académico',
     opciones: [
       {
         texto: 'Estudiantes',
         ruta: '/estudiantes',
+        roles: ['ADMINISTRADOR', 'RECTOR', 'COORDINADOR_ACADEMICO', 'SECRETARIA'],
+      },
+      {
+        texto: 'Solicitudes de matrícula',
+        ruta: '/solicitudes-matricula',
         roles: ['ADMINISTRADOR', 'RECTOR', 'COORDINADOR_ACADEMICO', 'SECRETARIA'],
       },
       {

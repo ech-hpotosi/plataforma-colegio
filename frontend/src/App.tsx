@@ -16,12 +16,19 @@ import DetalleEstudiante from './paginas/estudiantes/DetalleEstudiante';
 import ListaEstudiantes from './paginas/estudiantes/ListaEstudiantes';
 import Inicio from './paginas/Inicio';
 import Login from './paginas/Login';
+import MatriculaEnLinea from './paginas/matricula/MatriculaEnLinea';
+import NuevaSolicitud from './paginas/matricula/NuevaSolicitud';
+import RevisarSolicitud from './paginas/matricula/RevisarSolicitud';
+import SolicitudAcudiente from './paginas/matricula/SolicitudAcudiente';
+import Solicitudes from './paginas/matricula/Solicitudes';
+import TiposDocumento from './paginas/matricula/TiposDocumento';
 import ConsolidadoNotas from './paginas/notas/ConsolidadoNotas';
 import EscalaValoracion from './paginas/notas/EscalaValoracion';
 import Notas from './paginas/notas/Notas';
 import InformePeriodo from './paginas/notas/InformePeriodo';
 import PlanillaNotas from './paginas/notas/PlanillaNotas';
 import NoEncontrada from './paginas/NoEncontrada';
+import Registro from './paginas/Registro';
 import SinPermiso from './paginas/SinPermiso';
 import ListaUsuarios from './paginas/usuarios/ListaUsuarios';
 import Seguimiento from './paginas/seguimiento/Seguimiento';
@@ -30,6 +37,7 @@ export default function App() {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
+      <Route path="/registro" element={<Registro />} />
       <Route element={<RutaProtegida />}>
         <Route element={<Plantilla />}>
           <Route path="/" element={<Inicio />} />
@@ -43,6 +51,16 @@ export default function App() {
             <Route path="/estudiantes" element={<ListaEstudiantes />} />
             <Route path="/estudiantes/:id" element={<DetalleEstudiante />} />
             <Route path="/seguimiento" element={<Seguimiento />} />
+            <Route path="/solicitudes-matricula" element={<Solicitudes />} />
+            <Route path="/solicitudes-matricula/:id" element={<RevisarSolicitud />} />
+          </Route>
+          <Route element={<RutaProtegida roles={['ADMINISTRADOR', 'SECRETARIA']} />}>
+            <Route path="/solicitudes-matricula/documentos" element={<TiposDocumento />} />
+          </Route>
+          <Route element={<RutaProtegida roles={['ACUDIENTE']} />}>
+            <Route path="/matricula-en-linea" element={<MatriculaEnLinea />} />
+            <Route path="/matricula-en-linea/nueva" element={<NuevaSolicitud />} />
+            <Route path="/matricula-en-linea/:id" element={<SolicitudAcudiente />} />
           </Route>
           <Route
             element={

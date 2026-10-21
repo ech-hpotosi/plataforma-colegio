@@ -30,3 +30,18 @@ export async function consultarUsuarioActual(): Promise<UsuarioActual | null> {
     throw error;
   }
 }
+
+export interface DatosRegistro {
+  tipoDocumento: string;
+  numeroDocumento: string;
+  nombres: string;
+  apellidos: string;
+  telefono: string;
+  correo: string;
+  contrasena: string;
+}
+
+/** Crea la cuenta de acudiente y deja la sesion iniciada. */
+export function registrarAcudiente(datos: DatosRegistro): Promise<UsuarioActual> {
+  return llamarApi<UsuarioActual>('/auth/registro', { method: 'POST', body: JSON.stringify(datos) });
+}

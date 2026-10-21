@@ -12,6 +12,11 @@ spring:
       ddl-auto: validate
   flyway:
     locations: classpath:db/migration
+  servlet:
+    multipart:
+      # Documentos de matricula: fotos o PDF de hasta 5 MB
+      max-file-size: 5MB
+      max-request-size: 6MB
 
 server:
   servlet:
@@ -35,6 +40,9 @@ plataforma:
   admin-inicial:
     usuario: ${ADMIN_USUARIO:admin}
     contrasena: ${ADMIN_CONTRASENA:}
+  archivos:
+    # Carpeta privada donde quedan los documentos de matricula. Debe incluirse en las copias de seguridad.
+    directorio: ${ARCHIVOS_DIRECTORIO:./datos/archivos}
   # Reglas del SIEE para asistencia. Pasaran a la configuracion del SIEE cuando exista ese modulo.
   asistencia:
     porcentaje-maximo-inasistencia: 15
