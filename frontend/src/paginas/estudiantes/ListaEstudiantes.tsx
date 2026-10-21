@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
-import { useNavigate } from 'react-router';
+import { Link as RouterLink, useNavigate } from 'react-router';
 import {
   Alert,
   Box,
@@ -57,9 +57,14 @@ export default function ListaEstudiantes() {
         descripcion="Fichas de los estudiantes, sus acudientes y matrículas."
         acciones={
           puedeEditar && (
-            <Button variant="contained" onClick={() => setCreando(true)}>
-              Nuevo estudiante
-            </Button>
+            <>
+              <Button variant="outlined" component={RouterLink} to="/estudiantes/importar">
+                Importar desde Excel
+              </Button>
+              <Button variant="contained" onClick={() => setCreando(true)}>
+                Nuevo estudiante
+              </Button>
+            </>
           )
         }
       />

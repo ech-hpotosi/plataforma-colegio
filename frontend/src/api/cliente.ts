@@ -53,9 +53,13 @@ export async function llamarApi<T>(ruta: string, opciones: RequestInit = {}): Pr
 }
 
 /** Descarga un archivo de la API (por ejemplo un PDF) con el nombre que envia el servidor. */
-export async function descargarArchivo(ruta: string, nombrePorDefecto: string): Promise<void> {
+export async function descargarArchivo(
+  ruta: string,
+  nombrePorDefecto: string,
+  tipo = 'application/pdf',
+): Promise<void> {
   const respuesta = await fetch('/api' + ruta, {
-    headers: { Accept: 'application/pdf, application/json' },
+    headers: { Accept: `${tipo}, application/json` },
     credentials: 'same-origin',
   });
   if (!respuesta.ok) {

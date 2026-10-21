@@ -13,6 +13,7 @@ import Asistencia from './paginas/asistencia/Asistencia';
 import ConsolidadoAsistencia from './paginas/asistencia/ConsolidadoAsistencia';
 import TomarAsistencia from './paginas/asistencia/TomarAsistencia';
 import DetalleEstudiante from './paginas/estudiantes/DetalleEstudiante';
+import ImportarEstudiantes from './paginas/estudiantes/ImportarEstudiantes';
 import ListaEstudiantes from './paginas/estudiantes/ListaEstudiantes';
 import Inicio from './paginas/Inicio';
 import Login from './paginas/Login';
@@ -56,6 +57,7 @@ export default function App() {
           </Route>
           <Route element={<RutaProtegida roles={['ADMINISTRADOR', 'SECRETARIA']} />}>
             <Route path="/solicitudes-matricula/documentos" element={<TiposDocumento />} />
+            <Route path="/estudiantes/importar" element={<ImportarEstudiantes />} />
           </Route>
           <Route element={<RutaProtegida roles={['ACUDIENTE']} />}>
             <Route path="/matricula-en-linea" element={<MatriculaEnLinea />} />

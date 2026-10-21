@@ -1,5 +1,5 @@
 import type { Pagina, TipoDocumento } from '../tipos';
-import { llamarApi } from './cliente';
+import { descargarArchivo, llamarApi } from './cliente';
 
 export type EstadoEstudiante = 'ASPIRANTE' | 'ACTIVO' | 'RETIRADO' | 'GRADUADO';
 
@@ -174,3 +174,43 @@ export const retirarMatricula = (matriculaId: number, motivo: string) =>
   llamarApi<Matricula>(`/matriculas/${matriculaId}/retirar`, json('POST', { motivo }));
 export const listarEstudiantesDeGrupo = (grupoId: number) =>
   llamarApi<EstudianteDeGrupo[]>(`/grupos/${grupoId}/estudiantes`);
+
+export type AccionImportacion = 'CREAR' | 'ACTUALIZAR' | 'ERROR';
+
+export interface FilaImportacion {
+  fila: number;
+  documento: string | null;
+  estudiante: string | null;
+  grado: string | null;
+  grupo: string | null;
+  accion: AccionImportacion;
+  errores: string[];
+  avisos: string[];
+}
+
+export interface ResultadoImportacion {
+  anio: number;
+  total: number;
+  creados: number;
+  actualizados: number;
+  conErrores: number;
+  aplicado: boolean;
+  filas: FilaImportacion[];
+}
+
+/** Sin confirmar, el servidor solo revisa el archivo y dice que haria con cada fila. */
+export function importarEstudiantes(anioId: number, archivo: File, confirmar: boolean) {
+  const formulario = new FormData();
+  formulario.append('archivo', archivo);
+  return llamarApi<ResultadoImportacion>(`/importacion-estudiantes?anioId=${anioId}&confirmar=${confirmar}`, {
+    method: 'POST',
+    body: formulario,
+  });
+}
+
+export const descargarPlantillaImportacion = () =>
+  descargarArchivo(
+    '/importacion-estudiantes/plantilla',
+    'plantilla-estudiantes.xlsx',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  );

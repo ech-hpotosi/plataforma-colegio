@@ -120,6 +120,28 @@ Endpoints: `POST /api/auth/registro`, `/api/matricula-en-linea/oferta`, `/api/ti
 `.../archivos/{documentoId}`, `.../archivos/{documentoId}/revision`, `.../enviar`, `.../devolver`, `.../rechazar`
 y `.../aprobar`.
 
+## Importacion de estudiantes
+
+Para la carga inicial (los estudiantes que hoy estan en OzetaRed, el SIMAT o una hoja propia) la secretaria o el
+administrador usan "Estudiantes > Importar desde Excel":
+
+1. Elegir el anio lectivo (no puede estar cerrado). Las sedes y los grupos deben existir antes en Estructura academica.
+2. Subir un archivo `.xlsx`. Se puede partir de la plantilla que se descarga en la misma pantalla. Las columnas se
+   reconocen por su titulo sin importar mayusculas ni tildes, y se aceptan variantes comunes ("Tipo doc", "Sexo",
+   "Primer nombre", "Celular acudiente", etc.). Puede haber filas de titulo antes del encabezado.
+3. "Revisar archivo" muestra que pasara con cada fila sin guardar nada: estudiante nuevo, ficha que se actualiza o
+   fila con errores (grado o sede que no existen, documento repetido en el archivo, fecha no valida...).
+4. "Cargar" guarda las filas sin errores: crea o actualiza la ficha (lo que viene vacio conserva lo que ya tenia),
+   matricula en el anio con el grupo indicado (si el grupo no existe queda sin grupo y se avisa) y vincula al
+   acudiente si viene su documento. Los acudientes importados quedan sin acceso de consulta hasta que secretaria lo
+   active.
+
+Cada fila se guarda por separado, asi que una fila con errores no impide cargar las demas, y volver a cargar el
+mismo archivo despues de corregirlo no duplica estudiantes, matriculas ni acudientes. Maximo 3000 filas por archivo.
+
+Endpoints: `POST /api/importacion-estudiantes?anioId=&confirmar=` (multipart, campo `archivo`) y
+`GET /api/importacion-estudiantes/plantilla`.
+
 ## Asistencia
 
 Pantalla "Asistencia" con dos pestanas:
